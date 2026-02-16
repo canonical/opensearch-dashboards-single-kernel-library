@@ -20,6 +20,6 @@ class OpenSearchVMCharm(OpenSearchDashboardsBaseCharm):
         return WorkloadVM()
 
     @property
-    def substrate(self) -> Substrates:
+    def substrate(self) -> str:
         """Access current substrate."""
-        return Substrates.VM
+        return Substrates.VM.value

@@ -12,9 +12,6 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_i
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
-
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
-
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +23,7 @@ class StateBase:
         relation: Relation | None,
         data_interface: Data,
         component: Unit | Application,
-        substrate: Substrates,
+        substrate: str,
     ):
         self.relation = relation
         self.data_interface = data_interface
@@ -63,7 +60,7 @@ class OpensearchServer(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Application,
-        substrate: Substrates,
+        substrate: str,
         local_app: Application | None = None,
         password: str = "",
         endpoints: str = "",
@@ -121,7 +118,7 @@ class ODCluster(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Application,
-        substrate: Substrates,
+        substrate: str,
         tls: bool | None = False,
     ):
         super().__init__(relation, data_interface, component, substrate)
@@ -149,7 +146,7 @@ class ODServer(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Unit,
-        substrate: Substrates,
+        substrate: str,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
@@ -257,7 +254,7 @@ class ODServer(StateBase):
     @log_level.setter
     def log_level(self, value: str) -> None:
         """Set log level value."""
-        self.relation_data.update({"log_level": value})
+        self.update({"log_level": value})
 
 
 class OAuth:

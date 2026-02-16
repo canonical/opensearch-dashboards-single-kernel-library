@@ -48,9 +48,9 @@ class APIManager:
         Raises:
             RequestException (including any descendants from requests.exceptions)
         """
-        return self._request(endpoint="status")
+        return self.request(endpoint="status")
 
-    def _request(
+    def request(
         self,
         endpoint: str,
         method: str = "GET",

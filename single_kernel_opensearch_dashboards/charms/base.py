@@ -7,10 +7,7 @@
 from abc import ABC, abstractmethod
 from ops import EventBase
 
-
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import TypedCharmBase
-
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
 
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -35,12 +32,11 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
 
         # State
         self.state = ClusterState(self, self.substrate)
-
         # Event Handlers
         self.shared_events = SharedEvents(
             self,
             self.state,
-            self.workload,
+            self.workload
         )
 
         self.opensearch_events = OpenSearchDashboardsEvents(self.shared_events)
@@ -58,7 +54,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
 
     @property
     @abstractmethod
-    def substrate(self) -> Substrates:
+    def substrate(self) -> str:
         """Access current substrate."""
         ...
 

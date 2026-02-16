@@ -38,7 +38,6 @@ class WorkloadK8s(WorkloadBase):
         """Runs a command on the workload substrate."""
         ...
 
-    @property
     def alive(self) -> bool:
         """Checks that the workload is alive."""
         ...

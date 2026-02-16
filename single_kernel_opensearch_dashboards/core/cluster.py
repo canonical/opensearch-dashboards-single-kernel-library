@@ -36,7 +36,6 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     PEER_UNIT_SECRETS,
     SERVER_PORT,
     UPGRADE_REL_NAME,
-    Substrates
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ class ClusterState(Object):
 
     def __init__(self,
                  charm: Framework | Object,
-                 substrate: Substrates,
+                 substrate: str,
                  ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate

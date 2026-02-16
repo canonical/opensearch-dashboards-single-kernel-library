@@ -21,6 +21,6 @@ class OpenSearchK8sCharm(OpenSearchDashboardsBaseCharm):
         return WorkloadK8s()
 
     @property
-    def substrate(self) -> Substrates:
+    def substrate(self) -> str:
         """Access current substrate."""
-        return Substrates.K8S
+        return Substrates.K8S.value

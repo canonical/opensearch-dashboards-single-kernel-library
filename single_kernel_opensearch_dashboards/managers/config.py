@@ -45,20 +45,20 @@ class ConfigManager:
 
     def update_config(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""
-        if self._load_dashboard_properties() == self._dashboard_properties():
+        if self.load_dashboard_properties() == self.dashboard_properties():
             return False
-        self._set_dashboard_properties()
+        self.set_dashboard_properties()
         return True
 
-    def _set_dashboard_properties(self) -> None:
+    def set_dashboard_properties(self) -> None:
         """Writes built config file."""
-        self.workload.paths.properties.write_text(yaml.dump(self._dashboard_properties()))
+        self.workload.paths.properties.write_text(yaml.dump(self.dashboard_properties()))
 
-    def _load_dashboard_properties(self) -> dict[str, Any]:
+    def load_dashboard_properties(self) -> dict[str, Any]:
         """Reads built config file."""
         return yaml.load(self.workload.paths.properties.read_text(), yaml.UnsafeLoader)
 
-    def _dashboard_properties(self) -> dict[str, Any]:
+    def dashboard_properties(self) -> dict[str, Any]:
         """Build the opensearch_dashboards.yml content.
 
         As we are building on top of the known templates above, we do not need to care about

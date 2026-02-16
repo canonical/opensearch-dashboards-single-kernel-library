@@ -14,14 +14,11 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrad
 from ops.model import BlockedStatus
 from typing_extensions import override
 
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
 from single_kernel_opensearch_dashboards.managers.upgrade import  \
     OpensearchDashboardsDependencyModel
 from single_kernel_opensearch_dashboards.core.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.utils.literals import \
     MSG_INCOMPATIBLE_UPGRADE, DEPENDENCIES
-from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
-
 
 logger = logging.getLogger(__name__)
 
@@ -31,17 +28,19 @@ class UpgradeEvents(DataUpgrade):
     def __init__(
             self,
             shared_events: SharedEvents,
-            substrate: Substrates
+            substrate: str
     )-> None:
-        DataUpgrade.__init__(self, shared_events.charm, OpensearchDashboardsDependencyModel(**DEPENDENCIES),"upgrade",
-                             "vm" if substrate == Substrates.VM else "k8s")
+        DataUpgrade.__init__(self,
+                             shared_events.charm,
+                             OpensearchDashboardsDependencyModel(**DEPENDENCIES),
+                             "upgrade",
+                             "vm" if substrate == "vm" else "k8s")
 
         self.charm = shared_events.charm
         self.workload = shared_events.workload
         # Because DataUpgrade already have property state and cluster_state
         self.od_state = shared_events.state
-
-        self.upgrade_manager = UpgradeManager(self.od_state,self.workload)
+        self.upgrade_manager = shared_events.upgrade_manager
 
 
     def post_upgrade_check(self) -> None:
@@ -55,7 +54,7 @@ class UpgradeEvents(DataUpgrade):
 
     @override
     def pre_upgrade_check(self) -> None:
-        if not self.workload.alive:
+        if not self.workload.alive():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
                 cause="Unit workload is not running",

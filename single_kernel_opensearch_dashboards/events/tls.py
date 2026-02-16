@@ -151,7 +151,7 @@ class TLSEvents(Object):
         self._remove_certificates()
 
     def _set_tls_private_key(self, event: ActionEvent) -> None:
-        """Handler for `set-tls-privat-key` event when user manually specifies private-keys for a unit."""
+        """Handler for `set-tls-private-key` event when user manually specifies private-keys for a unit."""
         key = event.params.get("internal-key") or generate_private_key().decode("utf-8")
         private_key = (
             key
