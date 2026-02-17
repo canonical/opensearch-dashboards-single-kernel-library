@@ -18,7 +18,6 @@ from single_kernel_opensearch_dashboards.utils.helpers import (
     clear_status,
 )
 from single_kernel_opensearch_dashboards.utils.literals import (
-    COS_PORT,
     MSG_INSTALLING,
     MSG_STARTING,
     MSG_WAITING_FOR_PEER,
@@ -108,21 +107,4 @@ class OpenSearchDashboardsEvents(Object):
 
         self.shared_events.reconcile(event)
         clear_status(self.charm.unit, MSG_STARTING)
-
-
-    # --- CONVENIENCE METHODS ---
-
-
-    def _scrape_config(self) -> list[dict]:
-        """Generates the scrape config as needed."""
-        return [
-            {
-                "metrics_path": "/metrics",
-                "static_configs": [
-                    {"targets": [f"{self.state.unit_server.private_ip}:{COS_PORT}"]}
-                ],
-                # "tls_config": {"ca": self.state.unit_server.ca},
-                "scheme": "http",
-            }
-        ]
 

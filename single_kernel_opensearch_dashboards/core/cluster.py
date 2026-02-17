@@ -7,6 +7,7 @@ import logging
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional, Set
 
+from single_kernel_opensearch_dashboards.utils.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     DataPeerData,
     DataPeerOtherUnitData,
@@ -46,7 +47,7 @@ class ClusterState(Object):
 
     def __init__(self,
                  charm: Framework | Object,
-                 substrate: str,
+                 substrate: Substrates,
                  ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
@@ -220,7 +221,7 @@ class ClusterState(Object):
         scheme = "https" if self.unit_server.tls else "http"
         return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
 
-    # UPGRADE RELATED
+    # --- UPGRADE RELATED ---
     @property
     def upgrade_unit_states(self) -> list:
         """Current upgrade state for all units.

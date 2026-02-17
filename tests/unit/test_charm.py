@@ -13,7 +13,7 @@ import responses
 from ops.framework import EventBase
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
-from single_kernel_opensearch_dashboards.core.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.utils.helpers import clear_status, update_grafana_dashboards_title
 from single_kernel_opensearch_dashboards.utils.literals import (
     CHARM_KEY,
@@ -21,7 +21,6 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     MSG_STATUS_ERROR,
     MSG_STATUS_UNHEALTHY,
     OPENSEARCH_REL_NAME,
-    PEER,
 )
 
 logger = logging.getLogger(__name__)
@@ -195,6 +194,7 @@ def test_restart_fails_not_started(harness):
         patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart") as patched_restart,
         patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start") as patched_start,
         patch("single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"),
+        patch("single_kernel_opensearch_dashboards.managers.config.ConfigManager.load_dashboard_properties"),
     ):
         harness.charm.restart(EventBase)
         patched_restart.assert_not_called()

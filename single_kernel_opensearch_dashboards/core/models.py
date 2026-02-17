@@ -8,6 +8,8 @@ import socket
 import requests
 
 from typing import MutableMapping
+
+from single_kernel_opensearch_dashboards.utils.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import Data, DataDict, RequirerData
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
@@ -23,7 +25,7 @@ class StateBase:
         relation: Relation | None,
         data_interface: Data,
         component: Unit | Application,
-        substrate: str,
+        substrate: Substrates,
     ):
         self.relation = relation
         self.data_interface = data_interface
@@ -60,7 +62,7 @@ class OpensearchServer(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Application,
-        substrate: str,
+        substrate: Substrates,
         local_app: Application | None = None,
         password: str = "",
         endpoints: str = "",
@@ -118,14 +120,14 @@ class ODCluster(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Application,
-        substrate: str,
+        substrate: Substrates,
         tls: bool | None = False,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self._tls = tls
         self.app = component
 
-    # -- TLS --
+    # --- TLS ---
 
     @property
     def tls(self) -> bool:
@@ -146,7 +148,7 @@ class ODServer(StateBase):
         relation: Relation | None,
         data_interface: Data,
         component: Unit,
-        substrate: str,
+        substrate: Substrates,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
@@ -159,7 +161,7 @@ class ODServer(StateBase):
         """
         return int(self.component.name.split("/")[1])
 
-    # -- Cluster Init --
+    # --- Cluster Init ---
 
     @property
     def started(self) -> bool:
@@ -196,17 +198,17 @@ class ODServer(StateBase):
     def host(self) -> str:
         """The hostname for the unit."""
         host = ""
-        if self.substrate == "vm":
+        if self.substrate == Substrates.VM:
             for key in ["hostname", "ip", "private-address"]:
                 if host := self.relation_data.get(key, ""):
                     break
 
-        if self.substrate == "k8s":
+        if self.substrate == Substrates.K8S:
             host = f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
 
         return host
 
-    # -- TLS --
+    # --- TLS ---
 
     @property
     def private_key(self) -> str:
@@ -244,8 +246,7 @@ class ODServer(StateBase):
             "sans_dns": [dns for dns in {self.hostname, self.fqdn} if dns],
         }
 
-    # Config
-
+    # --- Config ---
     @property
     def log_level(self) -> str:
         """Get log level value."""
@@ -255,7 +256,6 @@ class ODServer(StateBase):
     def log_level(self, value: str) -> None:
         """Set log level value."""
         self.update({"log_level": value})
-
 
 class OAuth:
     """State collection metadata for the oauth relation."""

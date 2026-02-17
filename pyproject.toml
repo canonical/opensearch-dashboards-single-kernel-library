@@ -46,6 +46,9 @@ target-version = ["py310"]
 [tool.isort]
 profile = "black"
 
+[tool.codespell]
+skip = "*.lock,./single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v0/apt.py"
+
 [tool.poetry]
 requires-poetry = ">=2.0.0"
 package-mode = true

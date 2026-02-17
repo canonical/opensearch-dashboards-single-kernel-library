@@ -10,7 +10,7 @@ from typing import Any
 import requests
 from requests.exceptions import RequestException
 
-from single_kernel_opensearch_dashboards.core.exceptions import OSDAPIError
+from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.utils.literals import REQUEST_TIMEOUT

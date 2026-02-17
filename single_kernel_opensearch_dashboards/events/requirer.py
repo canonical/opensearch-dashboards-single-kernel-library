@@ -48,9 +48,8 @@ class RequirerEvents(Object):
             and self.state.opensearch_server.endpoints
             and self.state.opensearch_server.tls_ca
         ):
-            self.workload.paths.opensearch_ca.write_text(
-                self.state.opensearch_server.tls_ca)
-            self.charm.on.config_changed.emit()
+            self.workload.paths.opensearch_ca.write_text(self.state.opensearch_server.tls_ca)
+            self.shared_events.reconcile(event)
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.

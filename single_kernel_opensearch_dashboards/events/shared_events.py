@@ -10,28 +10,23 @@ from ops import EventBase, WaitingStatus, MaintenanceStatus, \
     BlockedStatus, Object
 from pydantic import ValidationError
 
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import DependencyModel
+
 from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
-
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
-
 from single_kernel_opensearch_dashboards.managers.api import APIManager
-
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
-
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
-
 from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import \
     RollingOpsManager
-
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import TypedCharmBase
 from single_kernel_opensearch_dashboards.utils.helpers import update_grafana_dashboards_title, set_global_status, \
     clear_global_status, clear_status
-from single_kernel_opensearch_dashboards.utils.literals import MSG_WAITING_FOR_PEER, MSG_STATUS_HANGING, \
+from single_kernel_opensearch_dashboards.utils.literals import \
+    MSG_WAITING_FOR_PEER, MSG_STATUS_HANGING, \
     MSG_STARTING_SERVER, MSG_INVALID_CONFIG, MSG_STATUS_DB_MISSING, \
     MSG_INCOMPATIBLE_UPGRADE, MSG_TLS_CONFIG, MSG_APP_STATUS, MSG_UNIT_STATUS, \
     OAUTH_REL_NAME, MSG_STATUS_OAUTH_INFO_FAILED, SERVER_PORT, RESTART_TIMEOUT, \
-    SERVICE_AVAILABLE_TIMEOUT, MSG_STARTING
+    SERVICE_AVAILABLE_TIMEOUT, MSG_STARTING, COS_PORT
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -211,5 +206,19 @@ class SharedEvents(Object):
 
         if self.charm.unit.is_leader() and not self.state.opensearch_server:
             self.charm.app.status = BlockedStatus(MSG_STATUS_DB_MISSING)
+
+    # --- CONVENIENCE METHODS ---
+    def scrape_config(self) -> list[dict]:
+        """Generates the scrape config as needed."""
+        return [
+            {
+                "metrics_path": "/metrics",
+                "static_configs": [
+                    {"targets": [f"{self.state.unit_server.private_ip}:{COS_PORT}"]}
+                ],
+                # "tls_config": {"ca": self.state.unit_server.ca},
+                "scheme": "http",
+            }
+        ]
 
 

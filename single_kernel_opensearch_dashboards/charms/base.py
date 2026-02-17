@@ -7,6 +7,8 @@
 from abc import ABC, abstractmethod
 from ops import EventBase
 
+from single_kernel_opensearch_dashboards.utils.literals import Substrates, \
+    COS_RELATION_NAME
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import TypedCharmBase
 
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
@@ -22,6 +24,7 @@ from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
 from single_kernel_opensearch_dashboards.events.oauth import OAuthEvents
 from single_kernel_opensearch_dashboards.events.requirer import RequirerEvents
 from single_kernel_opensearch_dashboards.events.tls import TLSEvents
+from single_kernel_opensearch_dashboards.lib.charms.grafana_agent.v0.cos_agent import COSAgentProvider
 
 class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     """Base OpenSearch Dashboards Charm, this will include base structure for both machine and k8s charms."""
@@ -30,21 +33,35 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # State
+        # --- State ---
         self.state = ClusterState(self, self.substrate)
-        # Event Handlers
+
+        # --- Helper class ---
         self.shared_events = SharedEvents(
             self,
             self.state,
             self.workload
         )
 
+        # --- Event Handlers ---
         self.opensearch_events = OpenSearchDashboardsEvents(self.shared_events)
         self.jwt_events = JwtEvents(self.shared_events)
         self.tls_events = TLSEvents(self.shared_events)
         self.requirer_events = RequirerEvents(self.shared_events)
         self.oauth = OAuthEvents(self.shared_events)
         self.upgrade_events = UpgradeEvents(self.shared_events,self.substrate)
+
+        # --- COS ---
+        self.cos_integration = COSAgentProvider(
+            self,
+            relation_name=COS_RELATION_NAME,
+            metrics_endpoints=[],
+            scrape_configs=self.shared_events.scrape_config,
+            refresh_events=[self.on.config_changed],
+            metrics_rules_dir= (self.charm_dir / "src/alert_rules/prometheus").as_posix(),
+            log_slots=["opensearch-dashboards:logs"],
+        )
+
 
     @property
     @abstractmethod
@@ -54,7 +71,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
 
     @property
     @abstractmethod
-    def substrate(self) -> str:
+    def substrate(self) -> Substrates:
         """Access current substrate."""
         ...
 

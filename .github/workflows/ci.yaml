@@ -16,10 +16,7 @@ on:
     - cron: '53 0 * * *' # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
   workflow_call:
-    outputs:
-      artifact-prefix:
-        description: build_charm.yaml `artifact-prefix` output
-        value: ${{ jobs.build.outputs.artifact-prefix }}
+
 
 jobs:
   lint:
@@ -28,7 +25,7 @@ jobs:
 
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -39,13 +36,16 @@ jobs:
           # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
           touch requirements.txt
       - name: Check libs
-        uses: canonical/charming-actions/check-libraries@2.6.0
+        uses: canonical/charming-actions/check-libraries@2.7.0
         continue-on-error: true
         with:
+          charm-path: ./single-kernel-opensearch-dashboards/
           credentials: ${{ secrets.CHARMHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           use-labels: false
           fail-build: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      pull-requests: write
 
   unit-test:
     name: Unit test charm
@@ -73,7 +73,7 @@ jobs:
 
       - name: Check validity of prometheus alert rules
         run: |
-          promtool check rules src/alert_rules/prometheus/*.yaml
+          promtool check rules tests/charms/vm/src/alert_rules/prometheus/*.yaml
 
       - name: Run unit tests for prometheus alert rules
         run: |
@@ -130,6 +130,7 @@ jobs:
     strategy:
       matrix:
         path:
+          - tests/integrations/application_charm
           - tests/charms/vm
     steps:
       - name: Install CLI
@@ -190,7 +191,7 @@ jobs:
       - build
     uses: ./.github/workflows/integration_test.yaml
     with:
-      artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
+      artifact-prefix: packed-charm
     secrets: inherit
     permissions:
       contents: write # Needed for Allure Report

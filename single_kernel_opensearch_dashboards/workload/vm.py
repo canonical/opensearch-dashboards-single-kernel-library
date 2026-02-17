@@ -18,7 +18,7 @@ from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.base import Paths
-from single_kernel_opensearch_dashboards.core.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.utils.literals import OPENSEARCH_DASHBOARDS_SNAP_REVISION
 
 logger = logging.getLogger(__name__)

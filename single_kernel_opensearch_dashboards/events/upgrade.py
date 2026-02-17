@@ -16,10 +16,10 @@ from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.managers.upgrade import  \
     OpensearchDashboardsDependencyModel
-from single_kernel_opensearch_dashboards.core.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.utils.literals import \
     MSG_INCOMPATIBLE_UPGRADE, DEPENDENCIES
-
+from single_kernel_opensearch_dashboards.utils.literals import Substrates
 logger = logging.getLogger(__name__)
 
 class UpgradeEvents(DataUpgrade):
@@ -28,13 +28,13 @@ class UpgradeEvents(DataUpgrade):
     def __init__(
             self,
             shared_events: SharedEvents,
-            substrate: str
+            substrate: Substrates
     )-> None:
         DataUpgrade.__init__(self,
                              shared_events.charm,
                              OpensearchDashboardsDependencyModel(**DEPENDENCIES),
                              "upgrade",
-                             "vm" if substrate == "vm" else "k8s")
+                             "vm" if substrate == Substrates.VM else "k8s")
 
         self.charm = shared_events.charm
         self.workload = shared_events.workload

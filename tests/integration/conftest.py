@@ -42,7 +42,7 @@ def series(ubuntu_base):
 @pytest.fixture
 def charm(ubuntu_base):
     """Path to the charm file to use for testing."""
-    # Return str instead of pathlib.Path since python-libjuju's model.deploy(), juju deploy, and
+    # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
     return f"./tests/charms/vm/opensearch-dashboards_ubuntu@{ubuntu_base}-amd64.charm"
@@ -51,7 +51,7 @@ def charm(ubuntu_base):
 @pytest.fixture
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/integration/application-charm/application_ubuntu@22.04-amd64.charm"
+    return "./tests/integration/application_charm/application_ubuntu@22.04-amd64.charm"
 
 
 @pytest.fixture(scope="module")

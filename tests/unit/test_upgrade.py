@@ -9,15 +9,9 @@ import pytest
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import ClusterNotReadyError, DependencyModel
 from ops.model import BlockedStatus
 
-
-
-
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.managers.upgrade import OpensearchDashboardsDependencyModel
-
-
-
-from single_kernel_opensearch_dashboards.core.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.utils.literals import CHARM_KEY, DEPENDENCIES, OPENSEARCH_REL_NAME
 from single_kernel_opensearch_dashboards.utils.literals import MSG_INCOMPATIBLE_UPGRADE
 from single_kernel_opensearch_dashboards.workload.vm import WorkloadVM
