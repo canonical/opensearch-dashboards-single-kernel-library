@@ -130,7 +130,7 @@ jobs:
     strategy:
       matrix:
         path:
-          - tests/integrations/application_charm
+          - tests/integration/application_charm
           - tests/charms/vm
     steps:
       - name: Install CLI

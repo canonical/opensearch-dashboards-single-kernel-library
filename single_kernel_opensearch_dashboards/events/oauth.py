@@ -6,12 +6,18 @@
 
 import logging
 
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from ops import BlockedStatus, EventBase, ModelError, Object
+
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
+    ClientConfig,
+    OAuthRequirer,
+)
 from single_kernel_opensearch_dashboards.utils.helpers import set_global_status
-from single_kernel_opensearch_dashboards.utils.literals import MSG_STATUS_OAUTH_INFO_FAILED, OAUTH_REL_NAME
-from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import \
-    OAuthRequirer, ClientConfig
+from single_kernel_opensearch_dashboards.utils.literals import (
+    MSG_STATUS_OAUTH_INFO_FAILED,
+    OAUTH_REL_NAME,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +26,8 @@ class OAuthEvents(Object):
     """Handler for managing oauth relations."""
 
     def __init__(
-            self,
-            shared_events: SharedEvents,
+        self,
+        shared_events: SharedEvents,
     ) -> None:
         super().__init__(shared_events.charm, "oauth")
         self.charm = shared_events.charm
@@ -35,8 +41,9 @@ class OAuthEvents(Object):
             self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
         )
 
-        self.oauth = OAuthRequirer(self.charm, self._oauth_client_config(),
-                                   relation_name=OAUTH_REL_NAME)
+        self.oauth = OAuthRequirer(
+            self.charm, self._oauth_client_config(), relation_name=OAUTH_REL_NAME
+        )
         self.oauth.update_client_config(self._oauth_client_config())
 
     def _on_oauth_relation_changed(self, event: EventBase) -> None:

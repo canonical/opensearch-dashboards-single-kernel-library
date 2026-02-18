@@ -6,42 +6,61 @@
 import logging
 import time
 
-from ops import EventBase, WaitingStatus, MaintenanceStatus, \
-    BlockedStatus, Object
+from ops import BlockedStatus, EventBase, MaintenanceStatus, Object, WaitingStatus
 from pydantic import ValidationError
 
-
-from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
-from single_kernel_opensearch_dashboards.managers.config import ConfigManager
-from single_kernel_opensearch_dashboards.managers.api import APIManager
-from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
-from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import \
-    RollingOpsManager
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import TypedCharmBase
-from single_kernel_opensearch_dashboards.utils.helpers import update_grafana_dashboards_title, set_global_status, \
-    clear_global_status, clear_status
-from single_kernel_opensearch_dashboards.utils.literals import \
-    MSG_WAITING_FOR_PEER, MSG_STATUS_HANGING, \
-    MSG_STARTING_SERVER, MSG_INVALID_CONFIG, MSG_STATUS_DB_MISSING, \
-    MSG_INCOMPATIBLE_UPGRADE, MSG_TLS_CONFIG, MSG_APP_STATUS, MSG_UNIT_STATUS, \
-    OAUTH_REL_NAME, MSG_STATUS_OAUTH_INFO_FAILED, SERVER_PORT, RESTART_TIMEOUT, \
-    SERVICE_AVAILABLE_TIMEOUT, MSG_STARTING, COS_PORT
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
+    RollingOpsManager,
+)
+from single_kernel_opensearch_dashboards.managers.api import APIManager
+from single_kernel_opensearch_dashboards.managers.config import ConfigManager
+from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
+from single_kernel_opensearch_dashboards.utils.helpers import (
+    clear_global_status,
+    clear_status,
+    set_global_status,
+    update_grafana_dashboards_title,
+)
+from single_kernel_opensearch_dashboards.utils.literals import (
+    COS_PORT,
+    MSG_APP_STATUS,
+    MSG_INCOMPATIBLE_UPGRADE,
+    MSG_INVALID_CONFIG,
+    MSG_STARTING,
+    MSG_STARTING_SERVER,
+    MSG_STATUS_DB_MISSING,
+    MSG_STATUS_HANGING,
+    MSG_STATUS_OAUTH_INFO_FAILED,
+    MSG_TLS_CONFIG,
+    MSG_UNIT_STATUS,
+    MSG_WAITING_FOR_PEER,
+    OAUTH_REL_NAME,
+    RESTART_TIMEOUT,
+    SERVER_PORT,
+    SERVICE_AVAILABLE_TIMEOUT,
+)
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
+
 class SharedEvents(Object):
     """Base class for methods and properties to be used by OpenSearch Dashboards events."""
+
     def __init__(
-            self,
-            charm: TypedCharmBase[CharmConfig],
-            state: ClusterState,
-            workload: WorkloadBase,
+        self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
+        workload: WorkloadBase,
     ):
-        super().__init__(charm,"shared-events")
+        super().__init__(charm, "shared-events")
         self.charm = charm
         self.workload = workload
         self.state = state
@@ -52,8 +71,9 @@ class SharedEvents(Object):
         self.health_manager = HealthManager(self.state, self.workload, self.api_manager)
         self.config_manager = ConfigManager(self.state, self.workload)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
-        self.restart_manager = RollingOpsManager(self.charm, relation="restart",
-                                         callback=self.restart)
+        self.restart_manager = RollingOpsManager(
+            self.charm, relation="restart", callback=self.restart
+        )
 
     def restart(self, event: EventBase) -> None:
         """Handler for emitted restart events."""
@@ -109,8 +129,7 @@ class SharedEvents(Object):
         try:
             self.state.unit_server.log_level = self.charm.config.log_level
         except ValidationError as e:
-            logger.debug(
-                f"Deferring reconcile due to config not passing validation yet: {e}")
+            logger.debug(f"Deferring reconcile due to config not passing validation yet: {e}")
             self.charm.unit.status = BlockedStatus(f"{MSG_INVALID_CONFIG} {str(e)}")
             event.defer()
             return
@@ -174,7 +193,10 @@ class SharedEvents(Object):
             outdated_status += MSG_UNIT_STATUS
 
         # check oauth status and make sure we have received the oauth_client_secret
-        if self.charm.model.get_relation(OAUTH_REL_NAME) and not self.state.cluster.oauth_client_secret:
+        if (
+            self.charm.model.get_relation(OAUTH_REL_NAME)
+            and not self.state.cluster.oauth_client_secret
+        ):
             set_global_status(self.charm, BlockedStatus(MSG_STATUS_OAUTH_INFO_FAILED))
             return
 
@@ -220,5 +242,3 @@ class SharedEvents(Object):
                 "scheme": "http",
             }
         ]
-
-

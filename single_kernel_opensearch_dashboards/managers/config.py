@@ -5,6 +5,7 @@
 """Manager for handling configuration building + writing."""
 import logging
 from typing import Any
+
 import yaml
 
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -35,6 +36,7 @@ LOG_PROPERTIES = {
 
 class ConfigManager:
     """Manager for handling configuration building + writing."""
+
     def __init__(
         self,
         state: ClusterState,
@@ -85,9 +87,7 @@ class ConfigManager:
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
 
         # We are using the address exposed by Juju as service address
-        properties |= {
-            "server.host": str(self.state.bind_address)
-        }
+        properties |= {"server.host": str(self.state.bind_address)}
         if opensearch_user and opensearch_password:
             properties |= {
                 "opensearch.username": opensearch_user,
@@ -95,9 +95,7 @@ class ConfigManager:
             }
 
         if opensearch_ca:
-            properties |= {
-                "path.data": self.workload.paths.data_dir.as_posix()
-            }
+            properties |= {"path.data": self.workload.paths.data_dir.as_posix()}
             properties["opensearch.ssl.certificateAuthorities"] = [opensearch_ca.as_posix()]
 
         if self.state.unit_server.tls:
@@ -115,7 +113,7 @@ class ConfigManager:
                 "opensearch_security.openid.client_id": self.state.oauth.client_id,
                 "opensearch_security.openid.client_secret": self.state.oauth.client_secret,
                 "opensearch_security.openid.verify_hostnames": False,
-                "opensearch_security.openid.root_ca": opensearch_ca,
+                "opensearch_security.openid.root_ca": opensearch_ca.as_posix(),
                 "opensearch_security.openid.base_redirect_url": self.state.url,
             }
 
@@ -144,8 +142,6 @@ class ConfigManager:
             properties["logging.silent"] = True
 
         # Paths
-        properties |= {
-            "path.data": self.workload.paths.data.as_posix()
-        }
+        properties |= {"path.data": self.workload.paths.data.as_posix()}
 
         return properties

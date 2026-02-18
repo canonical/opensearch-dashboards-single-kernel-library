@@ -11,9 +11,9 @@ import urllib3
 from requests.exceptions import ConnectionError, HTTPError
 from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
 
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.managers.api import APIManager
 from single_kernel_opensearch_dashboards.utils.literals import (
     HEALTH_OPENSEARCH_STATUS_URL,
     MSG_STATUS_APP_REMOVED,
@@ -28,7 +28,7 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     MSG_STATUS_WORKLOAD_DOWN,
     REQUEST_TIMEOUT,
 )
-from single_kernel_opensearch_dashboards.managers.api import APIManager
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,7 @@ logger = logging.getLogger(__name__)
 class HealthManager:
     """Manager for handling Opensearch DashBoards machine health."""
 
-    def __init__(
-        self,
-        state: ClusterState,
-        workload: WorkloadBase,
-        api_manager: APIManager
-    ):
+    def __init__(self, state: ClusterState, workload: WorkloadBase, api_manager: APIManager):
         self.state = state
         self.workload = workload
         self.api_manager = api_manager

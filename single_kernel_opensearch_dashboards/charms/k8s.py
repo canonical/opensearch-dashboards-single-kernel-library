@@ -3,8 +3,10 @@
 # See LICENSE file for licensing details.
 
 """OpenSearch Dashboards Kubernetes Charm."""
+from single_kernel_opensearch_dashboards.charms.base import (
+    OpenSearchDashboardsBaseCharm,
+)
 from single_kernel_opensearch_dashboards.utils.literals import Substrates
-from single_kernel_opensearch_dashboards.charms.base import OpenSearchDashboardsBaseCharm
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.k8s import WorkloadK8s
 

@@ -5,19 +5,22 @@
 """Manager for building necessary files for TLS auth."""
 import logging
 
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
-    DependencyModel,
     BaseModel,
+    DependencyModel,
 )
 from single_kernel_opensearch_dashboards.utils.literals import DEPENDENCIES
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
+
 class OpensearchDashboardsDependencyModel(BaseModel):
     """Model for OpensearchDashboards Operator dependencies."""
+
     osd_upstream: DependencyModel
+
 
 class UpgradeManager:
     """Logic relating to Rolling Upgrades."""

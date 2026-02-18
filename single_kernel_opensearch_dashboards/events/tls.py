@@ -7,16 +7,17 @@ import base64
 import logging
 import re
 
+from ops.charm import ActionEvent, RelationCreatedEvent
+from ops.framework import EventBase, Object
+
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
     generate_csr,
     generate_private_key,
 )
-from ops.charm import ActionEvent, RelationCreatedEvent
-from ops.framework import EventBase, Object
 from single_kernel_opensearch_dashboards.utils.literals import CERTS_REL_NAME
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +26,15 @@ class TLSEvents(Object):
     """Event handlers for related applications on the `certificates` relation interface."""
 
     def __init__(
-            self,
-            shared_events: SharedEvents,
-    )-> None:
+        self,
+        shared_events: SharedEvents,
+    ) -> None:
         super().__init__(shared_events.charm, "tls")
         self.charm = shared_events.charm
         self.state = shared_events.state
         self.workload = shared_events.workload
         self.shared_events = shared_events
-        self.tls_manager= shared_events.tls_manager
+        self.tls_manager = shared_events.tls_manager
 
         self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
 
@@ -60,16 +61,13 @@ class TLSEvents(Object):
     def _request_certificates(self):
         """Request brand-new certificates."""
         if not self.state.unit_server.private_key:
-            self.state.unit_server.update(
-                {"private-key": generate_private_key().decode("utf-8")}
-            )
+            self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
 
         if self.state.unit_server.tls:
             self._remove_certificates()
 
         sans_ip = set(
-            self.state.unit_server.sans.get("sans_ip", [])
-            + [str(self.state.bind_address or "")]
+            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
         )
         sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
 
@@ -111,9 +109,7 @@ class TLSEvents(Object):
             logger.error("Can't use certificate, found unknown CSR")
             return
 
-        self.state.unit_server.update(
-            {"certificate": event.certificate, "ca-cert": event.ca}
-        )
+        self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
 
         self.tls_manager.set_private_key()
         self.tls_manager.set_ca()

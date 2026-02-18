@@ -5,43 +5,45 @@
 """Event handler for handling OpensearchDashboards in-place upgrades."""
 import logging
 
+from ops.model import BlockedStatus
+from typing_extensions import override
+
+from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
     UpgradeGrantedEvent,
 )
-from ops.model import BlockedStatus
-from typing_extensions import override
+from single_kernel_opensearch_dashboards.managers.upgrade import (
+    OpensearchDashboardsDependencyModel,
+)
+from single_kernel_opensearch_dashboards.utils.literals import (
+    DEPENDENCIES,
+    MSG_INCOMPATIBLE_UPGRADE,
+    Substrates,
+)
 
-from single_kernel_opensearch_dashboards.managers.upgrade import  \
-    OpensearchDashboardsDependencyModel
-from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
-from single_kernel_opensearch_dashboards.utils.literals import \
-    MSG_INCOMPATIBLE_UPGRADE, DEPENDENCIES
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
 logger = logging.getLogger(__name__)
+
 
 class UpgradeEvents(DataUpgrade):
     """Implementation of :class:`DataUpgrade` overrides for in-place upgrades."""
 
-    def __init__(
+    def __init__(self, shared_events: SharedEvents, substrate: Substrates) -> None:
+        DataUpgrade.__init__(
             self,
-            shared_events: SharedEvents,
-            substrate: Substrates
-    )-> None:
-        DataUpgrade.__init__(self,
-                             shared_events.charm,
-                             OpensearchDashboardsDependencyModel(**DEPENDENCIES),
-                             "upgrade",
-                             "vm" if substrate == Substrates.VM else "k8s")
+            shared_events.charm,
+            OpensearchDashboardsDependencyModel(**DEPENDENCIES),
+            "upgrade",
+            "vm" if substrate == Substrates.VM else "k8s",
+        )
 
         self.charm = shared_events.charm
         self.workload = shared_events.workload
         # Because DataUpgrade already have property state and cluster_state
         self.od_state = shared_events.state
         self.upgrade_manager = shared_events.upgrade_manager
-
 
     def post_upgrade_check(self) -> None:
         """Runs necessary checks validating the unit is in a healthy state after upgrade."""

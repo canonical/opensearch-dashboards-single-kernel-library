@@ -8,9 +8,9 @@ backends:
     allocate: |
       hash=$(python3 -c "import hashlib; print(hashlib.sha256('$SPREAD_PASSWORD'.encode()).hexdigest()[:6])")
       VM_NAME="${VM_NAME:-${SPREAD_SYSTEM//./-}-${hash}}"
-      DISK="${DISK:-20}"
-      CPU="${CPU:-4}"
-      MEM="${MEM:-8}"
+      DISK="${DISK:-30}"
+      CPU="${CPU:-6}"
+      MEM="${MEM:-12}"
 
       cloud_config="#cloud-config
       ssh_pwauth: true
@@ -152,7 +152,7 @@ prepare: |
     microk8s enable metallb:10.64.140.43-10.64.140.49
     mkdir -p ~/.kube
     microk8s config > ~/.kube/config
-    
+  
     echo "Waiting for all pods to be in 'Running' phase..."
     until kubectl get po -A --field-selector=status.phase!=Running 2>&1 | grep -q "No resources found"; do
       echo "Some pods are not running. Retrying in 5 seconds..."
@@ -160,10 +160,10 @@ prepare: |
     done
     echo "Success: All pods are running!"
   fi
-
+  
   # Install charmcraft & pipx (on lxd-vm backend)
   concierge prepare --trace
-
+  
   if [[ $SPREAD_TASK == *"oauth"* ]]
   then
     /snap/bin/juju add-k8s uk8s --client --controller $(/snap/bin/juju show-controller | yq "keys | .[0]")

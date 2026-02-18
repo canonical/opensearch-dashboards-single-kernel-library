@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
-
 import logging
 import pathlib
 from asyncio import gather
 
-# import oauth_tools
 import pytest
 import yaml
-from tests.integration.helpers import CONFIG_OPTS, get_address
 from oauth_tools import (
     ExternalIdpService,
     access_application_login_page,
@@ -20,12 +17,13 @@ from oauth_tools import (
 from playwright.async_api._generated import Page
 from pytest_operator.plugin import OpsTest
 
+from tests.integration.helpers import CONFIG_OPTS, get_address
+
 pytest_plugins = ["oauth_tools.fixtures"]
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(
-    pathlib.Path("tests/charms/vm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(pathlib.Path("tests/charms/vm/metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 OPENSEARCH_RELATION_NAME = "opensearch-client"

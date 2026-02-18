@@ -5,10 +5,13 @@
 """Collection of global literals for the charm."""
 from enum import Enum
 
+
 class Substrates(Enum):
     """Possible substrates."""
+
     K8S = "k8s"
     VM = "vm"
+
 
 OPENSEARCH_DASHBOARDS_SNAP_REVISION = "54"
 CHARM_KEY = "opensearch-dashboards"
@@ -40,12 +43,15 @@ SNAP_DATA = "current"
 SNAP_COMMON = "common"
 SNAP = "/snap/opensearch-dashboards/current"
 
+
 class OpenSearchDashboardsPaths:
     """Base Paths for OpenSearch Dashboards Snap."""
+
     CONF = "etc/opensearch-dashboards"
     DATA = "var/lib/opensearch-dashboards"
     LOGS = "var/log/opensearch-dashboards"
     BIN = "opt/opensearch-dashboards"
+
 
 PEER_APP_SECRETS = ["monitor-username", "monitor-password", "oauth-client-secret"]
 PEER_UNIT_SECRETS = ["ca-cert", "csr", "certificate", "private-key"]

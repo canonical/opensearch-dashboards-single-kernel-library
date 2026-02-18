@@ -7,13 +7,6 @@ import logging
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional, Set
 
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
-    DataPeerData,
-    DataPeerOtherUnitData,
-    DataPeerUnitData,
-    OpenSearchRequiresData,
-)
 from ops.framework import Framework, Object
 from ops.model import Relation, Unit
 
@@ -24,7 +17,12 @@ from single_kernel_opensearch_dashboards.core.models import (
     ODServer,
     OpensearchServer,
 )
-
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
+    DataPeerData,
+    DataPeerOtherUnitData,
+    DataPeerUnitData,
+    OpenSearchRequiresData,
+)
 from single_kernel_opensearch_dashboards.utils.literals import (
     CERTS_REL_NAME,
     DASHBOARD_INDEX,
@@ -37,6 +35,7 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     PEER_UNIT_SECRETS,
     SERVER_PORT,
     UPGRADE_REL_NAME,
+    Substrates,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,10 +44,11 @@ logger = logging.getLogger(__name__)
 class ClusterState(Object):
     """Collection of global cluster state for Framework/Object."""
 
-    def __init__(self,
-                 charm: Framework | Object,
-                 substrate: Substrates,
-                 ):
+    def __init__(
+        self,
+        charm: Framework | Object,
+        substrate: Substrates,
+    ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
         self._servers_data = {}
@@ -66,7 +66,6 @@ class ClusterState(Object):
             extra_user_roles=DASHBOARD_ROLE,
         )
         self.jwt_requires = JwtConfigurationRequires(self.model, relation_name=JWT_REL_NAME)
-
 
     # --- RAW RELATION ---
 
@@ -232,7 +231,9 @@ class ClusterState(Object):
         if not self.upgrade_relation:
             return []
 
-        return [self.upgrade_relation.data[unit].get("state", "") for unit in self.upgrade_app_units]
+        return [
+            self.upgrade_relation.data[unit].get("state", "") for unit in self.upgrade_app_units
+        ]
 
     @property
     def upgrade_idle(self) -> Optional[bool]:

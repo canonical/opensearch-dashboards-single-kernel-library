@@ -9,17 +9,18 @@ import string
 import subprocess
 
 from charmlibs import pathops
-from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
 from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 from typing_extensions import override
 
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
-from single_kernel_opensearch_dashboards.workload.base import Paths
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
-from single_kernel_opensearch_dashboards.utils.literals import OPENSEARCH_DASHBOARDS_SNAP_REVISION
+from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
+from single_kernel_opensearch_dashboards.utils.literals import (
+    OPENSEARCH_DASHBOARDS_SNAP_REVISION,
+)
+from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
 
 logger = logging.getLogger(__name__)
 

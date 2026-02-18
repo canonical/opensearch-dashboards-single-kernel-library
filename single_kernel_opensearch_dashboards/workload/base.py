@@ -5,6 +5,8 @@
 """Base objects for workload operations across VM + K8s charms."""
 from abc import ABC, abstractmethod
 
+from charmlibs.pathops import PathProtocol
+
 from single_kernel_opensearch_dashboards.utils.literals import (
     BASE_SNAP_DIR,
     SNAP,
@@ -12,7 +14,7 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     SNAP_DATA,
     OpenSearchDashboardsPaths,
 )
-from charmlibs.pathops import PathProtocol
+
 
 class Paths:
     """Collection of expected paths for the Opensearch Dashboards workload."""
@@ -87,6 +89,7 @@ class Paths:
     def opensearch_ca(self) -> PathProtocol:
         """The certificate for the service to identify itself with for TLS auth."""
         return self.certificate_dir / "opensearch_ca.pem"
+
 
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""

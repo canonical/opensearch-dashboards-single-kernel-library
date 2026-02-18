@@ -6,11 +6,14 @@ from unittest.mock import DEFAULT, PropertyMock, patch
 
 import pytest
 
-from single_kernel_opensearch_dashboards.utils.literals import CERTS_REL_NAME, CHARM_KEY, PEER
+from single_kernel_opensearch_dashboards.utils.literals import (
+    CERTS_REL_NAME,
+    CHARM_KEY,
+    PEER,
+)
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_created_sets_tls_enabled(harness):
     with harness.hooks_disabled():
         harness.set_leader(True)
@@ -23,9 +26,8 @@ def test_certificates_created_sets_tls_enabled(harness):
 
         assert harness.charm.state.cluster.tls
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_joined_creates_private_key(harness):
     with (
         patch("core.cluster.ClusterState.stable", new_callable=PropertyMock, return_value=True),
@@ -39,9 +41,8 @@ def test_certificates_joined_creates_private_key(harness):
     assert "BEGIN RSA PRIVATE KEY" in harness.charm.state.unit_server.private_key.splitlines()[0]
     assert workload_config.assert_called_once
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_available_fails_wrong_csr(harness):
     cert_rel_id = harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
     harness.update_relation_data(cert_rel_id, f"{CHARM_KEY}/0", {"csr": "not-missing"})
@@ -56,9 +57,8 @@ def test_certificates_available_fails_wrong_csr(harness):
     assert not harness.charm.state.unit_server.certificate
     assert not harness.charm.state.unit_server.ca
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_available_succeeds(harness):
     with harness.hooks_disabled():
         harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
@@ -90,9 +90,8 @@ def test_certificates_available_succeeds(harness):
         assert harness.charm.state.unit_server.certificate
         assert harness.charm.state.unit_server.ca
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_broken(harness):
     with harness.hooks_disabled():
         certs_rel_id = harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
@@ -115,10 +114,16 @@ def test_certificates_broken(harness):
     # implicitly tests these method calls
     with (
         patch.multiple(
-            "single_kernel_opensearch_dashboards.managers.tls.TLSManager", remove_cert_files=DEFAULT, certificate_valid=lambda _: True
+            "single_kernel_opensearch_dashboards.managers.tls.TLSManager",
+            remove_cert_files=DEFAULT,
+            certificate_valid=lambda _: True,
         ),
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.configure") as workload_config,
-        patch("single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.configure"
+        ) as workload_config,
+        patch(
+            "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"
+        ),
     ):
 
         harness.remove_relation(certs_rel_id)
@@ -132,9 +137,8 @@ def test_certificates_broken(harness):
 
         assert workload_config.assert_called_once
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_expiring(harness):
     key = open("tests/keys/0.key").read()
     harness.update_relation_data(
@@ -162,9 +166,8 @@ def test_certificates_expiring(harness):
 
         assert harness.charm.state.unit_server.csr != "csr"
 
-@pytest.mark.parametrize("harness", [{
-    "add_upgrade": False
-}], indirect=True)
+
+@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_set_tls_private_key(harness):
     harness.update_relation_data(
         harness.charm.state.peer_relation.id,

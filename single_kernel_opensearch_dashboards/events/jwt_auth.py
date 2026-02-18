@@ -19,8 +19,8 @@ class JwtEvents(Object):
     """Handler for managing JWT relations."""
 
     def __init__(
-            self,
-            shared_events: SharedEvents,
+        self,
+        shared_events: SharedEvents,
     ) -> None:
         super().__init__(shared_events.charm, "provider")
         self.charm = shared_events.charm

@@ -274,7 +274,14 @@ from ops.charm import (
     UpgradeCharmEvent,
 )
 from ops.framework import EventBase, EventSource, Object
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, Relation, Unit, WaitingStatus
+from ops.model import (
+    ActiveStatus,
+    BlockedStatus,
+    MaintenanceStatus,
+    Relation,
+    Unit,
+    WaitingStatus,
+)
 from pydantic import BaseModel, root_validator, validator
 
 # The unique Charmhub library identifier, never change it

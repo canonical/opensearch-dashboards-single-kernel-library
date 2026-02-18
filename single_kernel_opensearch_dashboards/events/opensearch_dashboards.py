@@ -5,7 +5,6 @@
 """Handler for General OpenSearch Dashboards charm events."""
 import logging
 
-
 logger = logging.getLogger(__name__)
 from ops import (
     EventBase,
@@ -14,6 +13,8 @@ from ops import (
     SecretChangedEvent,
 )
 from ops.model import MaintenanceStatus, WaitingStatus
+
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.utils.helpers import (
     clear_status,
 )
@@ -23,14 +24,14 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     MSG_WAITING_FOR_PEER,
     PEER,
 )
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 
 
 class OpenSearchDashboardsEvents(Object):
     """Handler for main Opensearch Dashboards charm events."""
+
     def __init__(
-            self,
-            shared_events: SharedEvents,
+        self,
+        shared_events: SharedEvents,
     ) -> None:
         super().__init__(shared_events.charm, "opensearch-dashboards-events")
         self.charm = shared_events.charm
@@ -40,21 +41,25 @@ class OpenSearchDashboardsEvents(Object):
 
         self.framework.observe(getattr(self.charm.on, "install"), self._on_install)
         self.framework.observe(getattr(self.charm.on, "start"), self._start)
-        self.framework.observe(getattr(self.charm.on, "update_status"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, "leader_elected"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, "config_changed"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, f"{PEER}_relation_changed"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, f"{PEER}_relation_joined"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, f"{PEER}_relation_departed"),
-                               self.shared_events.reconcile)
-        self.framework.observe(getattr(self.charm.on, "secret_changed"),
-                               self._on_secret_changed)
-
+        self.framework.observe(
+            getattr(self.charm.on, "update_status"), self.shared_events.reconcile
+        )
+        self.framework.observe(
+            getattr(self.charm.on, "leader_elected"), self.shared_events.reconcile
+        )
+        self.framework.observe(
+            getattr(self.charm.on, "config_changed"), self.shared_events.reconcile
+        )
+        self.framework.observe(
+            getattr(self.charm.on, f"{PEER}_relation_changed"), self.shared_events.reconcile
+        )
+        self.framework.observe(
+            getattr(self.charm.on, f"{PEER}_relation_joined"), self.shared_events.reconcile
+        )
+        self.framework.observe(
+            getattr(self.charm.on, f"{PEER}_relation_departed"), self.shared_events.reconcile
+        )
+        self.framework.observe(getattr(self.charm.on, "secret_changed"), self._on_secret_changed)
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handler for the `on_install` event."""
@@ -68,7 +73,6 @@ class OpenSearchDashboardsEvents(Object):
             event.defer()
             return
         clear_status(self.charm.unit, [MSG_INSTALLING, MSG_WAITING_FOR_PEER])
-
 
     def _on_secret_changed(self, event: SecretChangedEvent):
         """Reconfigure services on a secret changed event."""
@@ -107,4 +111,3 @@ class OpenSearchDashboardsEvents(Object):
 
         self.shared_events.reconcile(event)
         clear_status(self.charm.unit, MSG_STARTING)
-

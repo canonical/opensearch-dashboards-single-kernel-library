@@ -4,8 +4,8 @@
 
 import logging
 
-from ops.main import main
 from ops.log import JujuLogHandler
+from ops.main import main
 
 from single_kernel_opensearch_dashboards.charms.vm import OpenSearchVMCharm
 

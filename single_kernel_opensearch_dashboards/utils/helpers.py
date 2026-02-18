@@ -7,9 +7,12 @@
 import json
 import logging
 
-from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import CharmBase
 from data_platform_helpers.version_check import get_charm_revision
 from ops.model import ActiveStatus, Application, StatusBase, Unit
+
+from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
+    CharmBase,
+)
 
 logger = logging.getLogger(__name__)
 

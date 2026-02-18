@@ -5,29 +5,36 @@
 """OpenSearch Dashboards Base Charm."""
 
 from abc import ABC, abstractmethod
+
 from ops import EventBase
 
-from single_kernel_opensearch_dashboards.utils.literals import Substrates, \
-    COS_RELATION_NAME
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import TypedCharmBase
-
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.events.opensearch_dashboards import OpenSearchDashboardsEvents
-
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
-
-from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
 from single_kernel_opensearch_dashboards.events.oauth import OAuthEvents
+from single_kernel_opensearch_dashboards.events.opensearch_dashboards import (
+    OpenSearchDashboardsEvents,
+)
 from single_kernel_opensearch_dashboards.events.requirer import RequirerEvents
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.events.tls import TLSEvents
-from single_kernel_opensearch_dashboards.lib.charms.grafana_agent.v0.cos_agent import COSAgentProvider
+from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.lib.charms.grafana_agent.v0.cos_agent import (
+    COSAgentProvider,
+)
+from single_kernel_opensearch_dashboards.utils.literals import (
+    COS_RELATION_NAME,
+    Substrates,
+)
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
+
 
 class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     """Base OpenSearch Dashboards Charm, this will include base structure for both machine and k8s charms."""
+
     config_type = CharmConfig
 
     def __init__(self, *args):
@@ -37,11 +44,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         self.state = ClusterState(self, self.substrate)
 
         # --- Helper class ---
-        self.shared_events = SharedEvents(
-            self,
-            self.state,
-            self.workload
-        )
+        self.shared_events = SharedEvents(self, self.state, self.workload)
 
         # --- Event Handlers ---
         self.opensearch_events = OpenSearchDashboardsEvents(self.shared_events)
@@ -49,7 +52,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         self.tls_events = TLSEvents(self.shared_events)
         self.requirer_events = RequirerEvents(self.shared_events)
         self.oauth = OAuthEvents(self.shared_events)
-        self.upgrade_events = UpgradeEvents(self.shared_events,self.substrate)
+        self.upgrade_events = UpgradeEvents(self.shared_events, self.substrate)
 
         # --- COS ---
         self.cos_integration = COSAgentProvider(
@@ -58,10 +61,9 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             metrics_endpoints=[],
             scrape_configs=self.shared_events.scrape_config,
             refresh_events=[self.on.config_changed],
-            metrics_rules_dir= (self.charm_dir / "src/alert_rules/prometheus").as_posix(),
+            metrics_rules_dir=(self.charm_dir / "src/alert_rules/prometheus").as_posix(),
             log_slots=["opensearch-dashboards:logs"],
         )
-
 
     @property
     @abstractmethod
@@ -75,7 +77,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         """Access current substrate."""
         ...
 
-    def restart(self, event:EventBase):
+    def restart(self, event: EventBase):
         """
         Helper method for RollingOpsManager
         If callback method is not directly in charm class it will throw error

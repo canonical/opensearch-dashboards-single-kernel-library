@@ -5,8 +5,7 @@
 """Kubernetes Workload."""
 from charmlibs import pathops
 
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase, \
-    Paths
+from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
 
 
 class WorkloadK8s(WorkloadBase):
@@ -23,16 +22,13 @@ class WorkloadK8s(WorkloadBase):
         """Stops the workload service."""
         ...
 
-
     def restart(self) -> None:
         """Restarts the workload service."""
         ...
 
-
     def configure(self, key: str, value: str) -> None:
         """Set workload parameters"""
         ...
-
 
     def exec(self, command: list[str], working_dir: str | None = None) -> None:
         """Runs a command on the workload substrate."""

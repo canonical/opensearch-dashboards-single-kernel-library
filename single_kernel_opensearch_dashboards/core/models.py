@@ -5,14 +5,18 @@
 """Collection of state objects for relations, apps and units."""
 import logging
 import socket
-import requests
-
 from typing import MutableMapping
 
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import Data, DataDict, RequirerData
+import requests
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
+
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
+    Data,
+    DataDict,
+    RequirerData,
+)
+from single_kernel_opensearch_dashboards.utils.literals import Substrates
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +260,7 @@ class ODServer(StateBase):
     def log_level(self, value: str) -> None:
         """Set log level value."""
         self.update({"log_level": value})
+
 
 class OAuth:
     """State collection metadata for the oauth relation."""

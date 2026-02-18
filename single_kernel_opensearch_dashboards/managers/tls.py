@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 class TLSManager:
     """Manager for building necessary files for Java TLS auth."""
 
-    def __init__(self,
-                 state: ClusterState,
-                 workload: WorkloadBase,
-                 ):
+    def __init__(
+        self,
+        state: ClusterState,
+        workload: WorkloadBase,
+    ):
         self.state = state
         self.workload = workload
 
@@ -30,7 +31,6 @@ class TLSManager:
         if not self.state.unit_server.private_key:
             logger.error("Can't set private-key to unit, missing private-key in relation data")
             return
-
 
         self.workload.paths.server_key.write_text(self.state.unit_server.private_key)
 

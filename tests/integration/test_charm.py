@@ -64,7 +64,7 @@ async def test_build_and_deploy(
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
 
     await ops_test.model.deploy(
-            charm, application_name=APP_NAME, num_units=NUM_UNITS_APP, series=series
+        charm, application_name=APP_NAME, num_units=NUM_UNITS_APP, series=series
     )
     await ops_test.model.set_config(OPENSEARCH_CONFIG)
 

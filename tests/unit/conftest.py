@@ -2,25 +2,27 @@
 # See LICENSE file for licensing details.
 
 from pathlib import Path
-from unittest.mock import PropertyMock
-import yaml
-from ops import JujuVersion
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
-
+import yaml
+from ops import JujuVersion
 from ops.testing import Harness
 
-from tests.charms.vm.src.charm import (
-    OpenSearchVMCharm as TestCharm,
+from single_kernel_opensearch_dashboards.managers.upgrade import (
+    OpensearchDashboardsDependencyModel,
 )
-from single_kernel_opensearch_dashboards.utils.literals import CHARM_KEY, \
-    OPENSEARCH_REL_NAME, PEER
-from single_kernel_opensearch_dashboards.managers.upgrade import OpensearchDashboardsDependencyModel
+from single_kernel_opensearch_dashboards.utils.literals import (
+    CHARM_KEY,
+    OPENSEARCH_REL_NAME,
+    PEER,
+)
+from tests.charms.vm.src.charm import OpenSearchVMCharm as TestCharm
 
 CONFIG = str(yaml.safe_load(Path("tests/charms/vm/config.yaml").read_text()))
 ACTIONS = str(yaml.safe_load(Path("tests/charms/vm/actions.yaml").read_text()))
 METADATA = str(yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text()))
+
 
 @pytest.fixture(autouse=True)
 def patched_wait(mocker):
@@ -34,7 +36,11 @@ def patched_pebble_restart(mocker):
 
 @pytest.fixture(autouse=True)
 def patched_healthy(mocker):
-    mocker.patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.healthy", new_callable=PropertyMock, return_value=True)
+    mocker.patch(
+        "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.healthy",
+        new_callable=PropertyMock,
+        return_value=True,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -70,8 +76,7 @@ def harness(request):
     if hasattr(request, "param"):
         options.update(request.param)
 
-    harness = Harness(TestCharm, meta=METADATA, config=CONFIG,
-                      actions=ACTIONS)
+    harness = Harness(TestCharm, meta=METADATA, config=CONFIG, actions=ACTIONS)
 
     harness.add_relation("restart", CHARM_KEY)
 
@@ -82,17 +87,16 @@ def harness(request):
     if options["add_upgrade"]:
         upgrade_rel_id = harness.add_relation("upgrade", CHARM_KEY)
         if options["upgrade_state"]:
-            harness.update_relation_data(upgrade_rel_id, f"{CHARM_KEY}/0",
-                                         {"state": options["upgrade_state"]})
+            harness.update_relation_data(
+                upgrade_rel_id, f"{CHARM_KEY}/0", {"state": options["upgrade_state"]}
+            )
 
     if options["add_opensearch"]:
-        opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME,
-                                                 "opensearch")
+        opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, "opensearch")
         harness.add_relation_unit(opensearch_rel_id, "opensearch/0")
         if options["opensearch_data"]:
             for key, value in options["opensearch_data"].items():
-                harness.update_relation_data(opensearch_rel_id, "opensearch",
-                                             {key: value})
+                harness.update_relation_data(opensearch_rel_id, "opensearch", {key: value})
 
     harness._update_config({"log_level": options["log_level"]})
 
@@ -101,42 +105,47 @@ def harness(request):
     if options["init_peer_hostname"]:
         with harness.hooks_disabled():
             harness.update_relation_data(
-                peer_rel_id, f"{CHARM_KEY}/0",
-                {"hostname": "000.000.000"}
+                peer_rel_id, f"{CHARM_KEY}/0", {"hostname": "000.000.000"}
             )
 
     if options["mock_network"]:
         harness.charm.model.get_binding = MagicMock()
         harness.charm.model.get_binding.network.bind_address = MagicMock(
-            return_value="10.10.10.10")
+            return_value="10.10.10.10"
+        )
 
     # Logic for test_charm: Target upgrade_events
     if options["inject_events_dep_model"]:
-        harness.charm.upgrade_events.dependency_model.osd_upstream = OpensearchDashboardsDependencyModel(
-            **{
-                "osd_upstream": {
-                    "dependencies": {"opensearch": "2.19.4"},
-                    "name": "opensearch-dashboards",
-                    "upgrade_supported": ">=2",
-                    "version": "2.19.4",
+        harness.charm.upgrade_events.dependency_model.osd_upstream = (
+            OpensearchDashboardsDependencyModel(
+                **{
+                    "osd_upstream": {
+                        "dependencies": {"opensearch": "2.19.4"},
+                        "name": "opensearch-dashboards",
+                        "upgrade_supported": ">=2",
+                        "version": "2.19.4",
+                    }
                 }
-            }
+            )
         )
 
     # Logic for test_upgrade: Target upgrade_manager
     if options["inject_manager_dep_model"]:
-        harness.charm.shared_events.upgrade_manager.dependency_model = OpensearchDashboardsDependencyModel(
-            **{
-                "osd_upstream": {
-                    "dependencies": {"opensearch": "2.12"},
-                    "name": "opensearch-dashboards",
-                    "upgrade_supported": ">=2",
-                    "version": "2.12",
+        harness.charm.shared_events.upgrade_manager.dependency_model = (
+            OpensearchDashboardsDependencyModel(
+                **{
+                    "osd_upstream": {
+                        "dependencies": {"opensearch": "2.12"},
+                        "name": "opensearch-dashboards",
+                        "upgrade_supported": ">=2",
+                        "version": "2.12",
+                    }
                 }
-            }
+            )
         )
 
     return harness
+
 
 # @pytest.fixture(autouse=True)
 # def patched_idle(mocker):

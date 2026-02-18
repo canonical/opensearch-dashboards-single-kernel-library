@@ -6,11 +6,11 @@ import logging
 from pathlib import Path
 from subprocess import CalledProcessError
 
-import tests.integration.ha.helpers as ha_helpers
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
+import tests.integration.ha.helpers as ha_helpers
 from tests.integration.helpers import (
     CONFIG_OPTS,
     TLS_STABLE_CHANNEL,

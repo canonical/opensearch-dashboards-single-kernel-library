@@ -3,27 +3,35 @@
 # See LICENSE file for licensing details.
 
 import logging
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 import responses
 from requests import ReadTimeout
+
 from single_kernel_opensearch_dashboards.utils.literals import (
-    MSG_STATUS_UNAVAIL,
     MSG_STATUS_DB_DOWN,
     MSG_STATUS_DB_UNHEALTHY,
     MSG_STATUS_HANGING,
+    MSG_STATUS_UNAVAIL,
 )
 
 logger = logging.getLogger(__name__)
 
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 @responses.activate
 def test_health_status_ok(harness):
     expected_response = {
@@ -87,13 +95,20 @@ def test_health_status_ok(harness):
     assert response[0]
     assert response[1] == ""
 
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 @responses.activate
 def test_health_status_service_uniavail(harness):
 
@@ -108,13 +123,20 @@ def test_health_status_service_uniavail(harness):
     assert not response[0]
     assert response[1] == MSG_STATUS_UNAVAIL
 
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 @responses.activate
 def test_health_status_service_unresponsive(harness):
 
@@ -129,13 +151,20 @@ def test_health_status_service_unresponsive(harness):
     assert not response[0]
     assert response[1] == MSG_STATUS_HANGING
 
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 @responses.activate
 def test_health_opensearch_ok(harness):
 
@@ -169,13 +198,19 @@ def test_health_opensearch_ok(harness):
 
 
 @responses.activate
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 @pytest.mark.parametrize("status", [("yellow"), ("red")])
 def test_health_opensearch_not_ok(harness, status):
     opensearch_status = {"status": status}
@@ -191,22 +226,34 @@ def test_health_opensearch_not_ok(harness, status):
     with (
         patch(
             "single_kernel_opensearch_dashboards.workload.base.Paths.opensearch_ca",
-            new_callable=PropertyMock, return_value=properties),
+            new_callable=PropertyMock,
+            return_value=properties,
+        ),
     ):
         # We should make a distinction between unhealthy and down
         if status == "red":
-            assert (False, MSG_STATUS_DB_UNHEALTHY) == harness.charm.shared_events.health_manager.opensearch_ok()
+            assert (
+                False,
+                MSG_STATUS_DB_UNHEALTHY,
+            ) == harness.charm.shared_events.health_manager.opensearch_ok()
         else:
             assert (True, "") == harness.charm.shared_events.health_manager.opensearch_ok()
 
+
 @responses.activate
-@pytest.mark.parametrize("harness", [{
-    "add_opensearch": True,
-    "opensearch_data": {
-        "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
-        "tls-ca": "<cert_data_here>"
-    }
-}], indirect=True)
+@pytest.mark.parametrize(
+    "harness",
+    [
+        {
+            "add_opensearch": True,
+            "opensearch_data": {
+                "endpoints": "111.222.333.444:9200,555.666.777.888:9200",
+                "tls-ca": "<cert_data_here>",
+            },
+        }
+    ],
+    indirect=True,
+)
 def test_health_opensearch_unavailable(harness):
 
     responses.add(
@@ -221,6 +268,11 @@ def test_health_opensearch_unavailable(harness):
     with (
         patch(
             "single_kernel_opensearch_dashboards.workload.base.Paths.opensearch_ca",
-            new_callable=PropertyMock, return_value=properties),
+            new_callable=PropertyMock,
+            return_value=properties,
+        ),
     ):
-        assert (False, MSG_STATUS_DB_DOWN) == harness.charm.shared_events.health_manager.opensearch_ok()
+        assert (
+            False,
+            MSG_STATUS_DB_DOWN,
+        ) == harness.charm.shared_events.health_manager.opensearch_ok()

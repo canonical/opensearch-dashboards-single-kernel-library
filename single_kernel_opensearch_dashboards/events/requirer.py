@@ -4,20 +4,25 @@
 
 """Event handler for related applications on the `zookeeper` relation interface."""
 import logging
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import OpenSearchRequiresEventHandlers
+
 from ops.charm import RelationBrokenEvent, RelationEvent
 from ops.framework import Object
-from single_kernel_opensearch_dashboards.utils.literals import OPENSEARCH_REL_NAME
+
 from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
+    OpenSearchRequiresEventHandlers,
+)
+from single_kernel_opensearch_dashboards.utils.literals import OPENSEARCH_REL_NAME
 
 logger = logging.getLogger(__name__)
 
 
 class RequirerEvents(Object):
     """Event handlers for related applications on the `zookeeper` relation interface."""
+
     def __init__(
-            self,
-            shared_events: SharedEvents,
+        self,
+        shared_events: SharedEvents,
     ) -> None:
         super().__init__(shared_events.charm, "provider")
         self.charm = shared_events.charm

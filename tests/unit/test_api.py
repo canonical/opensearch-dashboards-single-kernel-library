@@ -11,12 +11,12 @@ from requests import ReadTimeout
 
 logger = logging.getLogger(__name__)
 
-@pytest.mark.parametrize("harness", [{
-    "add_peer": False,
-    "log_level": "debug",
-    "add_opensearch": True,
-    "mock_network": True
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [{"add_peer": False, "log_level": "debug", "add_opensearch": True, "mock_network": True}],
+    indirect=True,
+)
 @responses.activate
 def test_api_request(harness):
     harness.set_leader(True)
@@ -81,12 +81,12 @@ def test_api_request(harness):
     assert all(field in response for field in ["status", "name", "version"])
     assert all(field in response["status"] for field in ["statuses", "overall"])
 
-@pytest.mark.parametrize("harness", [{
-    "add_peer": False,
-    "log_level": "debug",
-    "add_opensearch": True,
-    "mock_network": True
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [{"add_peer": False, "log_level": "debug", "add_opensearch": True, "mock_network": True}],
+    indirect=True,
+)
 @responses.activate
 def test_status(harness):
 
@@ -152,12 +152,12 @@ def test_status(harness):
     assert all(field in response for field in ["status", "name", "version"])
     assert all(field in response["status"] for field in ["statuses", "overall"])
 
-@pytest.mark.parametrize("harness", [{
-    "add_peer": False,
-    "log_level": "debug",
-    "add_opensearch": True,
-    "mock_network": True
-}], indirect=True)
+
+@pytest.mark.parametrize(
+    "harness",
+    [{"add_peer": False, "log_level": "debug", "add_opensearch": True, "mock_network": True}],
+    indirect=True,
+)
 @responses.activate
 def test_request_timeout(harness):
     """ReadTimeout is "bubbled up" to caller."""

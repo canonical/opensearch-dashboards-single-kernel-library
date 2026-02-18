@@ -1331,7 +1331,9 @@ class RepositoryMapping(Mapping[str, DebianRepository]):
         """Return number of repositories in map."""
         return len(self._repository_map)
 
-    def __iter__(self) -> Iterator[DebianRepository]:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def __iter__(
+        self,
+    ) -> Iterator[DebianRepository]:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Return iterator for RepositoryMapping.
 
         Iterates over the DebianRepository values rather than the string names.

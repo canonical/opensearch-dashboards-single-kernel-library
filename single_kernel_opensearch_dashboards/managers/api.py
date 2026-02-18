@@ -12,8 +12,8 @@ from requests.exceptions import RequestException
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.utils.literals import REQUEST_TIMEOUT
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -87,12 +87,12 @@ class APIManager:
         full_url = f"{self.state.url}/api/{endpoint}"
 
         request_kwargs = {
-            "verify": self.workload.paths.ca,
+            "verify": self.workload.paths.ca.as_posix(),
             "method": method.upper(),
             "url": full_url,
             "headers": headers,
             "timeout": REQUEST_TIMEOUT,
-            "data": json.dumps(payload)
+            "data": json.dumps(payload),
         }
 
         try:

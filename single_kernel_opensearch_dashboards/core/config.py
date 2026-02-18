@@ -6,7 +6,10 @@
 
 from typing import Literal
 
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import BaseConfigModel
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    BaseConfigModel,
+)
+
 
 class CharmConfig(BaseConfigModel):
     """Structured charm config."""
