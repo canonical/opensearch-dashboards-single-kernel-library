@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 from charmlibs.pathops import PathProtocol
 
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     BASE_SNAP_DIR,
     SNAP,
     SNAP_COMMON,

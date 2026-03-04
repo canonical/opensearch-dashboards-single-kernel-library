@@ -9,20 +9,27 @@ from ops.model import BlockedStatus
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.literals import (
+    DEPENDENCIES,
+    MSG_INCOMPATIBLE_UPGRADE,
+    Substrates,
+)
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
     UpgradeGrantedEvent,
 )
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
+    UpgradeManager,
 )
-from single_kernel_opensearch_dashboards.utils.literals import (
-    DEPENDENCIES,
-    MSG_INCOMPATIBLE_UPGRADE,
-    Substrates,
-)
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +37,28 @@ logger = logging.getLogger(__name__)
 class UpgradeEvents(DataUpgrade):
     """Implementation of :class:`DataUpgrade` overrides for in-place upgrades."""
 
-    def __init__(self, shared_events: SharedEvents, substrate: Substrates) -> None:
+    def __init__(
+        self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
+        workload: WorkloadBase,
+        substrate: Substrates,
+        upgrade_manager: UpgradeManager,
+        shared_events: SharedEvents,
+    ) -> None:
         DataUpgrade.__init__(
             self,
-            shared_events.charm,
+            charm,
             OpensearchDashboardsDependencyModel(**DEPENDENCIES),
             "upgrade",
             "vm" if substrate == Substrates.VM else "k8s",
         )
-
-        self.charm = shared_events.charm
-        self.workload = shared_events.workload
+        self.charm = charm
         # Because DataUpgrade already have property state and cluster_state
-        self.od_state = shared_events.state
-        self.upgrade_manager = shared_events.upgrade_manager
+        self.od_state = state
+        self.workload = workload
+        self.shared_events = shared_events
+        self.upgrade_manager = upgrade_manager
 
     def post_upgrade_check(self) -> None:
         """Runs necessary checks validating the unit is in a healthy state after upgrade."""

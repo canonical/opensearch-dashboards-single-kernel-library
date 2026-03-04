@@ -5,6 +5,14 @@
 """Handler for General OpenSearch Dashboards charm events."""
 import logging
 
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
+
 logger = logging.getLogger(__name__)
 from ops import (
     EventBase,
@@ -14,15 +22,14 @@ from ops import (
 )
 from ops.model import MaintenanceStatus, WaitingStatus
 
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    clear_status,
-)
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     MSG_INSTALLING,
     MSG_STARTING,
     MSG_WAITING_FOR_PEER,
     PEER,
+)
+from single_kernel_opensearch_dashboards.utils.helpers import (
+    clear_status,
 )
 
 
@@ -31,12 +38,15 @@ class OpenSearchDashboardsEvents(Object):
 
     def __init__(
         self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
+        workload: WorkloadBase,
         shared_events: SharedEvents,
     ) -> None:
-        super().__init__(shared_events.charm, "opensearch-dashboards-events")
-        self.charm = shared_events.charm
-        self.state = shared_events.state
-        self.workload = shared_events.workload
+        super().__init__(charm, "opensearch-dashboards-events")
+        self.charm = charm
+        self.state = state
+        self.workload = workload
         self.shared_events = shared_events
 
         self.framework.observe(getattr(self.charm.on, "install"), self._on_install)

@@ -9,26 +9,7 @@ import time
 from ops import BlockedStatus, EventBase, MaintenanceStatus, Object, WaitingStatus
 from pydantic import ValidationError
 
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
-)
-from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
-    RollingOpsManager,
-)
-from single_kernel_opensearch_dashboards.managers.api import APIManager
-from single_kernel_opensearch_dashboards.managers.config import ConfigManager
-from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
-from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    clear_global_status,
-    clear_status,
-    set_global_status,
-    update_grafana_dashboards_title,
-)
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     COS_PORT,
     MSG_APP_STATUS,
     MSG_INCOMPATIBLE_UPGRADE,
@@ -46,6 +27,24 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     SERVER_PORT,
     SERVICE_AVAILABLE_TIMEOUT,
 )
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
+    RollingOpsManager,
+)
+from single_kernel_opensearch_dashboards.managers.config import ConfigManager
+from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
+from single_kernel_opensearch_dashboards.utils.helpers import (
+    clear_global_status,
+    clear_status,
+    set_global_status,
+    update_grafana_dashboards_title,
+)
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -59,6 +58,11 @@ class SharedEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ClusterState,
         workload: WorkloadBase,
+        health_manager: HealthManager,
+        restart_manager: RollingOpsManager,
+        config_manager: ConfigManager,
+        tls_manager: TLSManager,
+        upgrade_manager: UpgradeManager,
     ):
         super().__init__(charm, "shared-events")
         self.charm = charm
@@ -66,14 +70,11 @@ class SharedEvents(Object):
         self.state = state
 
         # Managers
-        self.api_manager = APIManager(self.state, self.workload)
-        self.tls_manager = TLSManager(self.state, self.workload)
-        self.health_manager = HealthManager(self.state, self.workload, self.api_manager)
-        self.config_manager = ConfigManager(self.state, self.workload)
-        self.upgrade_manager = UpgradeManager(self.state, self.workload)
-        self.restart_manager = RollingOpsManager(
-            self.charm, relation="restart", callback=self.restart
-        )
+        self.tls_manager = tls_manager
+        self.health_manager = health_manager
+        self.config_manager = config_manager
+        self.upgrade_manager = upgrade_manager
+        self.restart_manager = restart_manager
 
     def restart(self, event: EventBase) -> None:
         """Handler for emitted restart events."""

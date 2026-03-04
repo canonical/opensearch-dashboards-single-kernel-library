@@ -8,7 +8,7 @@ from charmlibs import pathops
 from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
 
 
-class WorkloadK8s(WorkloadBase):
+class K8sWorkload(WorkloadBase):
     """Kubernetes OpenSearch Dashboards Workload."""
 
     def __init__(self):

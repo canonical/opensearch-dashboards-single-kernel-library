@@ -2,4 +2,4 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Utils."""
+"""OpenSearch Dashboards Single Kernel Utils."""

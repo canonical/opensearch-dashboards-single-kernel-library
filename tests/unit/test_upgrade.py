@@ -9,6 +9,12 @@ import pytest
 from ops.model import BlockedStatus
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.literals import (
+    CHARM_KEY,
+    DEPENDENCIES,
+    MSG_INCOMPATIBLE_UPGRADE,
+    OPENSEARCH_REL_NAME,
+)
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
     ClusterNotReadyError,
@@ -17,13 +23,7 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrad
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
 )
-from single_kernel_opensearch_dashboards.utils.literals import (
-    CHARM_KEY,
-    DEPENDENCIES,
-    MSG_INCOMPATIBLE_UPGRADE,
-    OPENSEARCH_REL_NAME,
-)
-from single_kernel_opensearch_dashboards.workload.vm import WorkloadVM
+from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ OPENSEARCH_APP_NAME = "opensearch"
 def test_pre_upgrade_check_succeeds(harness, mocker):
     """pre_upgrade_check successful on a healthy system."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
     ):
         assert harness.charm.upgrade_events.pre_upgrade_check() is None
 
@@ -54,7 +54,7 @@ def test_pre_upgrade_check_succeeds(harness, mocker):
 def test_pre_upgrade_check_fails_if_workload_down(harness, mocker):
     """Simulate a workflow failure to verify pre_upgrade_check fails then."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=False
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
     ):
         with pytest.raises(ClusterNotReadyError):
             assert harness.charm.upgrade_events.pre_upgrade_check() is None
@@ -70,7 +70,7 @@ def test_post_upgrade_check_succeeds(version, harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
     harness.update_relation_data(opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": version})
     assert harness.charm.upgrade_events.post_upgrade_check() is None
-    assert harness.charm.shared_events.upgrade_manager.version_compatible() is True
+    assert harness.charm.upgrade_manager.version_compatible() is True
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ def test_post_upgrade_check_fails_minor(harness, mocker):
             opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.13.1"}
         )
         assert harness.charm.upgrade_events.post_upgrade_check() is None
-        assert harness.charm.shared_events.upgrade_manager.version_compatible() is False
+        assert harness.charm.upgrade_manager.version_compatible() is False
         assert isinstance(harness.model.unit.status, BlockedStatus)
 
 
@@ -138,9 +138,9 @@ def test_dashboards_dependency_model():
     "harness", [{"init_peer_hostname": True, "inject_manager_dep_model": True}], indirect=True
 )
 def test_upgrade_granted_sets_failed_if_failed_snap(harness, mocker):
-    mocker.patch.object(WorkloadVM, "stop")
-    mocker.patch.object(WorkloadVM, "restart")
-    mocker.patch.object(WorkloadVM, "install", side_effect=OSDInstallError("install failed"))
+    mocker.patch.object(VMWorkload, "stop")
+    mocker.patch.object(VMWorkload, "restart")
+    mocker.patch.object(VMWorkload, "install", side_effect=OSDInstallError("install failed"))
     mocker.patch.object(UpgradeEvents, "pre_upgrade_check")
     mocker.patch.object(UpgradeEvents, "set_unit_completed")
     mocker.patch.object(UpgradeEvents, "set_unit_failed")
@@ -149,9 +149,9 @@ def test_upgrade_granted_sets_failed_if_failed_snap(harness, mocker):
 
     harness.charm.upgrade_events._on_upgrade_granted(mock_event)
 
-    WorkloadVM.stop.assert_called_once()
-    WorkloadVM.install.assert_called_once()
-    WorkloadVM.restart.assert_not_called()
+    VMWorkload.stop.assert_called_once()
+    VMWorkload.install.assert_called_once()
+    VMWorkload.restart.assert_not_called()
     UpgradeEvents.set_unit_completed.assert_not_called()
     UpgradeEvents.set_unit_failed.assert_called_once()
 
@@ -165,9 +165,9 @@ def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
         opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "5.12.1"}
     )
 
-    mocker.patch.object(WorkloadVM, "stop")
-    mocker.patch.object(WorkloadVM, "restart")
-    mocker.patch.object(WorkloadVM, "install", return_value=True)
+    mocker.patch.object(VMWorkload, "stop")
+    mocker.patch.object(VMWorkload, "restart")
+    mocker.patch.object(VMWorkload, "install", return_value=True)
     mocker.patch.object(UpgradeEvents, "set_unit_completed")
     mocker.patch.object(UpgradeEvents, "set_unit_failed")
 
@@ -175,8 +175,8 @@ def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
 
     harness.charm.upgrade_events._on_upgrade_granted(mock_event)
 
-    WorkloadVM.stop.assert_called_once()
-    WorkloadVM.install.assert_called_once()
+    VMWorkload.stop.assert_called_once()
+    VMWorkload.install.assert_called_once()
     UpgradeEvents.set_unit_completed.assert_not_called()
     UpgradeEvents.set_unit_failed.assert_called_once()
 
@@ -190,9 +190,9 @@ def test_upgrade_granted_succeeds(harness, mocker):
         opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.12.1"}
     )
 
-    mocker.patch.object(WorkloadVM, "stop")
-    mocker.patch.object(WorkloadVM, "restart")
-    mocker.patch.object(WorkloadVM, "install")
+    mocker.patch.object(VMWorkload, "stop")
+    mocker.patch.object(VMWorkload, "restart")
+    mocker.patch.object(VMWorkload, "install")
     mocker.patch.object(UpgradeEvents, "pre_upgrade_check")
     mocker.patch.object(UpgradeEvents, "set_unit_completed")
     mocker.patch.object(UpgradeEvents, "set_unit_failed")
@@ -201,9 +201,9 @@ def test_upgrade_granted_succeeds(harness, mocker):
 
     harness.charm.upgrade_events._on_upgrade_granted(mock_event)
 
-    WorkloadVM.stop.assert_called_once()
-    WorkloadVM.install.assert_called_once()
-    WorkloadVM.restart.assert_called_once()
+    VMWorkload.stop.assert_called_once()
+    VMWorkload.install.assert_called_once()
+    VMWorkload.restart.assert_called_once()
     UpgradeEvents.set_unit_completed.assert_called_once()
     UpgradeEvents.set_unit_failed.assert_not_called()
 
@@ -217,9 +217,9 @@ def test_upgrade_granted_recurses_upgrade_changed_on_leader(harness, mocker):
         opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.12.1"}
     )
 
-    mocker.patch.object(WorkloadVM, "stop")
-    mocker.patch.object(WorkloadVM, "restart")
-    mocker.patch.object(WorkloadVM, "install")
+    mocker.patch.object(VMWorkload, "stop")
+    mocker.patch.object(VMWorkload, "restart")
+    mocker.patch.object(VMWorkload, "install")
     mocker.patch.object(UpgradeEvents, "pre_upgrade_check")
     mocker.patch.object(UpgradeEvents, "on_upgrade_changed")
 

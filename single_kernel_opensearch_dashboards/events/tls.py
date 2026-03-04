@@ -10,14 +10,19 @@ import re
 from ops.charm import ActionEvent, RelationCreatedEvent
 from ops.framework import EventBase, Object
 
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.common.literals import CERTS_REL_NAME
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.utils.literals import CERTS_REL_NAME
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +32,14 @@ class TLSEvents(Object):
 
     def __init__(
         self,
-        shared_events: SharedEvents,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
+        tls_manager: TLSManager,
     ) -> None:
-        super().__init__(shared_events.charm, "tls")
-        self.charm = shared_events.charm
-        self.state = shared_events.state
-        self.workload = shared_events.workload
-        self.shared_events = shared_events
-        self.tls_manager = shared_events.tls_manager
+        super().__init__(charm, "tls")
+        self.charm = charm
+        self.state = state
+        self.tls_manager = tls_manager
 
         self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
 
@@ -60,28 +65,10 @@ class TLSEvents(Object):
 
     def _request_certificates(self):
         """Request brand-new certificates."""
-        if not self.state.unit_server.private_key:
-            self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
-
         if self.state.unit_server.tls:
             self._remove_certificates()
 
-        sans_ip = set(
-            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
-        )
-        sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
-
-        logger.debug(
-            "Requesting certificate for: "
-            f"host {self.state.unit_server.host}, with IP {sans_ip}, DNS {sans_dns}"
-        )
-
-        csr = generate_csr(
-            private_key=self.state.unit_server.private_key.encode("utf-8"),
-            subject=str(self.state.bind_address or self.state.unit_server.private_ip),
-            sans_ip=list(sans_ip or ""),
-            sans_dns=list(sans_dns),
-        )
+        csr = self.tls_manager.generate_csr()
 
         self.state.unit_server.update({"csr": csr.decode("utf-8").strip()})
         self.certificates.request_certificate_creation(certificate_signing_request=csr)

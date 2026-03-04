@@ -5,7 +5,7 @@
 import logging
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from single_kernel_opensearch_dashboards.utils.literals import PEER
+from single_kernel_opensearch_dashboards.common.literals import PEER
 
 logger = logging.getLogger(__name__)
 
@@ -21,21 +21,18 @@ def test_log_level_changed(harness):
         ),
     ):
         harness.charm.state.unit_server.log_level = "INFO"
-        assert harness.charm.shared_events.config_manager.update_config()
+        assert harness.charm.config_manager.update_config()
         assert "logging.verbose: true" in properties.write_text.call_args[0][0]
         harness.charm.state.unit_server.log_level = "ERROR"
-        assert harness.charm.shared_events.config_manager.update_config()
+        assert harness.charm.config_manager.update_config()
         assert "logging.silent: true" in properties.write_text.call_args[0][0]
         harness.charm.state.unit_server.log_level = "WARNING"
-        assert harness.charm.shared_events.config_manager.update_config()
+        assert harness.charm.config_manager.update_config()
         assert "logging.quiet: true" in properties.write_text.call_args[0][0]
 
 
 def test_tls_disabled(harness):
-    assert (
-        "server.ssl.enabled: true"
-        not in harness.charm.shared_events.config_manager.dashboard_properties()
-    )
+    assert "server.ssl.enabled: true" not in harness.charm.config_manager.dashboard_properties()
 
 
 def test_tls_enabled(harness):
@@ -48,7 +45,4 @@ def test_tls_enabled(harness):
             label=f"{PEER}.opensearch-dashboards.unit",
         )
 
-    assert (
-        harness.charm.shared_events.config_manager.dashboard_properties().get("server.ssl.enabled")
-        is True
-    )
+    assert harness.charm.config_manager.dashboard_properties().get("server.ssl.enabled") is True

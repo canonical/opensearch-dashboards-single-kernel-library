@@ -14,16 +14,16 @@ from ops.framework import EventBase
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    clear_status,
-    update_grafana_dashboards_title,
-)
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     MSG_INCOMPATIBLE_UPGRADE,
     MSG_STATUS_ERROR,
     MSG_STATUS_UNHEALTHY,
     OPENSEARCH_REL_NAME,
+)
+from single_kernel_opensearch_dashboards.utils.helpers import (
+    clear_status,
+    update_grafana_dashboards_title,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ def test_install_blocks_snap_install_failure(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.install",
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.install",
             side_effect=OSDInstallError("install failed"),
         ),
         pytest.raises(OSDInstallError),
@@ -111,7 +111,7 @@ def test_install_sets_ip_hostname_fqdn(harness):
         harness.set_leader(True)
 
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.install", return_value=True
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.install", return_value=True
     ):
         harness.charm.on.install.emit()
         assert harness.charm.state.bind_address
@@ -211,7 +211,7 @@ def test_relation_changed_does_not_restart_on_departing(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start"),
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start"),
     ):
         harness.remove_relation_unit(harness.charm.state.peer_relation.id, f"{CHARM_KEY}/0")
         patched.assert_not_called()
@@ -246,9 +246,9 @@ def test_restart_fails_not_started(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart"
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start") as patched_start,
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start") as patched_start,
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
@@ -295,10 +295,10 @@ def test_restart_sleep_no_wait_once_service_up(harness):
     # to reduce the scope of the test to the service availability delay
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart"
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
@@ -348,14 +348,14 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
     patched_timeout = 5
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.events.shared_events.SERVICE_AVAILABLE_TIMEOUT",
             patched_timeout,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart"
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
@@ -388,7 +388,7 @@ def test_restart_restarts_with_sleep(harness):
             "single_kernel_opensearch_dashboards.events.shared_events.SERVICE_AVAILABLE_TIMEOUT", 3
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart"
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
@@ -410,7 +410,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start") as start,
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start") as start,
     ):
         harness.charm.shared_events.init_server()
 
@@ -432,7 +432,7 @@ def test_init_server_calls_necessary_methods_leader(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start") as start,
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start") as start,
     ):
         harness.charm.shared_events.init_server()
 
@@ -450,7 +450,7 @@ def test_config_changed_applies_relation_data(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config"
@@ -466,7 +466,7 @@ def test_config_changed_applies_relation_data(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch("single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start"),
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start"),
         patch(
             "single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock"
         ),
@@ -488,13 +488,13 @@ def test_workload_down_blocked_status(harness):
             "single_kernel_opensearch_dashboards.events.shared_events.SERVICE_AVAILABLE_TIMEOUT", 3
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=False
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.restart",
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart",
             return_value=False,
         ),
         patch(
@@ -528,10 +528,10 @@ def test_service_unavailable_blocked_status(harness):
         harness.set_leader(True)
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config",
@@ -582,10 +582,10 @@ def test_service_unhealthy(harness):
             return_value=opensearch_ca,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config",
@@ -595,24 +595,27 @@ def test_service_unhealthy(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.hostname",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.hostname",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.fqdn",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.fqdn",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.managers.api.APIManager.request",
-            return_value={
-                "status": {
-                    "overall": {
-                        "state": "yellow",
+            "single_kernel_opensearch_dashboards.managers.base.BaseManager.request_opensearch_dashboards",
+            return_value=(
+                200,
+                {
+                    "status": {
+                        "overall": {
+                            "state": "yellow",
+                        },
                     },
                 },
-            },
+            ),
         ),
     ):
         harness.charm.shared_events.init_server()
@@ -652,10 +655,10 @@ def test_service_error(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config",
@@ -670,24 +673,27 @@ def test_service_error(harness):
             return_value=opensearch_ca,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.hostname",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.hostname",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.fqdn",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.fqdn",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.managers.api.APIManager.request",
-            return_value={
-                "status": {
-                    "overall": {
-                        "state": "red",
-                    },
+            "single_kernel_opensearch_dashboards.managers.base.BaseManager.request_opensearch_dashboards",
+            return_value=(
+                200,
+                {
+                    "status": {
+                        "overall": {
+                            "state": "red",
+                        },
+                    }
                 },
-            },
+            ),
         ),
     ):
         harness.charm.shared_events.init_server()
@@ -727,10 +733,10 @@ def test_service_available(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config",
@@ -741,24 +747,27 @@ def test_service_available(harness):
         ),
         patch("single_kernel_opensearch_dashboards.workload.base.Paths.opensearch_ca"),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.hostname",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.hostname",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.models.ODServer.fqdn",
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.fqdn",
             new_callable=PropertyMock,
             return_value="opensearch-dashboards",
         ),
         patch(
-            "single_kernel_opensearch_dashboards.managers.api.APIManager.request",
-            return_value={
-                "status": {
-                    "overall": {
-                        "state": "green",
+            "single_kernel_opensearch_dashboards.managers.base.BaseManager.request_opensearch_dashboards",
+            return_value=(
+                200,
+                {
+                    "status": {
+                        "overall": {
+                            "state": "green",
+                        },
                     },
                 },
-            },
+            ),
         ),
     ):
         harness.charm.shared_events.init_server()
@@ -799,10 +808,10 @@ def test_wrong_opensearch_version(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.update_config",

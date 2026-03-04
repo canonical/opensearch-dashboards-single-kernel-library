@@ -2,4 +2,4 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""OpenSearch Dashboards Single Kernel Events Handlers"""
+"""OpenSearch Dashboards Single Kernel Common."""

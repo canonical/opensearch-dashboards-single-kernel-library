@@ -10,20 +10,7 @@ from typing import Optional, Set
 from ops.framework import Framework, Object
 from ops.model import Relation, Unit
 
-from single_kernel_opensearch_dashboards.core.models import (
-    JwtConfigurationRequires,
-    OAuth,
-    ODCluster,
-    ODServer,
-    OpensearchServer,
-)
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
-    DataPeerData,
-    DataPeerOtherUnitData,
-    DataPeerUnitData,
-    OpenSearchRequiresData,
-)
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     DASHBOARD_INDEX,
     DASHBOARD_ROLE,
@@ -36,6 +23,19 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     SERVER_PORT,
     UPGRADE_REL_NAME,
     Substrates,
+)
+from single_kernel_opensearch_dashboards.core.models import (
+    JwtConfigurationRequires,
+    OAuth,
+    OpensearchServer,
+    OSDCluster,
+    OSDServer,
+)
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
+    DataPeerData,
+    DataPeerOtherUnitData,
+    DataPeerUnitData,
+    OpenSearchRequiresData,
 )
 
 logger = logging.getLogger(__name__)
@@ -102,9 +102,9 @@ class ClusterState(Object):
     # --- CORE COMPONENTS---
 
     @property
-    def unit_server(self) -> ODServer:
+    def unit_server(self) -> OSDServer:
         """The server state of the current running Unit."""
-        return ODServer(
+        return OSDServer(
             relation=self.peer_relation,
             data_interface=self.peer_unit_data,
             component=self.model.unit,
@@ -125,9 +125,9 @@ class ClusterState(Object):
         return self._servers_data
 
     @property
-    def cluster(self) -> ODCluster:
+    def cluster(self) -> OSDCluster:
         """The cluster state of the current running App."""
-        return ODCluster(
+        return OSDCluster(
             relation=self.peer_relation,
             data_interface=self.peer_app_data,
             component=self.model.app,
@@ -136,7 +136,7 @@ class ClusterState(Object):
         )
 
     @property
-    def servers(self) -> set[ODServer]:
+    def servers(self) -> set[OSDServer]:
         """Grabs all servers in the current peer relation, including the running unit server.
 
         Returns:
@@ -148,7 +148,7 @@ class ClusterState(Object):
         servers = set()
         for unit, data_interface in self.peer_units_data.items():
             servers.add(
-                ODServer(
+                OSDServer(
                     relation=self.peer_relation,
                     data_interface=data_interface,
                     component=unit,

@@ -9,13 +9,13 @@ import yaml
 from ops import JujuVersion
 from ops.testing import Harness
 
-from single_kernel_opensearch_dashboards.managers.upgrade import (
-    OpensearchDashboardsDependencyModel,
-)
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     OPENSEARCH_REL_NAME,
     PEER,
+)
+from single_kernel_opensearch_dashboards.managers.upgrade import (
+    OpensearchDashboardsDependencyModel,
 )
 from tests.charms.vm.src.charm import OpenSearchVMCharm as TestCharm
 
@@ -37,7 +37,7 @@ def patched_pebble_restart(mocker):
 @pytest.fixture(autouse=True)
 def patched_healthy(mocker):
     mocker.patch(
-        "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.healthy",
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
         new_callable=PropertyMock,
         return_value=True,
     )
@@ -131,17 +131,15 @@ def harness(request):
 
     # Logic for test_upgrade: Target upgrade_manager
     if options["inject_manager_dep_model"]:
-        harness.charm.shared_events.upgrade_manager.dependency_model = (
-            OpensearchDashboardsDependencyModel(
-                **{
-                    "osd_upstream": {
-                        "dependencies": {"opensearch": "2.12"},
-                        "name": "opensearch-dashboards",
-                        "upgrade_supported": ">=2",
-                        "version": "2.12",
-                    }
+        harness.charm.upgrade_manager.dependency_model = OpensearchDashboardsDependencyModel(
+            **{
+                "osd_upstream": {
+                    "dependencies": {"opensearch": "2.12"},
+                    "name": "opensearch-dashboards",
+                    "upgrade_supported": ">=2",
+                    "version": "2.12",
                 }
-            )
+            }
         )
 
     return harness

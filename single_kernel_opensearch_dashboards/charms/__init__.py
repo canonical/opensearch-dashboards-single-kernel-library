@@ -2,4 +2,4 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charms Definitions."""
+"""OpenSearch Dashboards Single Kernel Charms Definitions."""

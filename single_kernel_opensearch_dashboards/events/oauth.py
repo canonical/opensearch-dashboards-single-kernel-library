@@ -8,16 +8,21 @@ import logging
 
 from ops import BlockedStatus, EventBase, ModelError, Object
 
+from single_kernel_opensearch_dashboards.common.literals import (
+    MSG_STATUS_OAUTH_INFO_FAILED,
+    OAUTH_REL_NAME,
+)
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
 from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
     ClientConfig,
     OAuthRequirer,
 )
 from single_kernel_opensearch_dashboards.utils.helpers import set_global_status
-from single_kernel_opensearch_dashboards.utils.literals import (
-    MSG_STATUS_OAUTH_INFO_FAILED,
-    OAUTH_REL_NAME,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +32,13 @@ class OAuthEvents(Object):
 
     def __init__(
         self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
         shared_events: SharedEvents,
     ) -> None:
-        super().__init__(shared_events.charm, "oauth")
-        self.charm = shared_events.charm
-        self.state = shared_events.state
+        super().__init__(charm, "oauth")
+        self.charm = charm
+        self.state = state
         self.shared_events = shared_events
 
         self.framework.observe(

@@ -7,9 +7,14 @@ import logging
 
 from ops import Object, RelationChangedEvent
 
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     JWT_REL_NAME,
+)
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
 )
 
 logger = logging.getLogger(__name__)
@@ -19,12 +24,11 @@ class JwtEvents(Object):
     """Handler for managing JWT relations."""
 
     def __init__(
-        self,
-        shared_events: SharedEvents,
+        self, charm: TypedCharmBase[CharmConfig], state: ClusterState, shared_events: SharedEvents
     ) -> None:
-        super().__init__(shared_events.charm, "provider")
-        self.charm = shared_events.charm
-        self.state = shared_events.state
+        super().__init__(charm, "provider")
+        self.charm = charm
+        self.state = state
         self.shared_events = shared_events
 
         self.framework.observe(

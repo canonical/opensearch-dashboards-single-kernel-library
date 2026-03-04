@@ -13,7 +13,7 @@ import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, retry, stop_after_attempt, wait_fixed
 
-from single_kernel_opensearch_dashboards.utils.literals import SERVER_PORT
+from single_kernel_opensearch_dashboards.common.literals import SERVER_PORT
 
 logger = logging.getLogger(__name__)
 

@@ -7,14 +7,10 @@
 import logging
 
 import requests
-import urllib3
 from requests.exceptions import ConnectionError, HTTPError
-from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.managers.api import APIManager
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     HEALTH_OPENSEARCH_STATUS_URL,
     MSG_STATUS_APP_REMOVED,
     MSG_STATUS_DB_DOWN,
@@ -26,25 +22,26 @@ from single_kernel_opensearch_dashboards.utils.literals import (
     MSG_STATUS_UNHEALTHY,
     MSG_STATUS_UNKNOWN,
     MSG_STATUS_WORKLOAD_DOWN,
-    REQUEST_TIMEOUT,
 )
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
 
-class HealthManager:
+class HealthManager(BaseManager):
     """Manager for handling Opensearch DashBoards machine health."""
 
-    def __init__(self, state: ClusterState, workload: WorkloadBase, api_manager: APIManager):
+    def __init__(self, state: ClusterState, workload: WorkloadBase):
+        super().__init__(state, workload)
         self.state = state
         self.workload = workload
-        self.api_manager = api_manager
 
     def status_ok(self) -> tuple[bool, str]:
         """Health status"""
         try:
-            status_data = self.api_manager.service_status()
+            status, body = self.request_opensearch_dashboards(endpoint="/api/status")
         except HTTPError as err:
             if err.response.status_code == 503:
                 return False, MSG_STATUS_UNAVAIL
@@ -54,11 +51,11 @@ class HealthManager:
         except requests.ReadTimeout:
             return False, MSG_STATUS_HANGING
 
-        if status_data["status"]["overall"]["state"] == "green":
+        if body["status"]["overall"]["state"] == "green":
             return True, ""
-        elif status_data["status"]["overall"]["state"] == "yellow":
+        elif body["status"]["overall"]["state"] == "yellow":
             return True, MSG_STATUS_UNHEALTHY
-        elif status_data["status"]["overall"]["state"] != "green":
+        elif body["status"]["overall"]["state"] != "green":
             return False, MSG_STATUS_ERROR
         return True, MSG_STATUS_UNKNOWN
 
@@ -74,58 +71,21 @@ class HealthManager:
         ):
             return False, MSG_STATUS_DB_MISSING
 
-        def log_retry(retry_state: RetryCallState) -> None:
-            """Log retry attempts."""
-            logger.debug(
-                f"Retrying... Attempt {retry_state.attempt_number}"
-                f"\tException: {retry_state.outcome.exception()}"
-            )
-
         for endpoint in self.state.opensearch_server.endpoints:
             full_url = f"https://{endpoint}/{HEALTH_OPENSEARCH_STATUS_URL}"
-
-            request_kwargs = {
-                "url": full_url,
-                "method": "GET",
-                "verify": self.workload.paths.opensearch_ca,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                },
-                "timeout": REQUEST_TIMEOUT,
-            }
-
-            with requests.Session() as s:
-                try:
-                    s.auth = (  # type: ignore [reportAttributeAccessIssue]
-                        self.state.opensearch_server.username,
-                        self.state.opensearch_server.password,
-                    )
-                    for attempt in Retrying(
-                        stop=stop_after_attempt(3),
-                        wait=wait_fixed(1),
-                        reraise=True,
-                        before_sleep=log_retry,
-                    ):
-                        with attempt:
-                            resp = s.request(**request_kwargs)
-                            resp.raise_for_status()
-                except (requests.RequestException, urllib3.exceptions.HTTPError):
-                    logger.error(f"Failed to connect to {full_url}")
-                    continue
-
-            if resp.status_code == 200:
-                try:
-                    status = resp.json()
-                except requests.exceptions.JSONDecodeError:
-                    logger.error(f"Failed to decode JSON from {full_url}")
-                    continue
-
-                if status.get("status") == "red":
+            try:
+                code, body = self.request_opensearch(full_url)
+            except requests.RequestException:
+                # logger.error(f"Failed to connect to {full_url}")
+                continue
+            if code == 200:
+                state = body.get("status")
+                if state == "red":
                     return False, MSG_STATUS_DB_UNHEALTHY
 
-                if status.get("status") in {"green", "yellow"}:
+                if state in {"green", "yellow"}:
                     return True, ""
+
         return False, MSG_STATUS_DB_DOWN
 
     def unit_healthy(self) -> tuple[bool, str]:

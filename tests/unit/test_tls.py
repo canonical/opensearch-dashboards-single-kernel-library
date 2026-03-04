@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, PropertyMock, patch
 
 import pytest
 
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     CHARM_KEY,
     PEER,
@@ -31,8 +31,8 @@ def test_certificates_created_sets_tls_enabled(harness):
 def test_certificates_joined_creates_private_key(harness):
     with (
         patch("core.cluster.ClusterState.stable", new_callable=PropertyMock, return_value=True),
-        patch("core.models.ODCluster.tls", new_callable=PropertyMock, return_value=True),
-        patch("workload.vm.WorkloadVM.configure") as workload_config,
+        patch("core.models.OSDCluster.tls", new_callable=PropertyMock, return_value=True),
+        patch("workload.vm.VMWorkload.configure") as workload_config,
     ):
         cert_rel_id = harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
         harness.add_relation_unit(cert_rel_id, "tls-certificates-operator/1")
@@ -64,7 +64,7 @@ def test_certificates_available_succeeds(harness):
         harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
 
     # implicitly tests restart call
-    harness.add_relation(harness.charm.shared_events.restart_manager.name, "{CHARM_KEY}/0")
+    harness.add_relation(harness.charm.restart_manager.name, "{CHARM_KEY}/0")
 
     harness.charm.unit.add_secret(
         {"csr": "not-missing"},
@@ -119,7 +119,7 @@ def test_certificates_broken(harness):
             certificate_valid=lambda _: True,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.WorkloadVM.configure"
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.configure"
         ) as workload_config,
         patch(
             "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"

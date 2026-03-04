@@ -8,11 +8,17 @@ import logging
 from ops.charm import RelationBrokenEvent, RelationEvent
 from ops.framework import Object
 
+from single_kernel_opensearch_dashboards.common.literals import OPENSEARCH_REL_NAME
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.utils.literals import OPENSEARCH_REL_NAME
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +28,15 @@ class RequirerEvents(Object):
 
     def __init__(
         self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ClusterState,
+        workload: WorkloadBase,
         shared_events: SharedEvents,
     ) -> None:
-        super().__init__(shared_events.charm, "provider")
-        self.charm = shared_events.charm
-        self.state = shared_events.state
-        self.workload = shared_events.workload
+        super().__init__(charm, "provider")
+        self.charm = charm
+        self.state = state
+        self.workload = workload
         self.shared_events = shared_events
 
         self.requirer_events = OpenSearchRequiresEventHandlers(

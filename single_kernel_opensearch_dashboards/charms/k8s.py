@@ -3,12 +3,13 @@
 # See LICENSE file for licensing details.
 
 """OpenSearch Dashboards Kubernetes Charm."""
+from literals import Substrates
+
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsBaseCharm,
 )
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
-from single_kernel_opensearch_dashboards.workload.k8s import WorkloadK8s
+from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
 
 class OpenSearchK8sCharm(OpenSearchDashboardsBaseCharm):
@@ -20,7 +21,7 @@ class OpenSearchK8sCharm(OpenSearchDashboardsBaseCharm):
     @property
     def workload(self) -> WorkloadBase:
         """Access current workload."""
-        return WorkloadK8s()
+        return K8sWorkload()
 
     @property
     def substrate(self) -> Substrates:

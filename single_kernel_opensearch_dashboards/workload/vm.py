@@ -16,16 +16,16 @@ from tenacity.wait import wait_fixed
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
-from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
-from single_kernel_opensearch_dashboards.utils.literals import (
+from single_kernel_opensearch_dashboards.common.literals import (
     OPENSEARCH_DASHBOARDS_SNAP_REVISION,
 )
+from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
 from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
 
 logger = logging.getLogger(__name__)
 
 
-class WorkloadVM(WorkloadBase):
+class VMWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
 
     SNAP_NAME = "opensearch-dashboards"

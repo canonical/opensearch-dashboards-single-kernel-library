@@ -1,6 +1,6 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-name: Release to Charmhub
+name: Release to PyPI
 
 on:
   push:

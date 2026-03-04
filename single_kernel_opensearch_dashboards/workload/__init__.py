@@ -2,4 +2,4 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Workload."""
+"""OpenSearch Dashboards Single Kernel Workloads."""

@@ -10,6 +10,10 @@ from subprocess import STDOUT, CalledProcessError
 import ops.pebble
 
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
+    generate_csr,
+    generate_private_key,
+)
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -86,3 +90,26 @@ class TLSManager:
             f"Currently recognized IP using 'gethostbyname': {self.state.unit_server.private_ip}"
         )
         return str(self.state.bind_address) in response
+
+    def generate_csr(self) -> bytes:
+        if not self.state.unit_server.private_key:
+            self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
+
+        sans_ip = set(
+            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
+        )
+        sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
+
+        logger.debug(
+            "Requesting certificate for: "
+            f"host {self.state.unit_server.host}, with IP {sans_ip}, DNS {sans_dns}"
+        )
+
+        csr = generate_csr(
+            private_key=self.state.unit_server.private_key.encode("utf-8"),
+            subject=str(self.state.bind_address or self.state.unit_server.private_ip),
+            sans_ip=list(sans_ip or ""),
+            sans_dns=list(sans_dns),
+        )
+
+        return csr

@@ -11,12 +11,12 @@ import requests
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
+from single_kernel_opensearch_dashboards.common.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     Data,
     DataDict,
     RequirerData,
 )
-from single_kernel_opensearch_dashboards.utils.literals import Substrates
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class OpensearchServer(StateBase):
         return self.relation_data.get("version")
 
 
-class ODCluster(StateBase):
+class OSDCluster(StateBase):
     """State collection metadata for the charm application."""
 
     def __init__(
@@ -144,7 +144,7 @@ class ODCluster(StateBase):
         return self.relation_data.get("oauth-client-secret", "")
 
 
-class ODServer(StateBase):
+class OSDServer(StateBase):
     """State collection metadata for a charm unit."""
 
     def __init__(
