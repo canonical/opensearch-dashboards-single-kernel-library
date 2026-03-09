@@ -47,3 +47,20 @@ class UpgradeManager:
         major_actual, minor_actual = srv_version_actual.split(".")[:2]
         major_required, minor_required = srv_version_required.split(".")[:2]
         return major_actual <= major_required and minor_actual <= minor_required
+
+    def build_upgrade_stack(self) -> list[int]:
+        """Compute the order in which units should be upgraded.
+
+        Returns:
+            A list of unit IDs representing the upgrade sequence
+        """
+        upgrade_stack = []
+
+        units = [self.state.unit]
+        if self.state.peer_relation:
+            units.extend(list(self.state.peer_relation.units))
+
+        for unit in units:
+            upgrade_stack.append(int(unit.name.split("/")[-1]))
+
+        return upgrade_stack

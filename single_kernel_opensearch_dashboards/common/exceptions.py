@@ -15,3 +15,11 @@ class OSDAPIError(OSDError):
 
 class OSDInstallError(OSDError):
     """Exception relating to OSD installation issues."""
+
+
+class OSDFileOperationError(OSDError):
+    """Exception thrown when file operations related to OSD fail."""
+
+
+class OSDTLSMissingDataError(OSDError):
+    """Raised when required TLS relation data is missing."""

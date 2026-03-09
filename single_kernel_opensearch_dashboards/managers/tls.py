@@ -9,6 +9,7 @@ from subprocess import STDOUT, CalledProcessError
 
 import ops.pebble
 
+from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     generate_csr,
@@ -33,26 +34,31 @@ class TLSManager:
     def set_private_key(self) -> None:
         """Sets the unit private-key."""
         if not self.state.unit_server.private_key:
-            logger.error("Can't set private-key to unit, missing private-key in relation data")
-            return
+            raise OSDTLSMissingDataError(
+                "Can't set private-key to unit, missing private-key in relation data"
+            )
 
-        self.workload.paths.server_key.write_text(self.state.unit_server.private_key)
+        self.workload.write_text(
+            self.state.unit_server.private_key, self.workload.paths.server_key
+        )
 
     def set_ca(self) -> None:
         """Sets the unit CA."""
         if not self.state.unit_server.ca:
-            logger.error("Can't set CA to unit, missing CA in relation data")
-            return
+            raise OSDTLSMissingDataError("Can't set CA to unit, missing CA in relation data")
 
-        self.workload.paths.ca.write_text(self.state.unit_server.ca)
+        self.workload.write_text(self.state.unit_server.ca, self.workload.paths.ca)
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
         if not self.state.unit_server.certificate:
-            logger.error("Can't set certificate to unit, missing certificate in relation data")
-            return
+            raise OSDTLSMissingDataError(
+                "Can't set certificate to unit, missing certificate in relation data"
+            )
 
-        self.workload.paths.certificate.write_text(self.state.unit_server.certificate)
+        self.workload.write_text(
+            self.state.unit_server.certificate, self.workload.paths.certificate
+        )
         self.workload.configure("scheme", "https")
 
     def remove_cert_files(self) -> None:
@@ -70,12 +76,12 @@ class TLSManager:
                 working_dir=self.workload.paths.config_dir.as_posix(),
             )
         except (subprocess.CalledProcessError, ops.pebble.ExecError) as e:
-            logger.error(str(e.stdout))
-            raise e
+            logger.error(f"Failed to remove cert files. Output: {e.stdout}")
+            raise
         self.workload.configure("scheme", "http")
 
     def certificate_valid(self) -> bool:
-        """Check if server certificate is valid"""
+        """Check if server certificate is valid."""
         cmd = f"openssl x509 -in {self.workload.paths.certificate} -subject -noout"
         try:
             response = subprocess.check_output(

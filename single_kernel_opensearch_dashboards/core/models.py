@@ -59,7 +59,10 @@ class StateBase:
 
 
 class OpensearchServer(StateBase):
-    """State collection metadata for a single related client application."""
+    """Manages relation state and connection metadata for an OpenSearch server.
+    This class provides a structured interface to read from and write to the
+    relation data shared with an OpenSearch server.
+    """
 
     def __init__(
         self,

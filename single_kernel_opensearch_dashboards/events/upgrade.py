@@ -55,7 +55,7 @@ class UpgradeEvents(DataUpgrade):
         )
         self.charm = charm
         # Because DataUpgrade already have property state and cluster_state
-        self.od_state = state
+        self.osd_state = state
         self.workload = workload
         self.shared_events = shared_events
         self.upgrade_manager = upgrade_manager
@@ -71,6 +71,13 @@ class UpgradeEvents(DataUpgrade):
 
     @override
     def pre_upgrade_check(self) -> None:
+        """Perform validation before the upgrade process starts.
+
+        Ensures the workload is currently alive and responsive.
+
+        Raises:
+            ClusterNotReadyError: If the workload is not running.
+        """
         if not self.workload.alive():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
@@ -79,19 +86,16 @@ class UpgradeEvents(DataUpgrade):
 
     @override
     def build_upgrade_stack(self) -> list[int]:
-        upgrade_stack = []
+        """Compute the order in which units should be upgraded.
 
-        units = [self.charm.unit]
-        if self.od_state.peer_relation:
-            units.extend(list(self.od_state.peer_relation.units))
-
-        for unit in units:
-            upgrade_stack.append(int(unit.name.split("/")[-1]))
-
-        return upgrade_stack
+        Returns:
+            A list of unit IDs representing the upgrade sequence
+        """
+        return self.upgrade_manager.build_upgrade_stack()
 
     @override
     def log_rollback_instructions(self) -> None:
+        """Log critical manual recovery steps in the event of an upgrade failure."""
         logger.critical(
             "\n".join(
                 [
@@ -105,6 +109,7 @@ class UpgradeEvents(DataUpgrade):
 
     @override
     def _on_upgrade_granted(self, event: UpgradeGrantedEvent) -> None:
+        """Handle the event triggered when the unit is permitted to upgrade."""
         self.workload.stop()
 
         try:

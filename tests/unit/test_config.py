@@ -5,7 +5,7 @@
 import logging
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from single_kernel_opensearch_dashboards.common.literals import PEER
+from single_kernel_opensearch_dashboards.common.literals import PEERS_REL_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def test_tls_enabled(harness):
     ):
         harness.charm.unit.add_secret(
             {"private-key": "key", "certificate": "cert", "ca-cert": "exists"},
-            label=f"{PEER}.opensearch-dashboards.unit",
+            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
         )
 
     assert harness.charm.config_manager.dashboard_properties().get("server.ssl.enabled") is True

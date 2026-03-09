@@ -7,7 +7,7 @@ import logging
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional, Set
 
-from ops.framework import Framework, Object
+from ops.framework import Object
 from ops.model import Relation, Unit
 
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -17,13 +17,14 @@ from single_kernel_opensearch_dashboards.common.literals import (
     JWT_REL_NAME,
     OAUTH_REL_NAME,
     OPENSEARCH_REL_NAME,
-    PEER,
     PEER_APP_SECRETS,
     PEER_UNIT_SECRETS,
+    PEERS_REL_NAME,
     SERVER_PORT,
     UPGRADE_REL_NAME,
     Substrates,
 )
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.models import (
     JwtConfigurationRequires,
     OAuth,
@@ -37,6 +38,9 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_i
     DataPeerUnitData,
     OpenSearchRequiresData,
 )
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +50,19 @@ class ClusterState(Object):
 
     def __init__(
         self,
-        charm: Framework | Object,
+        charm: TypedCharmBase[CharmConfig],
         substrate: Substrates,
     ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
+        self.charm = charm
         self._servers_data = {}
 
         self.peer_app_data = DataPeerData(
-            self.model, relation_name=PEER, additional_secret_fields=PEER_APP_SECRETS
+            self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_APP_SECRETS
         )
         self.peer_unit_data = DataPeerUnitData(
-            self.model, relation_name=PEER, additional_secret_fields=PEER_UNIT_SECRETS
+            self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_UNIT_SECRETS
         )
         self.client_requires_data = OpenSearchRequiresData(
             self.model,
@@ -72,7 +77,7 @@ class ClusterState(Object):
     @property
     def peer_relation(self) -> Relation | None:
         """The cluster peer relation."""
-        return self.model.get_relation(PEER)
+        return self.model.get_relation(PEERS_REL_NAME)
 
     @property
     def upgrade_relation(self) -> Relation | None:
@@ -100,6 +105,10 @@ class ClusterState(Object):
         return self.jwt_requires.relations[0] if len(self.jwt_requires.relations) else None
 
     # --- CORE COMPONENTS---
+    @property
+    def unit(self) -> Unit:
+        """Unit that this execution is responsible for."""
+        return self.charm.unit
 
     @property
     def unit_server(self) -> OSDServer:
@@ -120,7 +129,7 @@ class ClusterState(Object):
         for unit in self.peer_relation.units:
             if unit not in self._servers_data:
                 self._servers_data[unit] = DataPeerOtherUnitData(
-                    model=self.model, unit=unit, relation_name=PEER
+                    model=self.model, unit=unit, relation_name=PEERS_REL_NAME
                 )
         return self._servers_data
 

@@ -5,8 +5,10 @@
 """Base objects for workload operations across VM + K8s charms."""
 from abc import ABC, abstractmethod
 
+from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
 
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     BASE_SNAP_DIR,
     SNAP,
@@ -138,5 +140,43 @@ class WorkloadBase(ABC):
 
     @abstractmethod
     def install(self) -> None:
-        """Install OD."""
+        """Install OSD."""
         ...
+
+    def write_text(self, content: str, path: PathProtocol) -> None:
+        """Write content to a file on disk.
+
+        Args:
+            content (str): The content to be written.
+            path (str): The file path where the content should be written.
+        """
+        try:
+            path.write_text(content)
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def read_text(self, path: pathops.PathProtocol) -> str:
+        """Read content from a file on disk.
+
+        Args:
+            path (str): The file path to read from.
+
+        Returns:
+            str: The content read from the file.
+        """
+        try:
+            return path.read_text()
+        except (
+            FileNotFoundError,
+            UnicodeError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+        ) as e:
+            raise OSDFileOperationError(e)

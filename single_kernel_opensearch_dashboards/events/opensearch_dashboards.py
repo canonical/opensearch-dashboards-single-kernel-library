@@ -26,7 +26,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     MSG_INSTALLING,
     MSG_STARTING,
     MSG_WAITING_FOR_PEER,
-    PEER,
+    PEERS_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.utils.helpers import (
     clear_status,
@@ -49,27 +49,22 @@ class OpenSearchDashboardsEvents(Object):
         self.workload = workload
         self.shared_events = shared_events
 
-        self.framework.observe(getattr(self.charm.on, "install"), self._on_install)
-        self.framework.observe(getattr(self.charm.on, "start"), self._start)
+        self.framework.observe(self.charm.on.install, self._on_install)
+
+        self.framework.observe(self.charm.on.start, self._start)
+        self.framework.observe(self.charm.on.update_status, self.shared_events.reconcile)
+        self.framework.observe(self.charm.on.leader_elected, self.shared_events.reconcile)
+        self.framework.observe(self.charm.on.config_changed, self.shared_events.reconcile)
         self.framework.observe(
-            getattr(self.charm.on, "update_status"), self.shared_events.reconcile
+            self.charm.on[PEERS_REL_NAME].relation_changed, self.shared_events.reconcile
         )
         self.framework.observe(
-            getattr(self.charm.on, "leader_elected"), self.shared_events.reconcile
+            self.charm.on[PEERS_REL_NAME].relation_joined, self.shared_events.reconcile
         )
         self.framework.observe(
-            getattr(self.charm.on, "config_changed"), self.shared_events.reconcile
+            self.charm.on[PEERS_REL_NAME].relation_departed, self.shared_events.reconcile
         )
-        self.framework.observe(
-            getattr(self.charm.on, f"{PEER}_relation_changed"), self.shared_events.reconcile
-        )
-        self.framework.observe(
-            getattr(self.charm.on, f"{PEER}_relation_joined"), self.shared_events.reconcile
-        )
-        self.framework.observe(
-            getattr(self.charm.on, f"{PEER}_relation_departed"), self.shared_events.reconcile
-        )
-        self.framework.observe(getattr(self.charm.on, "secret_changed"), self._on_secret_changed)
+        self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handler for the `on_install` event."""
@@ -77,11 +72,6 @@ class OpenSearchDashboardsEvents(Object):
 
         self.workload.install()
 
-        # don't complete install until passwords set
-        if not self.state.peer_relation:
-            self.charm.unit.status = WaitingStatus(MSG_WAITING_FOR_PEER)
-            event.defer()
-            return
         clear_status(self.charm.unit, [MSG_INSTALLING, MSG_WAITING_FOR_PEER])
 
     def _on_secret_changed(self, event: SecretChangedEvent):
@@ -93,13 +83,13 @@ class OpenSearchDashboardsEvents(Object):
             return
 
         cluster_secret_label = self.state.cluster.data_interface._generate_secret_label(
-            PEER,
+            PEERS_REL_NAME,
             self.state.peer_relation.id,
             "extra",  # type:ignore noqa
         )  # Changes with the soon upcoming new version of DP-libs STILL within this POC
 
         server_secret_label = self.state.unit_server.data_interface._generate_secret_label(
-            PEER,
+            PEERS_REL_NAME,
             self.state.peer_relation.id,
             "extra",  # type:ignore noqa
         )  # Changes with the soon upcoming new version of DP-libs STILL within this POC
@@ -113,11 +103,6 @@ class OpenSearchDashboardsEvents(Object):
 
         Necessary for ensuring that `on_start` restarts roll.
         """
-        # if not self.state.peer_relation or not self.state.stable or not self.upgrade_events.idle:
         self.charm.unit.status = MaintenanceStatus(MSG_STARTING)
-        if not self.state.peer_relation or not self.state.stable:
-            event.defer()
-            return
-
         self.shared_events.reconcile(event)
         clear_status(self.charm.unit, MSG_STARTING)

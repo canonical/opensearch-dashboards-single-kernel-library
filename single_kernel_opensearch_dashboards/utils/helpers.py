@@ -56,8 +56,8 @@ def update_grafana_dashboards_title(charm: CharmBase) -> None:
 
     old_title = dashboard.get("title", "Charmed OpenSearch Dashboards")
     title_prefix = old_title.split(" - Rev")[0]
-    new_title = f"{old_title} - Rev {revision}"
-    dashboard["title"] = f"{title_prefix} - Rev {revision}"
+    new_title = f"{title_prefix} - Rev {revision}"
+    dashboard["title"] = new_title
 
     logger.info(
         "Changing the title of dashboard %s from %s to %s",

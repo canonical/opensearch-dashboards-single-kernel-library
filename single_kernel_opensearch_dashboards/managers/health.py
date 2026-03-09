@@ -11,7 +11,6 @@ from requests.exceptions import ConnectionError, HTTPError
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
-    HEALTH_OPENSEARCH_STATUS_URL,
     MSG_STATUS_APP_REMOVED,
     MSG_STATUS_DB_DOWN,
     MSG_STATUS_DB_MISSING,
@@ -72,11 +71,11 @@ class HealthManager(BaseManager):
             return False, MSG_STATUS_DB_MISSING
 
         for endpoint in self.state.opensearch_server.endpoints:
-            full_url = f"https://{endpoint}/{HEALTH_OPENSEARCH_STATUS_URL}"
+            full_url = f"https://{endpoint}/_cluster/health"
             try:
                 code, body = self.request_opensearch(full_url)
             except requests.RequestException:
-                # logger.error(f"Failed to connect to {full_url}")
+                logger.error(f"Failed to connect to {full_url}")
                 continue
             if code == 200:
                 state = body.get("status")
@@ -90,7 +89,7 @@ class HealthManager(BaseManager):
 
     def unit_healthy(self) -> tuple[bool, str]:
         """Unit-level global health check."""
-        if not self.workload.alive:
+        if not self.workload.alive():
             return False, MSG_STATUS_WORKLOAD_DOWN
 
         return self.status_ok()

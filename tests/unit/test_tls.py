@@ -9,7 +9,7 @@ import pytest
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     CHARM_KEY,
-    PEER,
+    PEERS_REL_NAME,
 )
 
 
@@ -68,7 +68,7 @@ def test_certificates_available_succeeds(harness):
 
     harness.charm.unit.add_secret(
         {"csr": "not-missing"},
-        label=f"{PEER}.opensearch-dashboards.unit",
+        label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
     )
 
     # implicitly tests these method calls
@@ -103,7 +103,7 @@ def test_certificates_broken(harness):
                 "ca-cert": "exists",
                 "private-key": "key",
             },
-            label=f"{PEER}.opensearch-dashboards.unit",
+            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
         )
         harness.set_leader(True)
 

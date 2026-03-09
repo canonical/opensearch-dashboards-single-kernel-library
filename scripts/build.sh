@@ -10,6 +10,10 @@ CHARMS_PATH="./tests/charms"
 # Helper function to avoid code duplication
 pack_charm() {
     if ${CI_CACHE:-false}; then
+        if ! command -v ccc >/dev/null 2>&1; then
+              echo "Error: CI_CACHE is enabled but 'ccc' is not installed." >&2
+              return 1
+        fi
         ccc pack -v
     else
         charmcraft pack -v

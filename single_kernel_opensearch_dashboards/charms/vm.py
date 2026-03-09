@@ -14,9 +14,6 @@ from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 class OpenSearchVMCharm(OpenSearchDashboardsBaseCharm):
     """OpenSearch Dashboards Machine Charm"""
 
-    def __init__(self, *args):
-        super().__init__(*args)
-
     @property
     def workload(self) -> WorkloadBase:
         """Access current workload."""

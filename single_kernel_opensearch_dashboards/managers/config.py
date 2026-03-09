@@ -54,7 +54,9 @@ class ConfigManager:
 
     def set_dashboard_properties(self) -> None:
         """Writes built config file."""
-        self.workload.paths.properties.write_text(yaml.dump(self.dashboard_properties()))
+        self.workload.write_text(
+            yaml.dump(self.dashboard_properties()), self.workload.paths.properties
+        )
 
     def load_dashboard_properties(self) -> dict[str, Any]:
         """Reads built config file."""

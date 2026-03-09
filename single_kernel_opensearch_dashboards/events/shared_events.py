@@ -6,11 +6,16 @@
 import logging
 import time
 
-from ops import BlockedStatus, EventBase, MaintenanceStatus, Object, WaitingStatus
+from ops import (
+    BlockedStatus,
+    EventBase,
+    MaintenanceStatus,
+    Object,
+    WaitingStatus,
+)
 from pydantic import ValidationError
 
 from single_kernel_opensearch_dashboards.common.literals import (
-    COS_PORT,
     MSG_APP_STATUS,
     MSG_INCOMPATIBLE_UPGRADE,
     MSG_INVALID_CONFIG,
@@ -87,7 +92,7 @@ class SharedEvents(Object):
 
         # Allow the service to start up safely on the snap level
         start_time = time.time()
-        while not self.workload.alive and time.time() - start_time < RESTART_TIMEOUT:
+        while not self.workload.alive() and time.time() - start_time < RESTART_TIMEOUT:
             time.sleep(5)
 
         # Allow the service to establish
@@ -205,6 +210,7 @@ class SharedEvents(Object):
         for status in outdated_status:
             clear_global_status(self.charm, status)
 
+    # TODO: PORT TO MANAGERS
     def init_server(self):
         """Calls startup functions for server start."""
         self.charm.unit.status = MaintenanceStatus(MSG_STARTING_SERVER)
@@ -229,17 +235,3 @@ class SharedEvents(Object):
 
         if self.charm.unit.is_leader() and not self.state.opensearch_server:
             self.charm.app.status = BlockedStatus(MSG_STATUS_DB_MISSING)
-
-    # --- CONVENIENCE METHODS ---
-    def scrape_config(self) -> list[dict]:
-        """Generates the scrape config as needed."""
-        return [
-            {
-                "metrics_path": "/metrics",
-                "static_configs": [
-                    {"targets": [f"{self.state.unit_server.private_ip}:{COS_PORT}"]}
-                ],
-                # "tls_config": {"ca": self.state.unit_server.ca},
-                "scheme": "http",
-            }
-        ]

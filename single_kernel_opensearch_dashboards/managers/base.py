@@ -25,6 +25,11 @@ HEADERS = {
 
 
 class BaseManager:
+    """Base OSD Manager.
+
+    Include a set of functions and properties useful to other managers.
+    """
+
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         self.state = state
         self.workload = workload
@@ -111,7 +116,31 @@ class BaseManager:
         headers: dict = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
+        """Issue a raw authenticated HTTP(S) request to the OpenSearch  or OSD API.
 
+        This method acts as a thin wrapper around `requests.Session`, providing
+        automatic retries and authentication using credentials stored in the
+        cluster state.
+
+        Args:
+        uri: The full destination URL for the request.
+        cert_path: Path to the CA certificate used for SSL verification.
+        method: HTTP method to use (e.g., "GET", "POST", "PUT"). Defaults to "GET".
+        headers: Optional dictionary of HTTP headers to include.
+        payload: Optional dictionary to be serialized as JSON in the request body.
+
+        Returns:
+        A tuple containing:
+            - int: The HTTP status code of the response.
+            - dict[str, Any]: The parsed JSON response body.
+
+        Raises:
+            OSDAPIError: If the OpenSearch server connection/credentials are missing.
+            requests.ReadTimeout: If the request times out after the specified duration.
+            requests.RequestException: For general transport-layer or HTTP errors
+                after retries are exhausted.
+            requests.exceptions.JSONDecodeError: If the response body is not valid JSON.
+        """
         if not self.state.opensearch_server:
             raise OSDAPIError(
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."

@@ -12,7 +12,7 @@ from ops.testing import Harness
 from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     OPENSEARCH_REL_NAME,
-    PEER,
+    PEERS_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
@@ -81,7 +81,7 @@ def harness(request):
     harness.add_relation("restart", CHARM_KEY)
 
     if options["add_peer"]:
-        peer_rel_id = harness.add_relation(PEER, CHARM_KEY)
+        peer_rel_id = harness.add_relation(PEERS_REL_NAME, CHARM_KEY)
         harness.add_relation_unit(peer_rel_id, f"{CHARM_KEY}/0")
 
     if options["add_upgrade"]:

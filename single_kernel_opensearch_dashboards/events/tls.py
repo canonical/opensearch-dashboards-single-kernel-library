@@ -6,10 +6,12 @@
 import base64
 import logging
 import re
+from subprocess import CalledProcessError
 
-from ops.charm import ActionEvent, RelationCreatedEvent
+from ops.charm import ActionEvent
 from ops.framework import EventBase, Object
 
+from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
 from single_kernel_opensearch_dashboards.common.literals import CERTS_REL_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
@@ -44,75 +46,81 @@ class TLSEvents(Object):
         self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
 
         self.framework.observe(
-            getattr(self.charm.on, "certificates_relation_created"),
-            self._on_certs_relation_created,
+            self.charm.on[CERTS_REL_NAME].relation_created, self._on_certs_relation_created
         )
         self.framework.observe(
-            getattr(self.certificates.on, "certificate_available"), self._on_certificate_available
-        )
-        self.framework.observe(
-            getattr(self.certificates.on, "certificate_expiring"), self._on_certificate_expiring
-        )
-        self.framework.observe(
-            getattr(self.charm.on, "certificates_relation_broken"), self._on_certs_relation_broken
+            self.charm.on[CERTS_REL_NAME].relation_broken, self._on_certs_relation_broken
         )
 
         self.framework.observe(
-            getattr(self.charm.on, "set_tls_private_key_action"), self._set_tls_private_key
+            self.certificates.on.certificate_available, self._on_certificate_available
+        )
+        self.framework.observe(
+            self.certificates.on.certificate_expiring, self._on_certificate_expiring
         )
 
-        self.framework.observe(getattr(self.charm.on, "config_changed"), self._on_config_changed)
+        self.framework.observe(self.charm.on.set_tls_private_key_action, self._set_tls_private_key)
+        self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
 
-    def _request_certificates(self):
+    def _request_certificates(self, event: EventBase) -> None:
         """Request brand-new certificates."""
         if self.state.unit_server.tls:
-            self._remove_certificates()
+            self._remove_certificates(event)
 
         csr = self.tls_manager.generate_csr()
 
         self.state.unit_server.update({"csr": csr.decode("utf-8").strip()})
         self.certificates.request_certificate_creation(certificate_signing_request=csr)
 
-    def _remove_certificates(self):
+    def _remove_certificates(self, event: EventBase) -> None:
         """Cleanup any existing certificates."""
-        if self.state.cluster.tls:
+        if self.state.cluster.tls and self.state.unit_server.csr:
             self.certificates.request_certificate_revocation(
                 self.state.unit_server.csr.encode("utf-8")
             )
+
         self.state.unit_server.update({"csr": "", "certificate": "", "ca-cert": ""})
 
-        # remove all existing keystores from the unit so we don't preserve certs
-        self.tls_manager.remove_cert_files()
+        try:
+            self.tls_manager.remove_cert_files()
+        except CalledProcessError as e:
+            logger.warning(f"Failed to remove cert files: {e}. Deferring.")
+            event.defer()
+            return
 
-    def _on_certs_relation_created(self, event: RelationCreatedEvent) -> None:
+    def _on_certs_relation_created(self, event: EventBase) -> None:
         """Handler for `certificates_relation_created` event."""
-        # generate unit private key if not already created by action
-        self._request_certificates()
+        self._request_certificates(event)
 
-    def _on_certificate_available(self, event: CertificateAvailableEvent) -> None:
+    def _on_certificate_available(self, event: "CertificateAvailableEvent") -> None:
         """Handler for `certificates_available` event after provider updates signed certs."""
-        # avoid setting tls files and restarting
         if event.certificate_signing_request != self.state.unit_server.csr:
             logger.error("Can't use certificate, found unknown CSR")
             return
 
         self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
 
-        self.tls_manager.set_private_key()
-        self.tls_manager.set_ca()
-        self.tls_manager.set_certificate()
+        try:
+            self.tls_manager.set_private_key()
+            self.tls_manager.set_ca()
+            self.tls_manager.set_certificate()
+        except OSDTLSMissingDataError as e:
+            logger.warning(f"TLS data incomplete: {e}. Deferring event.")
+            event.defer()
+            return
 
-    def _on_certificate_expiring(self, _: EventBase) -> None:
+    def _on_certificate_expiring(self, event: EventBase) -> None:
         """Handler for `certificates_expiring` event when certs need renewing."""
         if not (self.state.unit_server.private_key or self.state.unit_server.csr):
-            logger.error("Missing unit private key and/or old csr")
+            logger.warning("Missing unit private key and/or old csr. Deferring.")
+            event.defer()
             return
 
         new_csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
             subject=self.state.unit_server.host,
-            sans_ip=self.state.unit_server.sans["sans_ip"],
-            sans_dns=self.state.unit_server.sans["sans_dns"],
+            sans_ip=self.state.unit_server.sans.get("sans_ip", []),
+            sans_dns=self.state.unit_server.sans.get("sans_dns", []),
         )
 
         self.certificates.request_certificate_renewal(
@@ -122,18 +130,18 @@ class TLSEvents(Object):
 
         self.state.unit_server.update({"csr": new_csr.decode("utf-8").strip()})
 
-    def _on_config_changed(self, event: EventBase):
+    def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
         if self.state.unit_server.tls and not self.tls_manager.certificate_valid():
-            self._remove_certificates()
-            self._request_certificates()
+            self._remove_certificates(event)
+            self._request_certificates(event)
 
-    def _on_certs_relation_broken(self, _) -> None:
+    def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
-        self._remove_certificates()
+        self._remove_certificates(event)
 
-    def _set_tls_private_key(self, event: ActionEvent) -> None:
+    def _set_tls_private_key(self, event: "ActionEvent") -> None:
         """Handler for `set-tls-private-key` event when user manually specifies private-keys for a unit."""
         key = event.params.get("internal-key") or generate_private_key().decode("utf-8")
         private_key = (

@@ -182,7 +182,7 @@ def test_relation_changed_emitted_for_opensearch_relation_changed(harness):
         harness.add_relation_unit(opensearch_rel_id, "opensearch/0")
 
     with patch(
-        "single_kernel_opensearch_dashboards.events.requirer.RequirerEvents._on_client_relation_changed"
+        "single_kernel_opensearch_dashboards.events.opensearch_requirer.RequirerEvents._on_client_relation_changed"
     ) as patched:
         harness.update_relation_data(opensearch_rel_id, "opensearch", {"data": "{}"})
         patched.assert_called_once()
