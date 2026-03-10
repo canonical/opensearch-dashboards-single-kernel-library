@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2023 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Manager for building necessary files for TLS auth."""
@@ -64,3 +64,11 @@ class UpgradeManager:
             upgrade_stack.append(int(unit.name.split("/")[-1]))
 
         return upgrade_stack
+
+    def upgrade_osd(self) -> None:
+        self.workload.stop()
+
+        self.workload.install()
+
+        logger.info(f"{self.state.unit.name} upgrading workload...")
+        self.workload.restart()

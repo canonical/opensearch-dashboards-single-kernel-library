@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2023 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Event handler for handling OpensearchDashboards in-place upgrades."""
@@ -110,17 +110,12 @@ class UpgradeEvents(DataUpgrade):
     @override
     def _on_upgrade_granted(self, event: UpgradeGrantedEvent) -> None:
         """Handle the event triggered when the unit is permitted to upgrade."""
-        self.workload.stop()
-
         try:
-            self.workload.install()
+            self.upgrade_manager.upgrade_osd()
         except OSDInstallError:
             logger.error("Unable to install OpensearchDashboards...")
             self.set_unit_failed(cause="Workload install failed")
             return
-
-        logger.info(f"{self.charm.unit.name} upgrading workload...")
-        self.workload.restart()
 
         try:
             logger.debug("Running post-upgrade check...")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2025 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Methods that can be used by others OpenSearch Dashboards events."""
@@ -210,8 +210,7 @@ class SharedEvents(Object):
         for status in outdated_status:
             clear_global_status(self.charm, status)
 
-    # TODO: PORT TO MANAGERS
-    def init_server(self):
+    def init_server(self) -> None:
         """Calls startup functions for server start."""
         self.charm.unit.status = MaintenanceStatus(MSG_STARTING_SERVER)
         logger.info(f"{self.charm.unit.name} initializing...")
