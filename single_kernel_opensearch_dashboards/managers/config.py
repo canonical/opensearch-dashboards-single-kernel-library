@@ -126,12 +126,7 @@ class ConfigManager:
                 properties["opensearch_security.auth.type"] = ["basicauth", "jwt"]
 
             properties["opensearch_security.auth.multiple_auth_enabled"] = True
-
-            jwt_relation_data = self.state.jwt_requires.fetch_relation_data(
-                [self.state.jwt_relation.id]
-            )
-            if url_param := jwt_relation_data[self.state.jwt_relation.id].get("jwt-url-parameter"):
-                properties["opensearch_security.jwt.url_param"] = url_param
+            properties |= {"opensearch_security.jwt.url_param": self.state.jwt.get_jwt_url()}
 
         # Log-level
         config_log_level = self.state.unit_server.log_level

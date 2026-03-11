@@ -26,7 +26,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
 )
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.models import (
-    JwtConfigurationRequires,
+    JWT,
     OAuth,
     OpensearchServer,
     OSDCluster,
@@ -70,7 +70,6 @@ class ClusterState(Object):
             index=DASHBOARD_INDEX,
             extra_user_roles=DASHBOARD_ROLE,
         )
-        self.jwt_requires = JwtConfigurationRequires(self.model, relation_name=JWT_REL_NAME)
 
     # --- RAW RELATION ---
 
@@ -102,7 +101,7 @@ class ClusterState(Object):
     @property
     def jwt_relation(self) -> Relation | None:
         """Return the jwt relation if present."""
-        return self.jwt_requires.relations[0] if len(self.jwt_requires.relations) else None
+        return self.jwt.jwt_relation
 
     # --- CORE COMPONENTS---
     @property
@@ -190,6 +189,11 @@ class ClusterState(Object):
             relation=self.oauth_relation,
             client_secret=self.cluster.oauth_client_secret,
         )
+
+    @property
+    def jwt(self) -> JWT:
+        """The jwt relation state."""
+        return JWT(model=self.model, relation_name=JWT_REL_NAME)
 
     @property
     def bind_address(self) -> IPv4Address | IPv6Address | str | None:

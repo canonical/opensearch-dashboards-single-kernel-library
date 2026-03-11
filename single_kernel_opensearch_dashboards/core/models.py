@@ -322,7 +322,7 @@ class OAuth:
             return True
 
 
-class JwtConfigurationRequires(RequirerData):
+class JWT(RequirerData):
     """Data Interface to JWT relation on requirer side."""
 
     def __init__(self, model, relation_name: str):
@@ -331,3 +331,14 @@ class JwtConfigurationRequires(RequirerData):
             relation_name,
             additional_secret_fields=["signing-key"],
         )
+
+    @property
+    def jwt_relation(self) -> Relation | None:
+        """Return the jwt relation if present."""
+        return self.relations[0] if len(self.relations) else None
+
+    def get_jwt_url(self) -> str:
+        if self.jwt_relation is None:
+            return ""
+        relation_data = self.fetch_relation_data([self.jwt_relation.id])
+        return relation_data[self.jwt_relation.id].get("jwt-url-parameter")
