@@ -169,8 +169,8 @@ class SharedEvents(Object):
         # Maintain the correct unit status
 
         # Request new certificates if IP changed
-        if self.state.cluster.tls:
-            if self.state.unit_server.tls and self.tls_manager.certificate_valid():
+        if self.state.cluster.tls_enabled:
+            if self.state.unit_server.tls_enabled and self.tls_manager.certificate_valid():
                 outdated_status.append(MSG_TLS_CONFIG)
             else:
                 self.charm.unit.status = MaintenanceStatus(MSG_TLS_CONFIG)

@@ -20,7 +20,7 @@ from ops import (
     Object,
     SecretChangedEvent,
 )
-from ops.model import MaintenanceStatus, WaitingStatus
+from ops.model import MaintenanceStatus
 
 from single_kernel_opensearch_dashboards.common.literals import (
     MSG_INSTALLING,
@@ -82,19 +82,9 @@ class OpenSearchDashboardsEvents(Object):
         if not self.state.peer_relation:
             return
 
-        cluster_secret_label = self.state.cluster.data_interface._generate_secret_label(
-            PEERS_REL_NAME,
-            self.state.peer_relation.id,
-            "extra",  # type:ignore noqa
-        )  # Changes with the soon upcoming new version of DP-libs STILL within this POC
-
-        server_secret_label = self.state.unit_server.data_interface._generate_secret_label(
-            PEERS_REL_NAME,
-            self.state.peer_relation.id,
-            "extra",  # type:ignore noqa
-        )  # Changes with the soon upcoming new version of DP-libs STILL within this POC
-
-        if event.secret.label in [cluster_secret_label, server_secret_label]:
+        if self.state.cluster.data_interface.secrets.get(
+            event.secret.label
+        ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
             logger.info(f"Secret {event.secret.label} changed.")
             self.shared_events.reconcile(event)
 

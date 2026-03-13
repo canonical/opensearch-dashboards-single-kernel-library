@@ -64,7 +64,7 @@ class TLSEvents(Object):
 
     def _request_certificates(self, event: EventBase) -> None:
         """Request brand-new certificates."""
-        if self.state.unit_server.tls:
+        if self.state.unit_server.tls_enabled:
             self._remove_certificates(event)
 
         csr = self.tls_manager.generate_csr()
@@ -74,7 +74,7 @@ class TLSEvents(Object):
 
     def _remove_certificates(self, event: EventBase) -> None:
         """Cleanup any existing certificates."""
-        if self.state.cluster.tls and self.state.unit_server.csr:
+        if self.state.cluster.tls_enabled and self.state.unit_server.csr:
             self.certificates.request_certificate_revocation(
                 self.state.unit_server.csr.encode("utf-8")
             )
@@ -132,7 +132,7 @@ class TLSEvents(Object):
 
     def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
-        if self.state.unit_server.tls and not self.tls_manager.certificate_valid():
+        if self.state.unit_server.tls_enabled and not self.tls_manager.certificate_valid():
             self._remove_certificates(event)
             self._request_certificates(event)
 

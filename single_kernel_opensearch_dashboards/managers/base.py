@@ -13,7 +13,10 @@ from requests import RequestException
 from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
-from single_kernel_opensearch_dashboards.common.literals import REQUEST_TIMEOUT
+from single_kernel_opensearch_dashboards.common.literals import (
+    DASHBOARD_USER,
+    REQUEST_TIMEOUT,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
@@ -165,7 +168,7 @@ class BaseManager:
         try:
             with requests.Session() as s:
                 s.auth = (  # type: ignore [reportAttributeAccessIssue]
-                    self.state.opensearch_server.username,
+                    DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
                 for attempt in Retrying(

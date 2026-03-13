@@ -2,7 +2,7 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Event handler for related applications on the `zookeeper` relation interface."""
+"""Event handler for related applications on the `opensearch-client` relation interface."""
 import logging
 
 from ops.charm import RelationBrokenEvent, RelationEvent
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class RequirerEvents(Object):
-    """Event handlers for related applications on the `zookeeper` relation interface."""
+    """Event handlers for related applications on the `opensearch-client` relation interface."""
 
     def __init__(
         self,
@@ -57,7 +57,6 @@ class RequirerEvents(Object):
 
         if (
             self.state.opensearch_server
-            and self.state.opensearch_server.username
             and self.state.opensearch_server.password
             and self.state.opensearch_server.endpoints
             and self.state.opensearch_server.tls_ca

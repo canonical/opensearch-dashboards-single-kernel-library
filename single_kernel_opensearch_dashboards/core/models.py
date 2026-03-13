@@ -89,11 +89,6 @@ class OpensearchServer(StateBase):
         self.data_interface.update_relation_data(self.relation.id, items)
 
     @property
-    def username(self) -> str | None:
-        """The generated username for the client application."""
-        return "kibanaserver"
-
-    @property
     def password(self) -> str | None:
         """The generated password for the client application."""
         return self.relation_data.get("password")
@@ -137,7 +132,7 @@ class OSDCluster(StateBase):
     # --- TLS ---
 
     @property
-    def tls(self) -> bool:
+    def tls_enabled(self) -> bool:
         """Flag to check if TLS is enabled for the cluster."""
         return bool(self._tls)
 
@@ -238,7 +233,7 @@ class OSDServer(StateBase):
         return self.relation_data.get("ca-cert", "")
 
     @property
-    def tls(self) -> bool:
+    def tls_enabled(self) -> bool:
         """Flag to check if TLS is enabled for the cluster."""
         return bool(self.ca) and bool(self.certificate) and bool(self.private_key)
 
@@ -338,6 +333,7 @@ class JWT(RequirerData):
         return self.relations[0] if len(self.relations) else None
 
     def get_jwt_url(self) -> str:
+        """Return the jwt urls if jwt relation is present."""
         if self.jwt_relation is None:
             return ""
         relation_data = self.fetch_relation_data([self.jwt_relation.id])

@@ -2,7 +2,7 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charmed Machine Operator for Apache Opensearch Dashboards."""
+"""Helper methods for Opensearch Dashboards charm."""
 
 import json
 import logging

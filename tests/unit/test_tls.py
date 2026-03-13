@@ -24,14 +24,14 @@ def test_certificates_created_sets_tls_enabled(harness):
     ):
         harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
 
-        assert harness.charm.state.cluster.tls
+        assert harness.charm.state.cluster.tls_enabled
 
 
 @pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_joined_creates_private_key(harness):
     with (
         patch("core.cluster.ClusterState.stable", new_callable=PropertyMock, return_value=True),
-        patch("core.models.OSDCluster.tls", new_callable=PropertyMock, return_value=True),
+        patch("core.models.OSDCluster.tls_enabled", new_callable=PropertyMock, return_value=True),
         patch("workload.vm.VMWorkload.configure") as workload_config,
     ):
         cert_rel_id = harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
@@ -129,11 +129,11 @@ def test_certificates_broken(harness):
         harness.remove_relation(certs_rel_id)
 
         # While the TLS relation and certs are gone
-        assert not harness.charm.state.cluster.tls
+        assert not harness.charm.state.cluster.tls_enabled
         assert not harness.charm.state.unit_server.certificate
         assert not harness.charm.state.unit_server.ca
         assert not harness.charm.state.unit_server.csr
-        assert not harness.charm.state.unit_server.tls
+        assert not harness.charm.state.unit_server.tls_enabled
 
         assert workload_config.assert_called_once
 

@@ -230,7 +230,7 @@ class ClusterState(Object):
     @property
     def url(self) -> str:
         """Service URL."""
-        scheme = "https" if self.unit_server.tls else "http"
+        scheme = "https" if self.unit_server.tls_enabled else "http"
         return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
 
     # --- UPGRADE RELATED ---

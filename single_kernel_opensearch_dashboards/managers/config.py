@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import yaml
+from single_kernel_opensearch_dashboards.common.literals import DASHBOARD_USER
 
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -74,9 +75,7 @@ class ConfigManager:
 
         properties = DEFAULT_PROPERTIES.copy()
 
-        opensearch_user = (
-            self.state.opensearch_server.username if self.state.opensearch_server else ""
-        )
+        opensearch_user = DASHBOARD_USER if self.state.opensearch_server else ""
         opensearch_password = (
             self.state.opensearch_server.password if self.state.opensearch_server else ""
         )
@@ -100,7 +99,7 @@ class ConfigManager:
             properties |= {"path.data": self.workload.paths.data_dir.as_posix()}
             properties["opensearch.ssl.certificateAuthorities"] = [opensearch_ca.as_posix()]
 
-        if self.state.unit_server.tls:
+        if self.state.unit_server.tls_enabled:
             properties |= TLS_PROPERTIES
             properties |= {
                 "server.ssl.certificate": self.workload.paths.certificate.as_posix(),
@@ -115,9 +114,10 @@ class ConfigManager:
                 "opensearch_security.openid.client_id": self.state.oauth.client_id,
                 "opensearch_security.openid.client_secret": self.state.oauth.client_secret,
                 "opensearch_security.openid.verify_hostnames": False,
-                "opensearch_security.openid.root_ca": opensearch_ca.as_posix(),
                 "opensearch_security.openid.base_redirect_url": self.state.url,
             }
+            if opensearch_ca:
+                properties |= {"opensearch_security.openid.root_ca": opensearch_ca.as_posix()}
 
         if self.state.jwt_relation:
             if self.state.oauth_relation:
