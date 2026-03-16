@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+# Copyright 2026 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+"""Manager for building necessary files for Java TLS auth."""
+import logging
+import subprocess
+from subprocess import STDOUT, CalledProcessError
+
+import ops.pebble
+
+from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
+    generate_csr,
+    generate_private_key,
+)
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
+
+logger = logging.getLogger(__name__)
+
+
+class TLSManager:
+    """Manager for building necessary files for Java TLS auth."""
+
+    def __init__(
+        self,
+        state: ClusterState,
+        workload: WorkloadBase,
+    ):
+        self.state = state
+        self.workload = workload
+
+    def set_private_key(self) -> None:
+        """Sets the unit private-key."""
+        if not self.state.unit_server.private_key:
+            raise OSDTLSMissingDataError(
+                "Can't set private-key to unit, missing private-key in relation data"
+            )
+
+        self.workload.write_text(
+            self.state.unit_server.private_key, self.workload.paths.server_key
+        )
+
+    def set_ca(self) -> None:
+        """Sets the unit CA."""
+        if not self.state.unit_server.ca:
+            raise OSDTLSMissingDataError("Can't set CA to unit, missing CA in relation data")
+
+        self.workload.write_text(self.state.unit_server.ca, self.workload.paths.ca)
+
+    def set_certificate(self) -> None:
+        """Sets the unit certificate."""
+        if not self.state.unit_server.certificate:
+            raise OSDTLSMissingDataError(
+                "Can't set certificate to unit, missing certificate in relation data"
+            )
+
+        self.workload.write_text(
+            self.state.unit_server.certificate, self.workload.paths.certificate
+        )
+        self.workload.configure("scheme", "https")
+
+    def remove_cert_files(self) -> None:
+        """Removes all certs, keys, stores from the unit."""
+        try:
+            self.workload.exec(
+                command=[
+                    "rm",
+                    "-rf",
+                    f"{self.workload.paths.config_dir}/*.pem",
+                    f"*{self.workload.paths.config_dir}/*.key",
+                    f"*{self.workload.paths.config_dir}/*.p12",
+                    f"*{self.workload.paths.config_dir}/*.jks",
+                ],
+                working_dir=self.workload.paths.config_dir.as_posix(),
+            )
+        except (subprocess.CalledProcessError, ops.pebble.ExecError) as e:
+            logger.error(f"Failed to remove cert files. Output: {e.stdout}")
+            raise
+        self.workload.configure("scheme", "http")
+
+    def certificate_valid(self) -> bool:
+        """Check if server certificate is valid."""
+        cmd = f"openssl x509 -in {self.workload.paths.certificate} -subject -noout"
+        try:
+            response = subprocess.check_output(
+                cmd, stderr=STDOUT, shell=True, universal_newlines=True
+            )
+        except CalledProcessError as error:
+            logging.error(f"Checking certificate failed: {error.output}")
+            return False
+
+        logger.debug(f"Response of openssl cert decode: {response}")
+        logger.debug(
+            f"Currently recognized IP using 'gethostbyname': {self.state.unit_server.private_ip}"
+        )
+        return str(self.state.bind_address) in response
+
+    def generate_csr(self) -> bytes:
+        if not self.state.unit_server.private_key:
+            self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
+
+        sans_ip = set(
+            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
+        )
+        sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
+
+        logger.debug(
+            "Requesting certificate for: "
+            f"host {self.state.unit_server.host}, with IP {sans_ip}, DNS {sans_dns}"
+        )
+
+        csr = generate_csr(
+            private_key=self.state.unit_server.private_key.encode("utf-8"),
+            subject=str(self.state.bind_address or self.state.unit_server.private_ip),
+            sans_ip=list(sans_ip or ""),
+            sans_dns=list(sans_dns),
+        )
+
+        return csr
