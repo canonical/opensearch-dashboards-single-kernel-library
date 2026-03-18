@@ -16,7 +16,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     OPENSEARCH_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
     DependencyModel,
 )
@@ -126,7 +126,7 @@ def test_build_upgrade_stack(harness):
 
 
 def test_dashboards_dependency_model():
-    assert sorted(OpensearchDashboardsDependencyModel.__fields__.keys()) == sorted(
+    assert sorted(OpensearchDashboardsDependencyModel.model_fields.keys()) == sorted(
         DEPENDENCIES.keys()
     )
 

@@ -8,19 +8,23 @@ import subprocess
 from subprocess import STDOUT, CalledProcessError
 
 import ops.pebble
+from data_platform_helpers.advanced_statuses import StatusObject
+from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     generate_csr,
     generate_private_key,
 )
+from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
 
-class TLSManager:
+class TLSManager(BaseManager):
     """Manager for building necessary files for Java TLS auth."""
 
     def __init__(
@@ -28,8 +32,8 @@ class TLSManager:
         state: ClusterState,
         workload: WorkloadBase,
     ):
-        self.state = state
-        self.workload = workload
+        super().__init__(state, workload)
+        self.name = "tls_manager"
 
     def set_private_key(self) -> None:
         """Sets the unit private-key."""
@@ -48,6 +52,12 @@ class TLSManager:
             raise OSDTLSMissingDataError("Can't set CA to unit, missing CA in relation data")
 
         self.workload.write_text(self.state.unit_server.ca, self.workload.paths.ca)
+
+    def set_ca_opensearch(self) -> None:
+        """Sets the unit CA."""
+        self.workload.write_text(
+            self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
+        )
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
@@ -119,3 +129,13 @@ class TLSManager:
         )
 
         return csr
+
+    def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
+        """Compute the tls manager's statuses."""
+        if not recompute:
+            statuses = self.state.statuses.get(scope, "tls_manager").root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
+
+        status_list: list[StatusObject] = []
+
+        return status_list or [CharmStatuses.ACTIVE_IDLE.value]

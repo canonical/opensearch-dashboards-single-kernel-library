@@ -7,6 +7,8 @@ import logging
 from ipaddress import IPv4Address, IPv6Address
 from typing import Optional, Set
 
+from data_platform_helpers.advanced_statuses import StatusesState
+from data_platform_helpers.advanced_statuses.protocol import StatusesStateProtocol
 from ops.framework import Object
 from ops.model import Relation, Unit
 
@@ -21,6 +23,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     PEER_UNIT_SECRETS,
     PEERS_REL_NAME,
     SERVER_PORT,
+    STATUS_PEERS_REL_NAME,
     UPGRADE_REL_NAME,
     Substrates,
 )
@@ -41,11 +44,15 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_i
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
 )
+from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
+    ClientConfig,
+    OAuthRequirer,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class ClusterState(Object):
+class ClusterState(Object, StatusesStateProtocol):
     """Collection of global cluster state for Framework/Object."""
 
     def __init__(
@@ -70,6 +77,8 @@ class ClusterState(Object):
             index=DASHBOARD_INDEX,
             extra_user_roles=DASHBOARD_ROLE,
         )
+
+        self.statuses = StatusesState(self, STATUS_PEERS_REL_NAME)
 
     # --- RAW RELATION ---
 
@@ -108,6 +117,11 @@ class ClusterState(Object):
     def unit(self) -> Unit:
         """Unit that this execution is responsible for."""
         return self.charm.unit
+
+    @property
+    def config(self) -> CharmConfig:
+        """Config of a charm"""
+        return self.charm.config
 
     @property
     def unit_server(self) -> OSDServer:
@@ -183,14 +197,6 @@ class ClusterState(Object):
         )
 
     @property
-    def oauth(self) -> OAuth:
-        """The oauth relation state."""
-        return OAuth(
-            relation=self.oauth_relation,
-            client_secret=self.cluster.oauth_client_secret,
-        )
-
-    @property
     def jwt(self) -> JWT:
         """The jwt relation state."""
         return JWT(model=self.model, relation_name=JWT_REL_NAME)
@@ -204,6 +210,30 @@ class ClusterState(Object):
                 bind_address = binding.network.bind_address
         # If the relation does not exist, then we get None
         return bind_address
+
+    # --- OAUTH ---
+    @property
+    def oauth(self) -> OAuth:
+        """The oauth relation state."""
+        return OAuth(
+            relation=self.oauth_relation,
+            client_secret=self.cluster.oauth_client_secret,
+        )
+
+    @property
+    def oauth_require(self) -> OAuthRequirer:
+        """The oauth relation state."""
+        return OAuthRequirer(self.charm, self.oauth_client_config(), relation_name=OAUTH_REL_NAME)
+
+    def oauth_client_config(self) -> ClientConfig:
+        """Generates actual client config for the OAuth."""
+        return ClientConfig(
+            audience=["opensearch"],
+            redirect_uri=f"{self.url}/auth/openid/login",
+            scope="openid profile email phone offline address",
+            grant_types=["authorization_code"],
+            token_endpoint_auth_method="client_secret_post",
+        )
 
     # --- CLUSTER INIT ---
 

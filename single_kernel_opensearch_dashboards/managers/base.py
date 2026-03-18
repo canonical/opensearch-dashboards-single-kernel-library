@@ -9,6 +9,7 @@ from typing import Any
 
 import requests
 from charmlibs.pathops import PathProtocol
+from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
 from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
 
@@ -27,11 +28,13 @@ HEADERS = {
 }
 
 
-class BaseManager:
+class BaseManager(ManagerStatusProtocol):
     """Base OSD Manager.
 
     Include a set of functions and properties useful to other managers.
     """
+
+    state: ClusterState
 
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         self.state = state

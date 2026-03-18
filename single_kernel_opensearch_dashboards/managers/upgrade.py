@@ -5,12 +5,20 @@
 """Manager for building necessary files for TLS auth."""
 import logging
 
+from data_platform_helpers.advanced_statuses import StatusObject
+from data_platform_helpers.advanced_statuses.types import Scope
+
 from single_kernel_opensearch_dashboards.common.literals import DEPENDENCIES
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
+from single_kernel_opensearch_dashboards.core.statuses import (
+    CharmStatuses,
+    UpgradeStatuses,
+)
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     BaseModel,
     DependencyModel,
 )
+from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -22,7 +30,7 @@ class OpensearchDashboardsDependencyModel(BaseModel):
     osd_upstream: DependencyModel
 
 
-class UpgradeManager:
+class UpgradeManager(BaseManager):
     """Logic relating to Rolling Upgrades."""
 
     def __init__(
@@ -30,9 +38,9 @@ class UpgradeManager:
         state: ClusterState,
         workload: WorkloadBase,
     ):
-        self.state = state
-        self.workload = workload
+        super().__init__(state, workload)
         self.dependency_model = OpensearchDashboardsDependencyModel(**DEPENDENCIES)
+        self.name = "upgrade_manager"
 
     def version_compatible(self) -> bool:
         """Verify version compatibility with Opensearch."""
@@ -72,3 +80,18 @@ class UpgradeManager:
 
         logger.info(f"{self.state.unit.name} upgrading workload...")
         self.workload.restart()
+
+    def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
+        """Compute the upgrade manager's statuses."""
+        if not recompute:
+            statuses = self.state.statuses.get(scope, "upgrade_manager").root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
+
+        status_list: list[StatusObject] = []
+
+        if not self.version_compatible():
+            status_list.append(UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value)
+        if not self.state.upgrade_idle:
+            status_list.append(UpgradeStatuses.WAITING_FOR_UPGRADE.value)
+
+        return status_list or [CharmStatuses.ACTIVE_IDLE.value]

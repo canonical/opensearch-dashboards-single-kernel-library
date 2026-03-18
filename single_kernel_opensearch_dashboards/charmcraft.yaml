@@ -19,7 +19,7 @@ charm-libs:
   - lib: charms.data_platform_libs.data_interface
     version: "0"
   - lib: charms.data_platform_libs.upgrade
-    version: "0"
+    version: "1"
   - lib: charms.opensearch_libs.data_models
     version: "1"
   - lib: charms.cos_agent.cos_agent

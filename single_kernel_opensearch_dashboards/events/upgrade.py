@@ -5,31 +5,29 @@
 """Event handler for handling OpensearchDashboards in-place upgrades."""
 import logging
 
-from ops.model import BlockedStatus
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
-    MSG_INCOMPATIBLE_UPGRADE,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.upgrade import (
+from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
     UpgradeGrantedEvent,
 )
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
-)
+from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
 )
-from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +39,9 @@ class UpgradeEvents(DataUpgrade):
         self,
         charm: TypedCharmBase[CharmConfig],
         state: ClusterState,
-        workload: WorkloadBase,
         substrate: Substrates,
         upgrade_manager: UpgradeManager,
-        shared_events: SharedEvents,
+        health_manager: HealthManager,
     ) -> None:
         DataUpgrade.__init__(
             self,
@@ -53,17 +50,24 @@ class UpgradeEvents(DataUpgrade):
             "upgrade",
             "vm" if substrate == Substrates.VM else "k8s",
         )
-        self.charm = charm
-        # Because DataUpgrade already have property state and cluster_state
         self.osd_state = state
-        self.workload = workload
-        self.shared_events = shared_events
         self.upgrade_manager = upgrade_manager
+        self.health_manager = health_manager
 
     def post_upgrade_check(self) -> None:
         """Runs necessary checks validating the unit is in a healthy state after upgrade."""
         if not self.upgrade_manager.version_compatible():
-            self.charm.unit.status = BlockedStatus(MSG_INCOMPATIBLE_UPGRADE)
+            if self.osd_state.unit.is_leader():
+                self.osd_state.statuses.add(
+                    status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
+                    scope="app",
+                    component="upgrade_manager",
+                )
+            self.osd_state.statuses.add(
+                status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
+                scope="unit",
+                component="upgrade_manager",
+            )
             raise ClusterNotReadyError(
                 message="Post-upgrade check failed and cannot safely upgrade",
                 cause="Opensearch version mismatch",
@@ -78,7 +82,7 @@ class UpgradeEvents(DataUpgrade):
         Raises:
             ClusterNotReadyError: If the workload is not running.
         """
-        if not self.workload.alive():
+        if not self.health_manager.service_healthy():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
                 cause="Unit workload is not running",

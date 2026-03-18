@@ -34,6 +34,7 @@ CERTS_REL_NAME = "certificates"
 OAUTH_REL_NAME = "oauth"
 JWT_REL_NAME = "jwt-configuration"
 COS_RELATION_NAME = "cos-agent"
+STATUS_PEERS_REL_NAME = "status-peers"
 
 # OpenSearch user and role
 DASHBOARD_INDEX = ".opensearch-dashboards"
@@ -73,7 +74,10 @@ REQUEST_TIMEOUT = 30
 MSG_INSTALLING = "installing Opensearch Dashboards..."
 MSG_STARTING = "starting..."
 MSG_STARTING_SERVER = "starting Opensearch Dashboards server..."
+MSG_RESTARTING_SERVER = "restarting Opensearch Dashboards server..."
+MSG_WAITING_FOR_GREEN = "waiting for Opensearch Dashboards health to be green..."
 MSG_WAITING_FOR_PEER = "waiting for peer relation"
+MSG_WAITING_FOR_UPGRADE = "waiting for upgrade"
 MSG_STATUS_DB_MISSING = "Opensearch connection is missing"
 MSG_STATUS_DB_DOWN = "Opensearch service is (partially or fully) down"
 MSG_STATUS_DB_UNHEALTHY = "The OpenSearch service health is red"
@@ -88,6 +92,8 @@ MSG_STATUS_UNKNOWN = "Workload status is not known"
 MSG_STATUS_APP_REMOVED = "remove-application was requested: leaving..."
 MSG_STATUS_HANGING = "Application does not respond, request hanging"
 MSG_STATUS_OAUTH_INFO_FAILED = "Failed to get OAuth provider info from relation"
+MSG_JWT_RELATION_DATA_FAILED = "Failed to get JWT data from relations"
+MSG_SERVERS_IS_DOWN = "No server is running"
 
 MSG_APP_STATUS = [
     MSG_STATUS_DB_DOWN,

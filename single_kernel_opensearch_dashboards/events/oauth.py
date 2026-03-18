@@ -6,40 +6,45 @@
 
 import logging
 
-from ops import BlockedStatus, EventBase, ModelError, Object
+from ops import EventBase, ModelError
 
+from single_kernel_opensearch_dashboards.charms.base import (
+    OpenSearchDashboardsStatusHandler,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
-    MSG_STATUS_OAUTH_INFO_FAILED,
     OAUTH_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
+from single_kernel_opensearch_dashboards.core.statuses import (
+    ConfigStatuses,
+    ServerStatuses,
 )
-from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
-    ClientConfig,
-    OAuthRequirer,
+from single_kernel_opensearch_dashboards.events.base import BaseEvents
+from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
+    RollingOpsManager,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import set_global_status
+from single_kernel_opensearch_dashboards.managers.config import ConfigManager
+from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.server import ServerManager
 
 logger = logging.getLogger(__name__)
 
 
-class OAuthEvents(Object):
+class OAuthEvents(BaseEvents):
     """Handler for managing oauth relations."""
 
     def __init__(
         self,
-        charm: TypedCharmBase[CharmConfig],
+        charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
-        shared_events: SharedEvents,
+        health_manager: HealthManager,
+        config_manager: ConfigManager,
+        server_manager: ServerManager,
+        restart_manager: RollingOpsManager,
     ) -> None:
-        super().__init__(charm, "oauth")
-        self.charm = charm
-        self.state = state
-        self.shared_events = shared_events
+        super().__init__(
+            charm, state, health_manager, config_manager, server_manager, restart_manager, "oauth"
+        )
 
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_changed, self._on_oauth_relation_changed
@@ -47,22 +52,32 @@ class OAuthEvents(Object):
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
         )
-
-        self.oauth = OAuthRequirer(
-            self.charm, self._oauth_client_config(), relation_name=OAUTH_REL_NAME
-        )
-        self.oauth.update_client_config(self._oauth_client_config())
+        self.state.oauth_require.update_client_config(self.state.oauth_client_config())
 
     def _on_oauth_relation_changed(self, event: EventBase) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
         if not self.state.servers:
+            self.state.statuses.add(
+                status=ServerStatuses.SERVERS_IS_DOWN.value,
+                scope="app",
+                component="server_manager",
+            )
             event.defer()
             return
+
+        self.delete_status_if_present(
+            status=ServerStatuses.SERVERS_IS_DOWN.value, scope="app", component="server_manager"
+        )
+
         try:
-            provider_info = self.oauth.get_provider_info()
+            provider_info = self.state.oauth_require.get_provider_info()
         except ModelError as e:
             logger.error("OAuth provider info not available: %s", e)
-            set_global_status(self.charm, BlockedStatus(MSG_STATUS_OAUTH_INFO_FAILED))
+            self.state.statuses.add(
+                status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
+                scope="app",
+                component="config_manager",
+            )
             event.defer()
             return
         self.state.cluster.update(
@@ -74,15 +89,10 @@ class OAuthEvents(Object):
                 ),
             }
         )
-
-        self.shared_events.reconcile(event)
-
-    def _oauth_client_config(self) -> ClientConfig:
-        """Generates actual client config for the OAuth."""
-        return ClientConfig(
-            audience=["opensearch"],
-            redirect_uri=f"{self.state.url}/auth/openid/login",
-            scope="openid profile email phone offline address",
-            grant_types=["authorization_code"],
-            token_endpoint_auth_method="client_secret_post",
+        self.delete_status_if_present(
+            status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
+            scope="app",
+            component="config_manager",
         )
+
+        self.charm.on[f"{self.restart_manager.name}"].acquire_lock.emit()

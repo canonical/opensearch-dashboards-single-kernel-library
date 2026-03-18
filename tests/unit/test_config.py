@@ -21,13 +21,13 @@ def test_log_level_changed(harness):
         ),
     ):
         harness.charm.state.unit_server.log_level = "INFO"
-        assert harness.charm.config_manager.update_config()
+        harness.charm.config_manager.set_dashboard_properties()
         assert "logging.verbose: true" in properties.write_text.call_args[0][0]
         harness.charm.state.unit_server.log_level = "ERROR"
-        assert harness.charm.config_manager.update_config()
+        harness.charm.config_manager.set_dashboard_properties()
         assert "logging.silent: true" in properties.write_text.call_args[0][0]
         harness.charm.state.unit_server.log_level = "WARNING"
-        assert harness.charm.config_manager.update_config()
+        harness.charm.config_manager.set_dashboard_properties()
         assert "logging.quiet: true" in properties.write_text.call_args[0][0]
 
 

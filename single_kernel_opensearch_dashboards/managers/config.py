@@ -7,9 +7,18 @@ import logging
 from typing import Any
 
 import yaml
-from single_kernel_opensearch_dashboards.common.literals import DASHBOARD_USER
+from data_platform_helpers.advanced_statuses import StatusObject
+from data_platform_helpers.advanced_statuses.types import Scope
+from ops import ModelError
+from pydantic import ValidationError
 
+from single_kernel_opensearch_dashboards.common.literals import DASHBOARD_USER
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import (
+    CharmStatuses,
+    ConfigStatuses,
+)
+from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -35,22 +44,17 @@ LOG_PROPERTIES = {
 }
 
 
-class ConfigManager:
+class ConfigManager(BaseManager):
     """Manager for handling configuration building + writing."""
 
-    def __init__(
-        self,
-        state: ClusterState,
-        workload: WorkloadBase,
-    ):
-        self.state = state
-        self.workload = workload
+    def __init__(self, state: ClusterState, workload: WorkloadBase):
+        super().__init__(state, workload)
+        self.name = "config_manager"
 
-    def update_config(self) -> bool:
+    def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""
         if self.load_dashboard_properties() == self.dashboard_properties():
             return False
-        self.set_dashboard_properties()
         return True
 
     def set_dashboard_properties(self) -> None:
@@ -142,3 +146,28 @@ class ConfigManager:
         properties |= {"path.data": self.workload.paths.data.as_posix()}
 
         return properties
+
+    def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
+        """Compute the config manager's statuses."""
+        if not recompute:
+            statuses = self.state.statuses.get(scope, "config_manager").root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
+
+        status_list: list[StatusObject] = []
+
+        if not self.state.peer_relation:
+            status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)
+        if self.state.jwt_relation:
+            if self.state.jwt.get_jwt_url() is None:
+                status_list.append(ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value)
+        try:
+            self.state.config.log_level
+        except ValidationError:
+            status_list.append(ConfigStatuses.INVALID_CONFIG.value)
+
+        try:
+            self.state.oauth_require.get_provider_info()
+        except ModelError:
+            status_list.append(ConfigStatuses.MISSING_OAUTH_SECRET.value)
+
+        return status_list or [CharmStatuses.ACTIVE_IDLE.value]
