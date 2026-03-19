@@ -52,6 +52,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         server_manager: ServerManager,
         restart_manager: RollingOpsManager,
     ) -> None:
+        """Initialize the OpenSearchDashboardsEvents handler."""
         super().__init__(
             charm,
             state,
@@ -78,7 +79,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
 
     def _on_install(self, event: InstallEvent) -> None:
-        """Handler for the `install` event."""
+        """Handle the `install` event."""
         self.charm.status_handler.set_running_status(
             status=ServerStatuses.INSTALLING_SERVER.value,
             scope="unit",
@@ -88,7 +89,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         self.server_manager.install_osd_server()
 
     def _on_start(self, event: EventBase) -> None:
-        """Handler for the `start` event."""
+        """Handle the `start` event."""
         if not self.pre_restart_check:
             event.defer()
             return
@@ -98,6 +99,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         self.emit_restart(event)
 
     def _on_update_status(self, event: EventBase) -> None:
+        """Handle the `update-status` event."""
         update_grafana_dashboards_title(self.charm)
 
         if not self.pre_restart_check:
@@ -107,7 +109,8 @@ class OpenSearchDashboardsEvents(BaseEvents):
         self.emit_restart(event)
         self.check_osd_status()
 
-    def _on_relation_departed(self, event: RelationDepartedEvent):
+    def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
+        """Handle the peer `relation-departed` event."""
         # do not restart unit that is dying
         if event.departing_unit == self.charm.unit:
             return
@@ -118,14 +121,16 @@ class OpenSearchDashboardsEvents(BaseEvents):
 
         self.emit_restart(event)
 
-    def _on_leader_elected(self, event: EventBase):
+    def _on_leader_elected(self, event: EventBase) -> None:
+        """Handle the `leader-elected` event."""
         if not self.pre_restart_check:
             event.defer()
             return
 
         self.emit_restart(event)
 
-    def _on_config_changed(self, event: ConfigChangedEvent):
+    def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+        """Handle the `config-changed` event."""
         if not self.pre_restart_check:
             event.defer()
             return
@@ -138,21 +143,23 @@ class OpenSearchDashboardsEvents(BaseEvents):
             )
             # no point in deferring, the hook will be called another time after config update
             return
+
         self.delete_status_if_present(
             status=ConfigStatuses.INVALID_CONFIG.value, scope="app", component="server_manager"
         )
 
         self.emit_restart(event)
 
-    def _on_relation_changed(self, event: EventBase):
+    def _on_relation_changed(self, event: EventBase) -> None:
+        """Handle `relation-changed` and `relation-joined` events for peers."""
         if not self.pre_restart_check:
             event.defer()
             return
 
         self.emit_restart(event)
 
-    def _on_secret_changed(self, event: SecretChangedEvent):
-        """Reconfigure services on a secret changed event."""
+    def _on_secret_changed(self, event: SecretChangedEvent) -> None:
+        """Handle the `secret-changed` event."""
         if not self.pre_restart_check:
             event.defer()
             return

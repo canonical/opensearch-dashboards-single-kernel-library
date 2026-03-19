@@ -6,6 +6,7 @@
 
 import logging
 import time
+from typing import Optional
 
 import requests
 from data_platform_helpers.advanced_statuses import StatusObject
@@ -28,14 +29,23 @@ logger = logging.getLogger(__name__)
 
 
 class HealthManager(BaseManager):
-    """Manager for handling Opensearch DashBoards machine health."""
+    """Manager responsible for handling Opensearch Dashboards service health."""
 
     def __init__(self, state: ClusterState, workload: WorkloadBase):
+        """Initialize the HealthManager."""
         super().__init__(state, workload)
         self.name = "health_manager"
 
-    def dashboards_status(self) -> tuple[bool, StatusObject] | tuple[bool, None]:
-        """Health status"""
+    def dashboards_status(self) -> tuple[bool, Optional[StatusObject]]:
+        """Fetch and evaluate the local OpenSearch Dashboards health status.
+
+        Queries the `/api/status` endpoint of the local Dashboards instance.
+
+        Returns:
+            tuple[bool, Optional[StatusObject]]: A tuple where the first element is a
+                boolean indicating if the service is reachable/functioning, and the
+                second is a specific StatusObject (or None if the state is perfectly 'green').
+        """
         try:
             status, body = self.request_opensearch_dashboards(endpoint="/api/status")
         except HTTPError as err:
@@ -47,16 +57,28 @@ class HealthManager(BaseManager):
         except requests.ReadTimeout:
             return False, HealthStatuses.STATUS_HANGING.value
 
-        if body["status"]["overall"]["state"] == "green":
-            return True, None
-        elif body["status"]["overall"]["state"] == "yellow":
-            return True, HealthStatuses.STATUS_UNHEALTHY.value
-        elif body["status"]["overall"]["state"] != "green":
-            return False, HealthStatuses.STATUS_ERROR.value
-        return True, HealthStatuses.STATUS_UNKNOWN.value
+        state = body.get("status", {}).get("overall", {}).get("state")
 
-    def opensearch_status(self) -> tuple[bool, StatusObject] | tuple[bool, None]:
-        """Verify if associated Opensearch service is up and running."""
+        if state == "green":
+            return True, None
+        if state == "yellow":
+            return True, HealthStatuses.STATUS_UNHEALTHY.value
+        if state:
+            return False, HealthStatuses.STATUS_ERROR.value
+
+        return False, HealthStatuses.STATUS_UNKNOWN.value
+
+    def opensearch_status(self) -> tuple[bool, Optional[StatusObject]]:
+        """Verify if the associated remote OpenSearch service is up and healthy.
+
+        Iterates through known OpenSearch endpoints and attempts to fetch the
+        `/_cluster/health` status. Stops at the first successful connection.
+
+        Returns:
+            tuple[bool, Optional[StatusObject]]: A tuple where the boolean indicates
+                if a healthy/accessible connection exists, and the StatusObject provides
+                specific error states (or None if 'green' or 'yellow').
+        """
         for endpoint in self.state.opensearch_server.endpoints:
             full_url = f"https://{endpoint}/_cluster/health"
             try:
@@ -64,26 +86,36 @@ class HealthManager(BaseManager):
             except requests.RequestException:
                 logger.error(f"Failed to connect to {full_url}")
                 continue
+
             if code == 200:
                 state = body.get("status")
                 if state == "red":
                     return False, HealthStatuses.DB_UNHEALTHY.value
-
                 if state in {"green", "yellow"}:
                     return True, None
 
         return False, HealthStatuses.DB_DOWN.value
 
     def service_healthy(self) -> bool:
-        """Unit-level global health check."""
+        """Perform a unit-level global health check.
+
+        Returns:
+            bool: True if the underlying workload process is alive, False otherwise.
+        """
         return self.workload.alive()
 
     def check_unit_health(self) -> None:
+        """Monitor the unit's health and wait for it to reach a 'green' state.
+
+        Polls the dashboards status for up to SERVICE_AVAILABLE_TIMEOUT seconds.
+        Updates the state statuses if the unit fails to become healthy.
+        """
         logger.info(f"{self.state.unit.name} waiting for green health")
 
         start_time = time.time()
         unit_healthy, unit_message = self.dashboards_status()
-        while not unit_healthy and time.time() - start_time < SERVICE_AVAILABLE_TIMEOUT:
+
+        while unit_message is not None and time.time() - start_time < SERVICE_AVAILABLE_TIMEOUT:
             time.sleep(5)
             unit_healthy, unit_message = self.dashboards_status()
 
@@ -99,15 +131,25 @@ class HealthManager(BaseManager):
         logger.info(f"{self.state.unit.name} is in green health")
 
     def check_opensearch_health(self) -> None:
+        """Check the health of the remote OpenSearch cluster and update statuses.
+
+        Only executes if an OpenSearch server connection exists and valid CA
+        certificates are present on disk.
+        """
         if self.state.opensearch_server and (
             self.workload.paths.opensearch_ca.exists()
             and self.workload.paths.opensearch_ca.read_text()
         ):
             opensearch_healthy, status = self.opensearch_status()
-            if not opensearch_healthy:
+            if not opensearch_healthy and status:
                 self.state.statuses.add(status=status, scope="app", component="health_manager")
 
     def check_health(self) -> None:
+        """Coordinate and execute all comprehensive health checks.
+
+        Validates the workload process, local dashboards state, and remote OpenSearch
+        health, clearing and updating the state's status records accordingly.
+        """
         if not self.service_healthy():
             if self.state.unit.is_leader():
                 self.state.statuses.add(
@@ -121,10 +163,12 @@ class HealthManager(BaseManager):
                 component="health_manager",
             )
             return
-        # Do not check health if not connected to opensearch(no credentials)
+
+        # Do not check health if not connected to opensearch (no credentials)
         if not self.state.opensearch_server:
             return
-        # we clear the statuses for health manager because they will be recomputed
+
+        # Clear the statuses for health manager because they will be recomputed
         if self.state.unit.is_leader():
             self.state.statuses.clear(scope="app", component="health_manager")
         self.state.statuses.clear(scope="unit", component="health_manager")
@@ -142,20 +186,20 @@ class HealthManager(BaseManager):
 
         if not self.service_healthy():
             status_list.append(HealthStatuses.WORKLOAD_IS_DOWN.value)
-            # return now because will not be able to access dashboards api
+            # Return immediately because we cannot access the dashboards API if the service is down
             return status_list
 
-        # Do not check opensearch health if it's not connected
+        # Do not check opensearch health if it's not connected or missing certificates
         if self.state.opensearch_server and (
             self.workload.paths.opensearch_ca.exists()
             and self.workload.paths.opensearch_ca.read_text()
         ):
             opensearch_healthy, status = self.opensearch_status()
-            if not opensearch_healthy:
+            if not opensearch_healthy and status:
                 status_list.append(status)
 
             dashboards_healthy, status = self.dashboards_status()
-            if not dashboards_healthy:
+            if not dashboards_healthy and status:
                 status_list.append(status)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

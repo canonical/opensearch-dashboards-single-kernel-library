@@ -42,7 +42,7 @@ class ServerManager(BaseManager):
         logger.info("Opensearch Dashboards service started")
 
     def restart_server(self) -> None:
-        """Calls startup functions for server start."""
+        """Calls restart functions for server restart."""
 
         logger.info("restarting Opensearch Dashboards service")
         self.workload.restart()
@@ -52,6 +52,7 @@ class ServerManager(BaseManager):
         logger.info("Opensearch Dashboards service restarted")
 
     def install_osd_server(self) -> None:
+        """Calls install functions for server installation."""
         logger.info("installing Opensearch Dashboards")
         self.workload.install()
         logger.info("Opensearch Dashboards installed")

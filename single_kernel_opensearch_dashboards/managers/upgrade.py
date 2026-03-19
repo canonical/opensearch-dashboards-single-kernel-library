@@ -25,13 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class OpensearchDashboardsDependencyModel(BaseModel):
-    """Model for OpensearchDashboards Operator dependencies."""
+    """Model representing the dependencies for the OpensearchDashboards Operator."""
 
     osd_upstream: DependencyModel
 
 
 class UpgradeManager(BaseManager):
-    """Logic relating to Rolling Upgrades."""
+    """Manager class responsible for handling Rolling Upgrades logic."""
 
     def __init__(
         self,
@@ -43,7 +43,13 @@ class UpgradeManager(BaseManager):
         self.name = "upgrade_manager"
 
     def version_compatible(self) -> bool:
-        """Verify version compatibility with Opensearch."""
+        """Verify version compatibility between OpenSearch Dashboards and the OpenSearch server.
+
+        Returns:
+            bool: True if the versions are compatible or if no server connection
+                exists; False if there is a version mismatch.
+        """
+
         # When there's no Opensearch connection, we shouldn't report version mismatch
         if not self.state.opensearch_server:
             return True
@@ -60,7 +66,8 @@ class UpgradeManager(BaseManager):
         """Compute the order in which units should be upgraded.
 
         Returns:
-            A list of unit IDs representing the upgrade sequence
+            list[int]: A list of numeric unit IDs representing the sequence
+                in which the units should be upgraded.
         """
         upgrade_stack = []
 
@@ -74,6 +81,11 @@ class UpgradeManager(BaseManager):
         return upgrade_stack
 
     def upgrade_osd(self) -> None:
+        """Execute the upgrade process for the OpenSearch Dashboards.
+
+        This method stops the current workload, installs the upgraded version
+        of the software, and restarts the service.
+        """
         self.workload.stop()
 
         self.workload.install()

@@ -426,6 +426,9 @@ def test_restart_restarts_with_sleep(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+        ),
         patch("time.sleep") as patched_sleep,
     ):
         harness.charm.restart(mock_event)
