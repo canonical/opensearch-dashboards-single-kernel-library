@@ -11,6 +11,7 @@ from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
     JWT_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -22,6 +23,7 @@ from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops im
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.server import ServerManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +39,7 @@ class JwtEvents(BaseEvents):
         config_manager: ConfigManager,
         server_manager: ServerManager,
         restart_manager: RollingOpsManager,
+        tls_manager: TLSManager,
     ) -> None:
         super().__init__(
             charm,
@@ -45,6 +48,7 @@ class JwtEvents(BaseEvents):
             config_manager,
             server_manager,
             restart_manager,
+            tls_manager,
             "provider",
         )
 
@@ -61,7 +65,7 @@ class JwtEvents(BaseEvents):
             self.state.statuses.add(
                 status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
                 scope="app",
-                component="config_manager",
+                component=CONFIG_MANAGER_NAME,
             )
             logger.error(f"Cannot access relation data for {JWT_REL_NAME}")
             return
@@ -69,15 +73,15 @@ class JwtEvents(BaseEvents):
         self.delete_status_if_present(
             status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
             scope="app",
-            component="config_manager",
+            component=CONFIG_MANAGER_NAME,
         )
-        self.charm.on[f"{self.restart_manager.name}"].acquire_lock.emit()
+        self.emit_restart(event)
 
     def _on_jwt_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle broken relation data."""
         self.delete_status_if_present(
             status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
             scope="app",
-            component="config_manager",
+            component=CONFIG_MANAGER_NAME,
         )
-        self.charm.on[f"{self.restart_manager.name}"].acquire_lock.emit()
+        self.emit_restart(event)

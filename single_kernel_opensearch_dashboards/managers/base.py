@@ -174,15 +174,8 @@ class BaseManager(ManagerStatusProtocol):
                     DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
-                for attempt in Retrying(
-                    stop=stop_after_attempt(3),
-                    wait=wait_fixed(1),
-                    reraise=True,
-                    before_sleep=log_retry,
-                ):
-                    with attempt:
-                        resp = s.request(**request_kwargs)
-                        resp.raise_for_status()
+                resp = s.request(**request_kwargs)
+                resp.raise_for_status()
         except requests.ReadTimeout as e:
             logger.error(f"Hanging, no response from {uri}: {e}.")
             raise

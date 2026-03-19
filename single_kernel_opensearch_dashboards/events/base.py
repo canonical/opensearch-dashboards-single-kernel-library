@@ -16,6 +16,12 @@ from ops import (
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
+    HEALTH_MANAGER_NAME,
+    SERVER_MANAGER_NAME,
+    UPGRADE_MANAGER_NAME,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
@@ -29,6 +35,7 @@ from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops im
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.server import ServerManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +51,7 @@ class BaseEvents(Object):
         config_manager: ConfigManager,
         server_manager: ServerManager,
         restart_manager: RollingOpsManager,
+        tls_manager: TLSManager,
         key: str,
     ) -> None:
         """Initialize the BaseEvents object."""
@@ -54,45 +62,59 @@ class BaseEvents(Object):
         self.config_manager = config_manager
         self.server_manager = server_manager
         self.restart_manager = restart_manager
+        self.tls_manager = tls_manager
 
     def emit_restart(self, event: EventBase) -> None:
         """Evaluate conditions and emit a restart lock request if necessary."""
-        # Check API only if opensearch connection exists
-        api_ok = (
-            self.health_manager.dashboards_status()[0] if self.state.opensearch_server else True
+        if not self.config_manager.config_changed():
+            if self.health_manager.check_unit_health():
+                logger.debug("OpenSearch Dashboards is healthy and config is same, not restarting")
+                return
+
+        self.state.statuses.add(
+            status=ServerStatuses.WAITING_ON_RESTART.value,
+            scope="unit",
+            component=SERVER_MANAGER_NAME,
         )
 
-        if (
-            self.config_manager.config_changed()
-            or not self.health_manager.service_healthy()
-            or not api_ok
-        ):
-            self.charm.on[self.restart_manager.name].acquire_lock.emit()
-        else:
-            logger.debug("OpenSearch Dashboards is healthy and config is same, not restarting")
+        self.charm.on[self.restart_manager.name].acquire_lock.emit()
 
     def restart(self, event: EventBase) -> None:
         """Execute the restart logic for the OpenSearch Dashboards server."""
         logger.debug(f"Creating properties for {event.framework.model.unit.name}")
         self.config_manager.set_dashboard_properties()
 
+        self.delete_status_if_present(
+            status=ServerStatuses.WAITING_ON_RESTART.value,
+            scope="unit",
+            component=SERVER_MANAGER_NAME,
+        )
+
         if not self.state.unit_server.started:
             self.charm.status_handler.set_running_status(
                 status=ServerStatuses.STARTING_SERVER.value,
-                component_name="server_manager",
+                component_name=SERVER_MANAGER_NAME,
                 scope="unit",
             )
             self.server_manager.init_server()
             self.state.unit_server.update({"state": "started"})
-            self.check_osd_status()
-            return
 
+            # Set ca if unit was added after opensearch relation creation
+            self.tls_manager.set_ca_opensearch()
+        else:
+            self.charm.status_handler.set_running_status(
+                status=ServerStatuses.RESTARTING_SERVER.value,
+                component_name=SERVER_MANAGER_NAME,
+                scope="unit",
+            )
+            self.server_manager.restart_server()
+
+        # Checking health after restart
         self.charm.status_handler.set_running_status(
-            status=ServerStatuses.RESTARTING_SERVER.value,
-            component_name="server_manager",
+            status=HealthStatuses.AFTER_RESTART.value,
+            component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
-        self.server_manager.restart_server()
         self.check_osd_status()
 
     def pre_restart_check(self) -> bool:
@@ -104,20 +126,24 @@ class BaseEvents(Object):
                 self.state.statuses.add(
                     status=ConfigStatuses.WAITING_FOR_PEER.value,
                     scope="app",
-                    component="config_manager",
+                    component=CONFIG_MANAGER_NAME,
                 )
             self.state.statuses.add(
                 status=ConfigStatuses.WAITING_FOR_PEER.value,
                 scope="unit",
-                component="config_manager",
+                component=CONFIG_MANAGER_NAME,
             )
             return False
 
         self.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value, scope="unit", component="config_manager"
+            status=ConfigStatuses.WAITING_FOR_PEER.value,
+            scope="unit",
+            component=CONFIG_MANAGER_NAME,
         )
         self.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value, scope="app", component="config_manager"
+            status=ConfigStatuses.WAITING_FOR_PEER.value,
+            scope="app",
+            component=CONFIG_MANAGER_NAME,
         )
 
         # UPGRADE IDLE CHECK
@@ -127,40 +153,42 @@ class BaseEvents(Object):
                 self.state.statuses.add(
                     status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
                     scope="app",
-                    component="upgrade_manager",
+                    component=UPGRADE_MANAGER_NAME,
                 )
             self.state.statuses.add(
                 status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
                 scope="unit",
-                component="upgrade_manager",
+                component=UPGRADE_MANAGER_NAME,
             )
             return False
 
         self.delete_status_if_present(
             status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
             scope="unit",
-            component="upgrade_manager",
+            component=UPGRADE_MANAGER_NAME,
         )
         self.delete_status_if_present(
             status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
             scope="app",
-            component="upgrade_manager",
+            component=UPGRADE_MANAGER_NAME,
         )
 
         return True
 
     def check_osd_status(self) -> None:
-        """Verify the OpenSearch connection and trigger a health check."""
+        """Verify the OpenSearch connection and trigger a health check.
+        Returns true if OSD server is healthy otherwise false
+        """
         # OPENSEARCH CONNECTION
         self.delete_status_if_present(
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
             scope="app",
-            component="server_manager",
+            component=SERVER_MANAGER_NAME,
         )
         self.delete_status_if_present(
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
             scope="unit",
-            component="server_manager",
+            component=SERVER_MANAGER_NAME,
         )
 
         if not self.state.opensearch_server:
@@ -168,19 +196,16 @@ class BaseEvents(Object):
                 self.state.statuses.add(
                     status=ServerStatuses.DB_CONNECTION_MISSING.value,
                     scope="app",
-                    component="server_manager",
+                    component=SERVER_MANAGER_NAME,
                 )
             self.state.statuses.add(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
                 scope="unit",
-                component="server_manager",
+                component=SERVER_MANAGER_NAME,
             )
 
         # HEALTH
-        self.charm.status_handler.set_running_status(
-            HealthStatuses.WAITING_FOR_GREEN.value, scope="unit", component_name="health_manager"
-        )
-        self.health_manager.check_health()
+        self.health_manager.check_osd_health()
 
     def delete_status_if_present(
         self, status: StatusObject, scope: Literal["unit", "app"], component: str

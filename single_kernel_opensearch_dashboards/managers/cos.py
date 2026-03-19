@@ -11,6 +11,7 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.literals import (
+    COS_MANAGER_NAME,
     COS_PORT,
     COS_RELATION_NAME,
     Substrates,
@@ -41,7 +42,7 @@ class COSManager(BaseManager):
         super().__init__(state, workload)
         self.substrate = substrate
         self.charm = charm
-        self.name = "cos_manager"
+        self.name = COS_MANAGER_NAME
 
         if self.substrate == Substrates.VM:
             self.cos_integration = COSAgentProvider(

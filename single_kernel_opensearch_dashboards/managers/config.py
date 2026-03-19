@@ -12,7 +12,10 @@ from data_platform_helpers.advanced_statuses.types import Scope
 from ops import ModelError
 from pydantic import ValidationError
 
-from single_kernel_opensearch_dashboards.common.literals import DASHBOARD_USER
+from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
+    DASHBOARD_USER,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
@@ -49,7 +52,7 @@ class ConfigManager(BaseManager):
 
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         super().__init__(state, workload)
-        self.name = "config_manager"
+        self.name = CONFIG_MANAGER_NAME
 
     def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""

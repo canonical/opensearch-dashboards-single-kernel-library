@@ -47,6 +47,7 @@ class RequirerEvents(BaseEvents):
             config_manager,
             server_manager,
             restart_manager,
+            tls_manager,
             "provider",
         )
         self.tls_manager = tls_manager
@@ -67,14 +68,8 @@ class RequirerEvents(BaseEvents):
             event.defer()
             return
 
-        if (
-            self.state.opensearch_server
-            and self.state.opensearch_server.password
-            and self.state.opensearch_server.endpoints
-            and self.state.opensearch_server.tls_ca
-        ):
-            self.tls_manager.set_ca_opensearch()
-            self.charm.on[f"{self.restart_manager.name}"].acquire_lock.emit()
+        self.tls_manager.set_ca_opensearch()
+        self.emit_restart(event)
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.

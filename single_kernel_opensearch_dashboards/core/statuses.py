@@ -7,6 +7,7 @@ from enum import Enum
 from data_platform_helpers.advanced_statuses import StatusObject
 
 from single_kernel_opensearch_dashboards.common.literals import (
+    MSG_AFTER_RESTART,
     MSG_INCOMPATIBLE_UPGRADE,
     MSG_INSTALLING,
     MSG_INVALID_CONFIG,
@@ -28,6 +29,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     MSG_WAITING_FOR_GREEN,
     MSG_WAITING_FOR_PEER,
     MSG_WAITING_FOR_UPGRADE,
+    MSG_WAITING_SERVERS_RESTART,
 )
 
 
@@ -105,6 +107,10 @@ class HealthStatuses(Enum):
         message=MSG_STATUS_DB_DOWN,
     )
 
+    AFTER_RESTART = StatusObject(
+        status="maintenance", message=MSG_AFTER_RESTART, running="blocking"
+    )
+
     WAITING_FOR_GREEN = StatusObject(
         status="maintenance", message=MSG_WAITING_FOR_GREEN, running="blocking"
     )
@@ -137,6 +143,8 @@ class ServerStatuses(Enum):
         message=MSG_STATUS_DB_MISSING,
         action="integrate OpenSearch and OpenSearch Dashboards charms",
     )
+
+    WAITING_ON_RESTART = StatusObject(status="waiting", message=MSG_WAITING_SERVERS_RESTART)
 
 
 class UpgradeStatuses(Enum):

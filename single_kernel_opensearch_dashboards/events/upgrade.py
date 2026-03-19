@@ -10,6 +10,7 @@ from typing_extensions import override
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
+    UPGRADE_MANAGER_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -61,12 +62,12 @@ class UpgradeEvents(DataUpgrade):
                 self.osd_state.statuses.add(
                     status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
                     scope="app",
-                    component="upgrade_manager",
+                    component=UPGRADE_MANAGER_NAME,
                 )
             self.osd_state.statuses.add(
                 status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
                 scope="unit",
-                component="upgrade_manager",
+                component=UPGRADE_MANAGER_NAME,
             )
             raise ClusterNotReadyError(
                 message="Post-upgrade check failed and cannot safely upgrade",

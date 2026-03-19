@@ -15,7 +15,10 @@ from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
-from single_kernel_opensearch_dashboards.common.literals import CERTS_REL_NAME
+from single_kernel_opensearch_dashboards.common.literals import (
+    CERTS_REL_NAME,
+    TLS_MANAGER_NAME,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import TLSStatuses
 from single_kernel_opensearch_dashboards.events.base import BaseEvents
@@ -56,6 +59,7 @@ class TLSEvents(BaseEvents):
             config_manager,
             server_manager,
             restart_manager,
+            tls_manager,
             "tls",
         )
         self.tls_manager = tls_manager
@@ -93,7 +97,7 @@ class TLSEvents(BaseEvents):
             TLSStatuses.WAITING_FOR_TLS.value,
             scope="unit",
             statuses_state=self.state.statuses,
-            component_name="tls_manager",
+            component_name=TLS_MANAGER_NAME,
         )
 
     def _remove_certificates(self, event: EventBase) -> None:
@@ -106,7 +110,7 @@ class TLSEvents(BaseEvents):
                 TLSStatuses.WAITING_FOR_TLS.value,
                 scope="unit",
                 statuses_state=self.state.statuses,
-                component_name="tls_manager",
+                component_name=TLS_MANAGER_NAME,
             )
 
         self.state.unit_server.update({"csr": "", "certificate": "", "ca-cert": ""})
@@ -125,7 +129,7 @@ class TLSEvents(BaseEvents):
     def _on_certificate_available(self, event: "CertificateAvailableEvent") -> None:
         """Handler for `certificates_available` event after provider updates signed certs."""
         self.delete_status_if_present(
-            TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component="tls_manager"
+            TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component=TLS_MANAGER_NAME
         )
 
         if event.certificate_signing_request != self.state.unit_server.csr:
@@ -166,7 +170,7 @@ class TLSEvents(BaseEvents):
             TLSStatuses.WAITING_FOR_TLS.value,
             scope="unit",
             statuses_state=self.state.statuses,
-            component_name="tls_manager",
+            component_name=TLS_MANAGER_NAME,
         )
 
         self.state.unit_server.update({"csr": new_csr.decode("utf-8").strip()})

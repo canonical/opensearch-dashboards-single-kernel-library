@@ -12,7 +12,10 @@ from ops import EventBase
 from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
 )
-from single_kernel_opensearch_dashboards.common.literals import Substrates
+from single_kernel_opensearch_dashboards.common.literals import (
+    RESTART_REL_NAME,
+    Substrates,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
@@ -56,7 +59,9 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         self.config_manager = ConfigManager(self.state, self.workload)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.server_manager = ServerManager(self.state, self.workload)
-        self.restart_manager = RollingOpsManager(self, relation="restart", callback=self.restart)
+        self.restart_manager = RollingOpsManager(
+            self, relation=RESTART_REL_NAME, callback=self.restart
+        )
         self.cos_manager = COSManager(self, self.state, self.workload, self.substrate)
 
         # --- Event Handlers ---
@@ -67,6 +72,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.config_manager,
             self.server_manager,
             self.restart_manager,
+            self.tls_manager,
         )
         self.jwt_events = JwtEvents(
             self,
@@ -75,6 +81,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.config_manager,
             self.server_manager,
             self.restart_manager,
+            self.tls_manager,
         )
         self.tls_events = TLSEvents(
             self,
@@ -101,6 +108,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.config_manager,
             self.server_manager,
             self.restart_manager,
+            self.tls_manager,
         )
 
         self.upgrade_events = UpgradeEvents(

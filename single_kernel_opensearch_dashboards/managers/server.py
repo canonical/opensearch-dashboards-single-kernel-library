@@ -15,6 +15,7 @@ from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.literals import (
     RESTART_TIMEOUT,
+    SERVER_MANAGER_NAME,
     SERVER_PORT,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 class ServerManager(BaseManager):
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         super().__init__(state, workload)
-        self.name = "server_manager"
+        self.name = SERVER_MANAGER_NAME
 
     def init_server(self) -> None:
         """Calls startup functions for server start."""

@@ -35,6 +35,15 @@ OAUTH_REL_NAME = "oauth"
 JWT_REL_NAME = "jwt-configuration"
 COS_RELATION_NAME = "cos-agent"
 STATUS_PEERS_REL_NAME = "status-peers"
+RESTART_REL_NAME = "restart"
+
+# Components names
+SERVER_MANAGER_NAME = "server_manager"
+CONFIG_MANAGER_NAME = "config_manager"
+HEALTH_MANAGER_NAME = "health_manager"
+UPGRADE_MANAGER_NAME = "upgrade_manager"
+TLS_MANAGER_NAME = "tls_manager"
+COS_MANAGER_NAME = "cos_manager"
 
 # OpenSearch user and role
 DASHBOARD_INDEX = ".opensearch-dashboards"
@@ -68,13 +77,14 @@ PEER_UNIT_SECRETS = ["ca-cert", "csr", "certificate", "private-key"]
 # Timeouts
 RESTART_TIMEOUT = 30
 SERVICE_AVAILABLE_TIMEOUT = 90
-REQUEST_TIMEOUT = 30
+REQUEST_TIMEOUT = 10
 
 # Status messages
 MSG_INSTALLING = "installing Opensearch Dashboards..."
 MSG_STARTING = "starting..."
 MSG_STARTING_SERVER = "starting Opensearch Dashboards server..."
 MSG_RESTARTING_SERVER = "restarting Opensearch Dashboards server..."
+MSG_AFTER_RESTART = "checking Opensearch Dashboards health after restart/start"
 MSG_WAITING_FOR_GREEN = "waiting for Opensearch Dashboards health to be green..."
 MSG_WAITING_FOR_PEER = "waiting for peer relation"
 MSG_WAITING_FOR_UPGRADE = "waiting for upgrade"
@@ -94,6 +104,7 @@ MSG_STATUS_HANGING = "Application does not respond, request hanging"
 MSG_STATUS_OAUTH_INFO_FAILED = "Failed to get OAuth provider info from relation"
 MSG_JWT_RELATION_DATA_FAILED = "Failed to get JWT data from relations"
 MSG_SERVERS_IS_DOWN = "No server is running"
+MSG_WAITING_SERVERS_RESTART = "Waiting on lock for server restart"
 
 MSG_APP_STATUS = [
     MSG_STATUS_DB_DOWN,

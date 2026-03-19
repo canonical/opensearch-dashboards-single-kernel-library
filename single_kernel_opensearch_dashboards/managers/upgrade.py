@@ -8,7 +8,10 @@ import logging
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
-from single_kernel_opensearch_dashboards.common.literals import DEPENDENCIES
+from single_kernel_opensearch_dashboards.common.literals import (
+    DEPENDENCIES,
+    UPGRADE_MANAGER_NAME,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
@@ -40,7 +43,7 @@ class UpgradeManager(BaseManager):
     ):
         super().__init__(state, workload)
         self.dependency_model = OpensearchDashboardsDependencyModel(**DEPENDENCIES)
-        self.name = "upgrade_manager"
+        self.name = UPGRADE_MANAGER_NAME
 
     def version_compatible(self) -> bool:
         """Verify version compatibility between OpenSearch Dashboards and the OpenSearch server.

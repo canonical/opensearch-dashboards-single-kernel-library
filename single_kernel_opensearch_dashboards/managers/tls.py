@@ -12,6 +12,7 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
+from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
@@ -33,7 +34,7 @@ class TLSManager(BaseManager):
         workload: WorkloadBase,
     ):
         super().__init__(state, workload)
-        self.name = "tls_manager"
+        self.name = TLS_MANAGER_NAME
 
     def set_private_key(self) -> None:
         """Sets the unit private-key."""
@@ -55,9 +56,15 @@ class TLSManager(BaseManager):
 
     def set_ca_opensearch(self) -> None:
         """Sets the unit CA."""
-        self.workload.write_text(
-            self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
-        )
+        if (
+            self.state.opensearch_server
+            and self.state.opensearch_server.password
+            and self.state.opensearch_server.endpoints
+            and self.state.opensearch_server.tls_ca
+        ):
+            self.workload.write_text(
+                self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
+            )
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""

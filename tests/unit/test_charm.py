@@ -449,7 +449,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
         patch(
-            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_health"
+            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
             "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
@@ -461,7 +461,9 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
     ):
         harness.charm.restart(mock_event)
         running.assert_called_with(
-            HealthStatuses.WAITING_FOR_GREEN.value, scope="unit", component_name="health_manager"
+            status=HealthStatuses.AFTER_RESTART.value,
+            component_name="health_manager",
+            scope="unit",
         )
         add.assert_called_with(
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
@@ -490,7 +492,7 @@ def test_init_server_calls_necessary_methods_leader(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
         patch(
-            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_health"
+            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
             "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
@@ -518,7 +520,9 @@ def test_init_server_calls_necessary_methods_leader(harness):
             ),
         ]
         running.assert_called_with(
-            HealthStatuses.WAITING_FOR_GREEN.value, scope="unit", component_name="health_manager"
+            status=HealthStatuses.AFTER_RESTART.value,
+            component_name="health_manager",
+            scope="unit",
         )
         add.assert_has_calls(expected_calls, any_order=False)
         assert harness.charm.state.unit_server.started
@@ -645,11 +649,6 @@ def test_service_unavailable_blocked_status(harness):
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNAVAILABLE.value,
-                scope="app",
-                component="health_manager",
-            ),
-            call(
-                status=HealthStatuses.STATUS_UNAVAILABLE.value,
                 scope="unit",
                 component="health_manager",
             ),
@@ -737,11 +736,6 @@ def test_service_unhealthy(harness):
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNHEALTHY.value,
-                scope="app",
-                component="health_manager",
-            ),
-            call(
-                status=HealthStatuses.STATUS_UNHEALTHY.value,
                 scope="unit",
                 component="health_manager",
             ),
@@ -827,9 +821,6 @@ def test_service_error(harness):
         mock_event.framework.model.unit.name = "unit/0"
         harness.charm.restart(mock_event)
         expected_calls = [
-            call(
-                status=HealthStatuses.STATUS_ERROR.value, scope="app", component="health_manager"
-            ),
             call(
                 status=HealthStatuses.STATUS_ERROR.value, scope="unit", component="health_manager"
             ),

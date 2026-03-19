@@ -10,6 +10,10 @@ from pydantic import ValidationError
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
+    SERVER_MANAGER_NAME,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
@@ -22,6 +26,7 @@ from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops im
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.server import ServerManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 from ops import (
@@ -51,6 +56,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         config_manager: ConfigManager,
         server_manager: ServerManager,
         restart_manager: RollingOpsManager,
+        tls_manager: TLSManager,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
         super().__init__(
@@ -60,6 +66,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
             config_manager,
             server_manager,
             restart_manager,
+            tls_manager,
             "opensearch-dashboards-events",
         )
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -83,7 +90,7 @@ class OpenSearchDashboardsEvents(BaseEvents):
         self.charm.status_handler.set_running_status(
             status=ServerStatuses.INSTALLING_SERVER.value,
             scope="unit",
-            component_name="server_manager",
+            component_name=SERVER_MANAGER_NAME,
         )
 
         self.server_manager.install_osd_server()
@@ -107,7 +114,6 @@ class OpenSearchDashboardsEvents(BaseEvents):
             return
 
         self.emit_restart(event)
-        self.check_osd_status()
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Handle the peer `relation-departed` event."""
@@ -139,13 +145,13 @@ class OpenSearchDashboardsEvents(BaseEvents):
             self.state.unit_server.log_level = self.state.config.log_level
         except ValidationError:
             self.state.statuses.add(
-                ConfigStatuses.INVALID_CONFIG.value, scope="app", component="config_manager"
+                ConfigStatuses.INVALID_CONFIG.value, scope="app", component=CONFIG_MANAGER_NAME
             )
             # no point in deferring, the hook will be called another time after config update
             return
 
         self.delete_status_if_present(
-            status=ConfigStatuses.INVALID_CONFIG.value, scope="app", component="server_manager"
+            status=ConfigStatuses.INVALID_CONFIG.value, scope="app", component=CONFIG_MANAGER_NAME
         )
 
         self.emit_restart(event)

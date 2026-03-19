@@ -15,6 +15,7 @@ from requests.exceptions import ConnectionError, HTTPError
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
+    HEALTH_MANAGER_NAME,
     SERVICE_AVAILABLE_TIMEOUT,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -34,7 +35,7 @@ class HealthManager(BaseManager):
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         """Initialize the HealthManager."""
         super().__init__(state, workload)
-        self.name = "health_manager"
+        self.name = HEALTH_MANAGER_NAME
 
     def dashboards_status(self) -> tuple[bool, Optional[StatusObject]]:
         """Fetch and evaluate the local OpenSearch Dashboards health status.
@@ -104,11 +105,26 @@ class HealthManager(BaseManager):
         """
         return self.workload.alive()
 
-    def check_unit_health(self) -> None:
+    def check_unit_health(self) -> bool:
+        """Returns true if OSD is healthy otherwise false"""
+
+        if not self.service_healthy():
+            return False
+
+        # Do not check health of OSD or OS if not connected to opensearch (no credentials)
+        if not self.state.opensearch_server:
+            return True
+
+        logger.info(f"Checking health")
+        return self.dashboards_status()[0]
+
+    def wait_for_unit_health(self) -> None:
         """Monitor the unit's health and wait for it to reach a 'green' state.
 
         Polls the dashboards status for up to SERVICE_AVAILABLE_TIMEOUT seconds.
         Updates the state statuses if the unit fails to become healthy.
+
+        Returns true if OSD is healthy otherwise false
         """
         logger.info(f"{self.state.unit.name} waiting for green health")
 
@@ -120,15 +136,12 @@ class HealthManager(BaseManager):
             unit_healthy, unit_message = self.dashboards_status()
 
         if unit_message:
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=unit_message, scope="app", component="health_manager"
-                )
             self.state.statuses.add(status=unit_message, scope="unit", component="health_manager")
             logger.info(f"{self.state.unit.name} is not healthy")
             return
 
         logger.info(f"{self.state.unit.name} is in green health")
+        return
 
     def check_opensearch_health(self) -> None:
         """Check the health of the remote OpenSearch cluster and update statuses.
@@ -143,12 +156,15 @@ class HealthManager(BaseManager):
             opensearch_healthy, status = self.opensearch_status()
             if not opensearch_healthy and status:
                 self.state.statuses.add(status=status, scope="app", component="health_manager")
+                self.state.statuses.add(status=status, scope="unit", component="health_manager")
 
-    def check_health(self) -> None:
+    def check_osd_health(self) -> None:
         """Coordinate and execute all comprehensive health checks.
 
         Validates the workload process, local dashboards state, and remote OpenSearch
         health, clearing and updating the state's status records accordingly.
+
+        Returns true if OSD is healthy otherwise false
         """
         if not self.service_healthy():
             if self.state.unit.is_leader():
@@ -164,16 +180,17 @@ class HealthManager(BaseManager):
             )
             return
 
-        # Do not check health if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server:
-            return
-
-        # Clear the statuses for health manager because they will be recomputed
+        # Clear the statuses for health manager because they will be recomputed if opensearch is connected
+        # if not there are no statuses possible except workload_is_down which we checked already
         if self.state.unit.is_leader():
             self.state.statuses.clear(scope="app", component="health_manager")
         self.state.statuses.clear(scope="unit", component="health_manager")
 
-        self.check_unit_health()
+        # Do not check health of OSD or OS if not connected to opensearch (no credentials)
+        if not self.state.opensearch_server:
+            return
+
+        self.wait_for_unit_health()
         self.check_opensearch_health()
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:

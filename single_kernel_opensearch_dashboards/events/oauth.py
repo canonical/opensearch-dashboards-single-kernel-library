@@ -12,7 +12,9 @@ from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
+    SERVER_MANAGER_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -26,6 +28,7 @@ from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops im
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.server import ServerManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +44,17 @@ class OAuthEvents(BaseEvents):
         config_manager: ConfigManager,
         server_manager: ServerManager,
         restart_manager: RollingOpsManager,
+        tls_manager: TLSManager,
     ) -> None:
         super().__init__(
-            charm, state, health_manager, config_manager, server_manager, restart_manager, "oauth"
+            charm,
+            state,
+            health_manager,
+            config_manager,
+            server_manager,
+            restart_manager,
+            tls_manager,
+            "oauth",
         )
 
         self.framework.observe(
@@ -60,13 +71,13 @@ class OAuthEvents(BaseEvents):
             self.state.statuses.add(
                 status=ServerStatuses.SERVERS_IS_DOWN.value,
                 scope="app",
-                component="server_manager",
+                component=SERVER_MANAGER_NAME,
             )
             event.defer()
             return
 
         self.delete_status_if_present(
-            status=ServerStatuses.SERVERS_IS_DOWN.value, scope="app", component="server_manager"
+            status=ServerStatuses.SERVERS_IS_DOWN.value, scope="app", component=SERVER_MANAGER_NAME
         )
 
         try:
@@ -76,7 +87,7 @@ class OAuthEvents(BaseEvents):
             self.state.statuses.add(
                 status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
                 scope="app",
-                component="config_manager",
+                component=CONFIG_MANAGER_NAME,
             )
             event.defer()
             return
@@ -92,7 +103,7 @@ class OAuthEvents(BaseEvents):
         self.delete_status_if_present(
             status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
             scope="app",
-            component="config_manager",
+            component=CONFIG_MANAGER_NAME,
         )
 
-        self.charm.on[f"{self.restart_manager.name}"].acquire_lock.emit()
+        self.emit_restart(event)
