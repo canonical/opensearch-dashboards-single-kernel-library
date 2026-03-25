@@ -42,11 +42,24 @@ class RequirerEvents(Object):
             self.charm, self.state.client_requires_data
         )
         self.framework.observe(
+            self.charm.on[OPENSEARCH_REL_NAME].relation_created, self._on_client_relation_created
+        )
+        self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_broken, self._on_client_relation_broken
         )
+
+    def _on_client_relation_created(self, event: RelationEvent) -> None:
+        """Updates ACLs while handling `client_relation_changed` events."""
+        # Temporary solution to test k8s charm
+        # Cross model secret sharing of opensearch is not supported so we force data interfaces to not use them
+        # TODO: remove it
+        if not self.charm.unit.is_leader():
+            return
+        event.relation.data[self.charm.app]["requested-secrets"] = "[]"
+        event.relation.data[self.charm.app]["provided-secrets"] = "[]"
 
     def _on_client_relation_changed(self, event: RelationEvent) -> None:
         """Updates ACLs while handling `client_relation_changed` events."""

@@ -26,6 +26,12 @@ class OpenSearchDashboardsPaths:
 OPENSEARCH_DASHBOARDS_SNAP_REVISION = "54"
 CHARM_KEY = "opensearch-dashboards"
 
+# K8s
+CONTAINER_NAME = "opensearch-dashboards"
+OSD_SERVICE = "opensearch-dashboards"
+EXPORTER_SERVICE = "prometheus-exporter"
+LAYER_NAME = "rockcraft-opensearch-dashboards"
+
 # Relation names
 PEERS_REL_NAME = "dashboard_peers"
 UPGRADE_REL_NAME = "upgrade"

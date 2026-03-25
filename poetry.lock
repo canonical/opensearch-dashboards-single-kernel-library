@@ -1612,14 +1612,14 @@ typing-extensions = ">=4.5.0"
 
 [[package]]
 name = "ops"
-version = "2.23.0"
+version = "2.23.2"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "charm-libs", "integration", "lint", "unit"]
 files = [
-    {file = "ops-2.23.0-py3-none-any.whl", hash = "sha256:7a42840410e8570acc3a4b498973a5bcd3fd0b12dd06837f57b9379b3acdfac3"},
-    {file = "ops-2.23.0.tar.gz", hash = "sha256:3e6c29a8f2119c7b8eaa88c82b5371de236dfcb7a7bf0012a6e2a829f0837fb7"},
+    {file = "ops-2.23.2-py3-none-any.whl", hash = "sha256:9cab0c6bc46eeff2e96777128200c3ef872b55641b12f07dc4fd6fe3103954be"},
+    {file = "ops-2.23.2.tar.gz", hash = "sha256:a69b0c5bc65ebd91720fc96459e81b969df851f3a6c9c855ee73de7004205987"},
 ]
 
 [package.dependencies]
@@ -1629,8 +1629,8 @@ PyYAML = "==6.*"
 websocket-client = "==1.*"
 
 [package.extras]
-testing = ["ops-scenario (==7.23.0)"]
-tracing = ["ops-tracing (==2.23.0)"]
+testing = ["ops-scenario (==7.23.2)"]
+tracing = ["ops-tracing (==2.23.2)"]
 
 [[package]]
 name = "packaging"
@@ -3137,4 +3137,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "c90ec650c645a4f070beee61f87c240f5a55e06c2f8c19d91d403e216df18e7e"
+content-hash = "128447a3aa6cb33009ad143df0483f6ebf2f58cdb72db596c7b06ffbcb771a16"

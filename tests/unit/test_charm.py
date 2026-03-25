@@ -111,7 +111,11 @@ def test_install_sets_ip_hostname_fqdn(harness):
 def test_relation_changed_emitted_for_leader_elected(harness):
     with patch(
         "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.started", return_value=True
+        ),
+    ):
         harness.set_leader(True)
         patched.assert_called_once()
 

@@ -9,6 +9,7 @@ import pytest
 import responses
 from requests import ReadTimeout
 
+from single_kernel_opensearch_dashboards.common.literals import Substrates
 from single_kernel_opensearch_dashboards.core.statuses import HealthStatuses
 
 logger = logging.getLogger(__name__)
@@ -340,7 +341,9 @@ def test_api_request(harness):
         url=f"{harness.charm.state.url}/api/status",
         json=expected_response,
     )
-    status, body = harness.charm.health_manager.request_opensearch_dashboards("/api/status")
+    status, body = harness.charm.health_manager.request_opensearch_dashboards(
+        "/api/status", substrate=Substrates.VM
+    )
     assert all(field in body for field in ["status", "name", "version"])
     assert all(field in body["status"] for field in ["statuses", "overall"])
 
@@ -409,7 +412,9 @@ def test_status(harness):
         json=expected_response,
     )
 
-    status, body = harness.charm.health_manager.request_opensearch_dashboards("/api/status")
+    status, body = harness.charm.health_manager.request_opensearch_dashboards(
+        "/api/status", substrate=Substrates.VM
+    )
     assert all(field in body for field in ["status", "name", "version"])
     assert all(field in body["status"] for field in ["statuses", "overall"])
 
@@ -424,4 +429,6 @@ def test_request_timeout(harness):
     """ReadTimeout is "bubbled up" to caller."""
     responses.add(method="GET", url=f"{harness.charm.state.url}/api/status", body=ReadTimeout())
     with pytest.raises(ReadTimeout):
-        harness.charm.health_manager.request_opensearch_dashboards("/api/status")
+        harness.charm.health_manager.request_opensearch_dashboards(
+            "/api/status", substrate=Substrates.VM
+        )

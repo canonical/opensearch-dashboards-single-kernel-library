@@ -17,6 +17,7 @@ from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
     HEALTH_MANAGER_NAME,
     SERVICE_AVAILABLE_TIMEOUT,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -32,10 +33,11 @@ logger = logging.getLogger(__name__)
 class HealthManager(BaseManager):
     """Manager responsible for handling Opensearch Dashboards service health."""
 
-    def __init__(self, state: ClusterState, workload: WorkloadBase):
+    def __init__(self, state: ClusterState, workload: WorkloadBase, substrate: Substrates):
         """Initialize the HealthManager."""
         super().__init__(state, workload)
         self.name = HEALTH_MANAGER_NAME
+        self.substrate = substrate
 
     def dashboards_status(self) -> tuple[bool, Optional[StatusObject]]:
         """Fetch and evaluate the local OpenSearch Dashboards health status.
@@ -48,7 +50,9 @@ class HealthManager(BaseManager):
                 second is a specific StatusObject (or None if the state is perfectly 'green').
         """
         try:
-            status, body = self.request_opensearch_dashboards(endpoint="/api/status")
+            status, body = self.request_opensearch_dashboards(
+                endpoint="/api/status", substrate=self.substrate
+            )
         except HTTPError as err:
             if err.response.status_code == 503:
                 return False, HealthStatuses.STATUS_UNAVAILABLE.value
@@ -83,7 +87,7 @@ class HealthManager(BaseManager):
         for endpoint in self.state.opensearch_server.endpoints:
             full_url = f"https://{endpoint}/_cluster/health"
             try:
-                code, body = self.request_opensearch(full_url)
+                code, body = self.request_opensearch(full_url, self.substrate)
             except requests.RequestException:
                 logger.error(f"Failed to connect to {full_url}")
                 continue

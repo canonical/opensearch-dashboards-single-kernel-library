@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     DASHBOARD_USER,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -50,9 +51,10 @@ LOG_PROPERTIES = {
 class ConfigManager(BaseManager):
     """Manager for handling configuration building + writing."""
 
-    def __init__(self, state: ClusterState, workload: WorkloadBase):
+    def __init__(self, state: ClusterState, workload: WorkloadBase, substrate: Substrates):
         super().__init__(state, workload)
         self.name = CONFIG_MANAGER_NAME
+        self.substrate = substrate
 
     def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""
@@ -91,11 +93,17 @@ class ConfigManager(BaseManager):
             properties["opensearch.hosts"] = [
                 f"https://{endpoint}" for endpoint in self.state.opensearch_server.endpoints
             ]
+            # TODO find out why dashboards add these and changes server.host in config of sk8s substrate automatically
+            properties |= {"opensearch_security.enabled": "false"}
 
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
 
-        # We are using the address exposed by Juju as service address
-        properties |= {"server.host": str(self.state.bind_address)}
+        if self.substrate == Substrates.K8S:
+            properties |= {"server.host": "0.0.0.0"}
+        else:
+            # We are using the address exposed by Juju as service address
+            properties |= {"server.host": str(self.state.bind_address)}
+
         if opensearch_user and opensearch_password:
             properties |= {
                 "opensearch.username": opensearch_user,

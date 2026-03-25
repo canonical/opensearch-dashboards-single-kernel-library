@@ -59,8 +59,8 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
 
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
-        self.health_manager = HealthManager(self.state, self.workload)
-        self.config_manager = ConfigManager(self.state, self.workload)
+        self.health_manager = HealthManager(self.state, self.workload, self.substrate)
+        self.config_manager = ConfigManager(self.state, self.workload, self.substrate)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)
         self.restart_manager = RollingOpsManager(
@@ -73,6 +73,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self,
             self.state,
             self.cluster_manager,
+            self.substrate,
         )
         self.jwt_events = JwtEvents(
             self,

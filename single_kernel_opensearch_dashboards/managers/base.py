@@ -5,6 +5,8 @@
 """Base manager for common methods"""
 import json
 import logging
+import os
+import tempfile
 from typing import Any
 
 import requests
@@ -15,8 +17,10 @@ from tenacity import RetryCallState
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
+    CONTAINER_NAME,
     DASHBOARD_USER,
     REQUEST_TIMEOUT,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -43,6 +47,7 @@ class BaseManager(ManagerStatusProtocol):
     def request_opensearch(
         self,
         uri: str,
+        substrate: Substrates,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -54,6 +59,7 @@ class BaseManager(ManagerStatusProtocol):
 
         Args:
             uri: URI of Opensearch
+            substrate: VM or K8s
             method: matching the known http methods.
             headers: request headers as a dict
             payload: JSON / map body payload.
@@ -73,6 +79,7 @@ class BaseManager(ManagerStatusProtocol):
         return self._request(
             uri,
             method=method,
+            substrate=substrate,
             headers=headers,
             payload=payload,
             cert_path=self.workload.paths.opensearch_ca,
@@ -81,6 +88,7 @@ class BaseManager(ManagerStatusProtocol):
     def request_opensearch_dashboards(
         self,
         endpoint: str,
+        substrate: Substrates,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -92,6 +100,7 @@ class BaseManager(ManagerStatusProtocol):
 
         Args:
             endpoint: relative to the base uri.
+            substrate: VM or K8s
             method: matching the known http methods.
             headers: request headers as a dict
             payload: JSON / map body payload.
@@ -111,13 +120,19 @@ class BaseManager(ManagerStatusProtocol):
             }
         uri = f"{self.state.url}{endpoint}"
         return self._request(
-            uri, method=method, headers=headers, payload=payload, cert_path=self.workload.paths.ca
+            uri,
+            method=method,
+            substrate=substrate,
+            headers=headers,
+            payload=payload,
+            cert_path=self.workload.paths.ca,
         )
 
     def _request(
         self,
         uri: str,
         cert_path: PathProtocol,
+        substrate: Substrates,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -152,21 +167,25 @@ class BaseManager(ManagerStatusProtocol):
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."
             )
 
+        # request library is run on other container than the opensearch is located so we temporarily
+        # copy certificates and remove them after request
+        local_ca_path = cert_path.as_posix()
+        if substrate == Substrates.K8S:
+            container = self.state.unit.get_container(CONTAINER_NAME)
+            ca_content = container.pull(cert_path.as_posix()).read()
+
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
+                local_ca_file.write(ca_content)
+                local_ca_path = local_ca_file.name
+
         request_kwargs = {
             "url": uri,
             "method": method.upper(),
-            "verify": cert_path.as_posix(),
+            "verify": local_ca_path,
             "headers": headers,
             "timeout": REQUEST_TIMEOUT,
             "data": json.dumps(payload),
         }
-
-        def log_retry(retry_state: RetryCallState) -> None:
-            """Log retry attempts."""
-            logger.debug(
-                f"Retrying... Attempt {retry_state.attempt_number}"
-                f"\tException: {retry_state.outcome.exception()}"
-            )
 
         try:
             with requests.Session() as s:
@@ -182,6 +201,9 @@ class BaseManager(ManagerStatusProtocol):
         except RequestException as e:
             logger.error(f"Request {method} to {uri} with payload: {payload} failed. \n{e}")
             raise
+        finally:
+            if os.path.exists(local_ca_path) and substrate == Substrates.K8S:
+                os.remove(local_ca_path)
 
         try:
             return resp.status_code, resp.json()

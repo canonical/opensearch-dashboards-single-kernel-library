@@ -7,6 +7,7 @@ from enum import Enum
 from data_platform_helpers.advanced_statuses import StatusObject
 
 
+
 class CharmStatuses(Enum):
     """Server related statuses."""
 
@@ -140,7 +141,7 @@ class ServerStatuses(Enum):
     WAITING_ON_RESTART = StatusObject(
         status="waiting", message="Waiting on lock for server start/restart"
     )
-
+    CONTAINER_IS_NOT_ACCESSIBLE = StatusObject(status="blocked", message=MSG_CONTAINER_BLOCKED)
 
 class UpgradeStatuses(Enum):
     DB_INCOMPATIBLE_VERSION = StatusObject(

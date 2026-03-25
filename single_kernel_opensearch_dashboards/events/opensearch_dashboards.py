@@ -5,6 +5,7 @@
 """Handler for General OpenSearch Dashboards charm events."""
 import logging
 
+import ops
 from pydantic import ValidationError
 
 from single_kernel_opensearch_dashboards.charms.base import (
@@ -13,6 +14,9 @@ from single_kernel_opensearch_dashboards.charms.base import (
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     UPGRADE_MANAGER_NAME,
+    CONTAINER_NAME,
+    SERVER_MANAGER_NAME,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -48,6 +52,7 @@ class OpenSearchDashboardsEvents(Object):
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
         cluster_manager: ClusterManager,
+        substrate: Substrates,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
         super().__init__(
@@ -57,6 +62,7 @@ class OpenSearchDashboardsEvents(Object):
         self.charm = charm
         self.state = state
         self.cluster_manager = cluster_manager
+        self.substrate = substrate
 
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.start, self._on_start)
@@ -73,6 +79,37 @@ class OpenSearchDashboardsEvents(Object):
             self.charm.on[PEERS_REL_NAME].relation_departed, self._on_relation_departed
         )
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        if self.substrate == Substrates.K8S:
+            self.framework.observe(
+                self.charm.on.opensearch_dashboards_pebble_ready, self._on_pebble_ready
+            )
+
+    def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
+        """Define the initial Pebble layer and start the service."""
+        logger.debug("PEBBLE READY")
+        container = self.charm.unit.get_container(CONTAINER_NAME)
+        if not container.can_connect():
+            self.state.statuses.add(
+                status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
+                scope="unit",
+                component=SERVER_MANAGER_NAME,
+            )
+            event.defer()
+            return
+        self.delete_status_if_present(
+            status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
+            scope="unit",
+            component=SERVER_MANAGER_NAME,
+        )
+        try:
+            container.add_layer(
+                "rockcraft-opensearch-dashboards", self._user_pebble_layer, combine=True
+            )
+            container.replan()
+
+        except (ops.pebble.PathError, ops.pebble.ProtocolError, ops.pebble.ConnectionError):
+            event.defer()
+            return
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -122,7 +159,8 @@ class OpenSearchDashboardsEvents(Object):
             event.defer()
             return
 
-        self.charm.emit_restart(event)
+        if self.state.unit_server.started:
+            self.charm.emit_restart(event)
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         """Handle the `config-changed` event."""
