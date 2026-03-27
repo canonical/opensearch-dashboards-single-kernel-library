@@ -52,6 +52,7 @@ class K8sWorkload(WorkloadBase):
     def start(self) -> None:
         """Starts the OpenSearch Dashboards and exporter daemon services via Pebble."""
         if self.container.can_connect():
+            self.paths.certificate_dir.mkdir(exist_ok=True)
             self.container.start(OSD_SERVICE, EXPORTER_SERVICE)
         else:
             logger.warning("Cannot connect to Pebble to start services.")
@@ -200,5 +201,4 @@ class K8sWorkload(WorkloadBase):
         In Kubernetes, workloads are provided by the container image itself.
         Therefore, no explicit installation steps are required here.
         """
-        self.paths.certificate_dir.mkdir(exist_ok=True)
         return

@@ -12,9 +12,8 @@ from typing import Any
 import requests
 from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
-from requests import RequestException
 from ops.pebble import PathError
-from tenacity import RetryCallState
+from requests import RequestException
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -175,8 +174,7 @@ class BaseManager(ManagerStatusProtocol):
             container = self.state.unit.get_container(CONTAINER_NAME)
             try:
                 ca_content = container.pull(local_ca_path).read()
-                with tempfile.NamedTemporaryFile(mode="w",
-                                                 delete=False) as local_ca_file:
+                with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
                     local_ca_file.write(ca_content)
                     local_ca_path = local_ca_file.name
             except PathError:

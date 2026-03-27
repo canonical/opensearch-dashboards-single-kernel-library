@@ -13,9 +13,10 @@ from single_kernel_opensearch_dashboards.charms.base import (
 )
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
-    UPGRADE_MANAGER_NAME,
     CONTAINER_NAME,
-    SERVER_MANAGER_NAME,
+    EXPORTER_SERVICE,
+    OSD_SERVICE,
+    UPGRADE_MANAGER_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -92,14 +93,14 @@ class OpenSearchDashboardsEvents(Object):
             self.state.statuses.add(
                 status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
                 scope="unit",
-                component=SERVER_MANAGER_NAME,
+                component=self.cluster_manager.name,
             )
             event.defer()
             return
-        self.delete_status_if_present(
+        self.state.delete_status_if_present(
             status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
             scope="unit",
-            component=SERVER_MANAGER_NAME,
+            component=self.cluster_manager.name,
         )
         try:
             container.add_layer(
@@ -263,3 +264,23 @@ class OpenSearchDashboardsEvents(Object):
         )
 
         return True
+
+    @property
+    def _user_pebble_layer(self) -> ops.pebble.Layer:
+        """Returns a new layer to force services to run as _daemon_."""
+        return ops.pebble.Layer(
+            {
+                "services": {
+                    OSD_SERVICE: {
+                        "override": "merge",
+                        "user": "_daemon_",
+                        "group": "_daemon_",
+                    },
+                    EXPORTER_SERVICE: {
+                        "override": "merge",
+                        "user": "_daemon_",
+                        "group": "_daemon_",
+                    },
+                },
+            }
+        )
