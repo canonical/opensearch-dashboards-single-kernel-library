@@ -13,6 +13,7 @@ import requests
 from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
+from ops.pebble import PathError
 from tenacity import RetryCallState
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
@@ -172,11 +173,15 @@ class BaseManager(ManagerStatusProtocol):
         local_ca_path = cert_path.as_posix()
         if substrate == Substrates.K8S:
             container = self.state.unit.get_container(CONTAINER_NAME)
-            ca_content = container.pull(cert_path.as_posix()).read()
-
-            with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
-                local_ca_file.write(ca_content)
-                local_ca_path = local_ca_file.name
+            try:
+                ca_content = container.pull(local_ca_path).read()
+                with tempfile.NamedTemporaryFile(mode="w",
+                                                 delete=False) as local_ca_file:
+                    local_ca_file.write(ca_content)
+                    local_ca_path = local_ca_file.name
+            except PathError:
+                # We don't move ca if it's not exists so `requests` handles it (ignoring it for HTTP, erroring for HTTPS).
+                pass
 
         request_kwargs = {
             "url": uri,

@@ -93,7 +93,6 @@ class ConfigManager(BaseManager):
             properties["opensearch.hosts"] = [
                 f"https://{endpoint}" for endpoint in self.state.opensearch_server.endpoints
             ]
-            # TODO find out why dashboards add these and changes server.host in config of sk8s substrate automatically
             properties |= {"opensearch_security.enabled": "false"}
 
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
