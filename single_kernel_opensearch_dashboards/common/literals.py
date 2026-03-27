@@ -38,7 +38,7 @@ STATUS_PEERS_REL_NAME = "status-peers"
 RESTART_REL_NAME = "restart"
 
 # Components names
-SERVER_MANAGER_NAME = "server_manager"
+CLUSTER_MANAGER_NAME = "cluster_manager"
 CONFIG_MANAGER_NAME = "config_manager"
 HEALTH_MANAGER_NAME = "health_manager"
 UPGRADE_MANAGER_NAME = "upgrade_manager"
@@ -77,45 +77,4 @@ PEER_UNIT_SECRETS = ["ca-cert", "csr", "certificate", "private-key"]
 # Timeouts
 RESTART_TIMEOUT = 30
 SERVICE_AVAILABLE_TIMEOUT = 90
-REQUEST_TIMEOUT = 10
-
-# Status messages
-MSG_INSTALLING = "installing Opensearch Dashboards..."
-MSG_STARTING = "starting..."
-MSG_STARTING_SERVER = "starting Opensearch Dashboards server..."
-MSG_RESTARTING_SERVER = "restarting Opensearch Dashboards server..."
-MSG_AFTER_RESTART = "checking Opensearch Dashboards health after restart/start"
-MSG_WAITING_FOR_GREEN = "waiting for Opensearch Dashboards health to be green..."
-MSG_WAITING_FOR_PEER = "waiting for peer relation"
-MSG_WAITING_FOR_UPGRADE = "waiting for upgrade"
-MSG_STATUS_DB_MISSING = "Opensearch connection is missing"
-MSG_STATUS_DB_DOWN = "Opensearch service is (partially or fully) down"
-MSG_STATUS_DB_UNHEALTHY = "The OpenSearch service health is red"
-MSG_TLS_CONFIG = "Waiting for TLS to be fully configured..."
-MSG_INCOMPATIBLE_UPGRADE = "Incompatible Opensearch and Dashboards versions"
-MSG_INVALID_CONFIG = "Config options invalid: "
-MSG_STATUS_UNAVAIL = "Service unavailable"
-MSG_STATUS_UNHEALTHY = "Service is not in a green health state"
-MSG_STATUS_ERROR = "Service is an error state"
-MSG_STATUS_WORKLOAD_DOWN = "Workload is not alive"
-MSG_STATUS_UNKNOWN = "Workload status is not known"
-MSG_STATUS_APP_REMOVED = "remove-application was requested: leaving..."
-MSG_STATUS_HANGING = "Application does not respond, request hanging"
-MSG_STATUS_OAUTH_INFO_FAILED = "Failed to get OAuth provider info from relation"
-MSG_JWT_RELATION_DATA_FAILED = "Failed to get JWT data from relations"
-MSG_SERVERS_IS_DOWN = "No server is running"
-MSG_WAITING_SERVERS_RESTART = "Waiting on lock for server restart"
-
-MSG_APP_STATUS = [
-    MSG_STATUS_DB_DOWN,
-    MSG_STATUS_DB_UNHEALTHY,
-]
-
-MSG_UNIT_STATUS = [
-    MSG_STATUS_HANGING,
-    MSG_STATUS_UNAVAIL,
-    MSG_STATUS_UNHEALTHY,
-    MSG_STATUS_WORKLOAD_DOWN,
-    MSG_STATUS_UNKNOWN,
-    MSG_STATUS_ERROR,
-]
+REQUEST_TIMEOUT = 30

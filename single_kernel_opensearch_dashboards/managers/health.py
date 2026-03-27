@@ -131,12 +131,12 @@ class HealthManager(BaseManager):
         start_time = time.time()
         unit_healthy, unit_message = self.dashboards_status()
 
-        while unit_message is not None and time.time() - start_time < SERVICE_AVAILABLE_TIMEOUT:
+        while unit_healthy is not True and time.time() - start_time < SERVICE_AVAILABLE_TIMEOUT:
             time.sleep(5)
             unit_healthy, unit_message = self.dashboards_status()
 
         if unit_message:
-            self.state.statuses.add(status=unit_message, scope="unit", component="health_manager")
+            self.state.statuses.add(status=unit_message, scope="unit", component=self.name)
             logger.info(f"{self.state.unit.name} is not healthy")
             return
 
@@ -155,8 +155,8 @@ class HealthManager(BaseManager):
         ):
             opensearch_healthy, status = self.opensearch_status()
             if not opensearch_healthy and status:
-                self.state.statuses.add(status=status, scope="app", component="health_manager")
-                self.state.statuses.add(status=status, scope="unit", component="health_manager")
+                self.state.statuses.add(status=status, scope="app", component=self.name)
+                self.state.statuses.add(status=status, scope="unit", component=self.name)
 
     def check_osd_health(self) -> None:
         """Coordinate and execute all comprehensive health checks.
@@ -171,20 +171,20 @@ class HealthManager(BaseManager):
                 self.state.statuses.add(
                     status=HealthStatuses.WORKLOAD_IS_DOWN.value,
                     scope="app",
-                    component="health_manager",
+                    component=self.name,
                 )
             self.state.statuses.add(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
                 scope="unit",
-                component="health_manager",
+                component=self.name,
             )
             return
 
         # Clear the statuses for health manager because they will be recomputed if opensearch is connected
         # if not there are no statuses possible except workload_is_down which we checked already
         if self.state.unit.is_leader():
-            self.state.statuses.clear(scope="app", component="health_manager")
-        self.state.statuses.clear(scope="unit", component="health_manager")
+            self.state.statuses.clear(scope="app", component=self.name)
+        self.state.statuses.clear(scope="unit", component=self.name)
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
         if not self.state.opensearch_server:
@@ -196,7 +196,7 @@ class HealthManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the health manager's statuses."""
         if not recompute:
-            statuses = self.state.statuses.get(scope, "health_manager").root
+            statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []

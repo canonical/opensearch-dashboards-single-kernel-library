@@ -47,7 +47,11 @@ class VMWorkload(WorkloadBase):
     @override
     def start(self) -> None:
         """Starts the OpenSearch Dashboards and exporter daemon services."""
-        self.dashboards.start(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
+        try:
+            self.dashboards.start(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
+        except snap.SnapError as e:
+            logger.exception(str(e))
+            raise
 
     @override
     def stop(self) -> None:

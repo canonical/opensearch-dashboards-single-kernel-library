@@ -14,7 +14,10 @@ import responses
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
+    CLUSTER_MANAGER_NAME,
+    HEALTH_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
+    UPGRADE_MANAGER_NAME,
 )
 from single_kernel_opensearch_dashboards.core.statuses import (
     HealthStatuses,
@@ -107,7 +110,7 @@ def test_install_sets_ip_hostname_fqdn(harness):
 
 def test_relation_changed_emitted_for_leader_elected(harness):
     with patch(
-        "single_kernel_opensearch_dashboards.events.base.BaseEvents.emit_restart"
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
         harness.set_leader(True)
         patched.assert_called_once()
@@ -115,7 +118,7 @@ def test_relation_changed_emitted_for_leader_elected(harness):
 
 def test_relation_changed_emitted_for_config_changed(harness):
     with patch(
-        "single_kernel_opensearch_dashboards.events.base.BaseEvents.emit_restart"
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
         harness.charm.on.config_changed.emit()
         patched.assert_called_once()
@@ -123,7 +126,7 @@ def test_relation_changed_emitted_for_config_changed(harness):
 
 def test_relation_changed_emitted_for_relation_changed(harness):
     with patch(
-        "single_kernel_opensearch_dashboards.events.base.BaseEvents.emit_restart"
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
         harness.charm.on.dashboard_peers_relation_changed.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
@@ -131,7 +134,7 @@ def test_relation_changed_emitted_for_relation_changed(harness):
 
 def test_relation_changed_emitted_for_relation_joined(harness):
     with patch(
-        "single_kernel_opensearch_dashboards.events.base.BaseEvents.emit_restart"
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
         harness.charm.on.dashboard_peers_relation_joined.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
@@ -139,7 +142,7 @@ def test_relation_changed_emitted_for_relation_joined(harness):
 
 def test_relation_changed_emitted_for_relation_departed(harness):
     with patch(
-        "single_kernel_opensearch_dashboards.events.base.BaseEvents.emit_restart"
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
         harness.charm.on.dashboard_peers_relation_departed.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
@@ -181,10 +184,10 @@ def test_restart_initializes_unstarted_server(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as mock_set_props,
         patch(
-            "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
         ) as mock_init_server,
         patch(
-            "single_kernel_opensearch_dashboards.events.base.BaseEvents.check_osd_status"
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm._check_osd_status"
         ) as mock_check_status,
     ):
         handler.restart(mock_event)
@@ -216,7 +219,7 @@ def test_relation_changed_does_not_start_units_again(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
         ) as patched,
         patch("single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"),
         patch(
@@ -418,7 +421,7 @@ def test_restart_restarts_with_sleep(harness):
 
     with (
         # Harmlessly decreasing timeouts for faster test run
-        patch("single_kernel_opensearch_dashboards.managers.server.RESTART_TIMEOUT", 3),
+        patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
@@ -452,7 +455,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
         ) as init_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
@@ -462,13 +465,13 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         harness.charm.restart(mock_event)
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
-            component_name="health_manager",
+            component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
         add.assert_called_with(
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
             scope="unit",
-            component="server_manager",
+            component=CLUSTER_MANAGER_NAME,
         )
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
@@ -495,7 +498,7 @@ def test_init_server_calls_necessary_methods_leader(harness):
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.server.ServerManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
         ) as init_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
@@ -511,17 +514,17 @@ def test_init_server_calls_necessary_methods_leader(harness):
             call(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
                 scope="app",
-                component="server_manager",
+                component=CLUSTER_MANAGER_NAME,
             ),
             call(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
                 scope="unit",
-                component="server_manager",
+                component=CLUSTER_MANAGER_NAME,
             ),
         ]
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
-            component_name="health_manager",
+            component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
         add.assert_has_calls(expected_calls, any_order=False)
@@ -567,7 +570,7 @@ def test_workload_down_blocked_status(harness):
 
     with (
         # Harmlessly decreasing timeouts for faster test run
-        patch("single_kernel_opensearch_dashboards.managers.server.RESTART_TIMEOUT", 3),
+        patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
@@ -599,12 +602,12 @@ def test_workload_down_blocked_status(harness):
             call(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
                 scope="app",
-                component="health_manager",
+                component=HEALTH_MANAGER_NAME,
             ),
             call(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
                 scope="unit",
-                component="health_manager",
+                component=HEALTH_MANAGER_NAME,
             ),
         ]
         add.assert_has_calls(expected_calls, any_order=False)
@@ -650,7 +653,7 @@ def test_service_unavailable_blocked_status(harness):
             call(
                 status=HealthStatuses.STATUS_UNAVAILABLE.value,
                 scope="unit",
-                component="health_manager",
+                component=HEALTH_MANAGER_NAME,
             ),
         ]
         add.assert_has_calls(expected_calls, any_order=False)
@@ -737,7 +740,7 @@ def test_service_unhealthy(harness):
             call(
                 status=HealthStatuses.STATUS_UNHEALTHY.value,
                 scope="unit",
-                component="health_manager",
+                component=HEALTH_MANAGER_NAME,
             ),
         ]
         add.assert_has_calls(expected_calls, any_order=False)
@@ -822,7 +825,9 @@ def test_service_error(harness):
         harness.charm.restart(mock_event)
         expected_calls = [
             call(
-                status=HealthStatuses.STATUS_ERROR.value, scope="unit", component="health_manager"
+                status=HealthStatuses.STATUS_ERROR.value,
+                scope="unit",
+                component=HEALTH_MANAGER_NAME,
             ),
         ]
         add.assert_has_calls(expected_calls, any_order=False)
@@ -958,13 +963,8 @@ def test_wrong_opensearch_version(harness):
         expected_calls = [
             call(
                 status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
-                scope="app",
-                component="upgrade_manager",
-            ),
-            call(
-                status=UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value,
                 scope="unit",
-                component="upgrade_manager",
+                component=UPGRADE_MANAGER_NAME,
             ),
         ]
         add.assert_has_calls(expected_calls, any_order=False)

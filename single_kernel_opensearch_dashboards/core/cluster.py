@@ -5,9 +5,9 @@
 """Collection of global cluster state."""
 import logging
 from ipaddress import IPv4Address, IPv6Address
-from typing import Optional, Set
+from typing import Literal, Optional, Set
 
-from data_platform_helpers.advanced_statuses import StatusesState
+from data_platform_helpers.advanced_statuses import StatusesState, StatusObject
 from data_platform_helpers.advanced_statuses.protocol import StatusesStateProtocol
 from ops.framework import Object
 from ops.model import Relation, Unit
@@ -294,3 +294,29 @@ class ClusterState(Object, StatusesStateProtocol):
             return set()
 
         return set([self.model.unit] + list(self.upgrade_relation.units))
+
+    # --- STATUS ---
+    def delete_status_if_present(
+        self, status: StatusObject, scope: Literal["unit", "app"], component: str
+    ) -> None:
+        """Delete a status from a specific component safely.
+
+        Checks if the status actually exists in the current state to avoid
+        logging unnecessary warnings when attempting to delete a non-existent status.
+
+        Args:
+            status (StatusObject): The status object to remove.
+            scope (Literal["unit", "app"]): The scope from which to remove the status.
+            component (str): The name of the component holding the status.
+        """
+        if scope == "app" and not self.unit.is_leader():
+            return
+
+        current_statuses = self.statuses.get(scope=scope, component=component)
+
+        if status in current_statuses:
+            self.statuses.delete(
+                status=status,
+                scope=scope,
+                component=component,
+            )

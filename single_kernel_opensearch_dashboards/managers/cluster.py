@@ -14,8 +14,8 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.literals import (
+    CLUSTER_MANAGER_NAME,
     RESTART_TIMEOUT,
-    SERVER_MANAGER_NAME,
     SERVER_PORT,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -29,10 +29,10 @@ from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 logger = logging.getLogger(__name__)
 
 
-class ServerManager(BaseManager):
+class ClusterManager(BaseManager):
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         super().__init__(state, workload)
-        self.name = SERVER_MANAGER_NAME
+        self.name = CLUSTER_MANAGER_NAME
 
     def init_server(self) -> None:
         """Calls startup functions for server start."""
@@ -61,7 +61,7 @@ class ServerManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the server manager's statuses."""
         if not recompute:
-            statuses = self.state.statuses.get(scope, "server_manager").root
+            statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []

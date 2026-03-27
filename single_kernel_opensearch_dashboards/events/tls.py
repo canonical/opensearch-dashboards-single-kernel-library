@@ -8,6 +8,7 @@ import logging
 import re
 from subprocess import CalledProcessError
 
+from ops import Object
 from ops.charm import ActionEvent
 from ops.framework import EventBase
 
@@ -17,51 +18,35 @@ from single_kernel_opensearch_dashboards.charms.base import (
 from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
-    TLS_MANAGER_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import TLSStatuses
-from single_kernel_opensearch_dashboards.events.base import BaseEvents
-from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
-    RollingOpsManager,
-)
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.managers.config import ConfigManager
-from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.server import ServerManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
 
-class TLSEvents(BaseEvents):
+class TLSEvents(Object):
     """Event handlers for related applications on the `certificates` relation interface."""
 
     def __init__(
         self,
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
-        health_manager: HealthManager,
-        config_manager: ConfigManager,
-        server_manager: ServerManager,
-        restart_manager: RollingOpsManager,
         tls_manager: TLSManager,
     ) -> None:
         super().__init__(
             charm,
-            state,
-            health_manager,
-            config_manager,
-            server_manager,
-            restart_manager,
-            tls_manager,
             "tls",
         )
+        self.charm = charm
+        self.state = state
         self.tls_manager = tls_manager
 
         self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
@@ -97,7 +82,7 @@ class TLSEvents(BaseEvents):
             TLSStatuses.WAITING_FOR_TLS.value,
             scope="unit",
             statuses_state=self.state.statuses,
-            component_name=TLS_MANAGER_NAME,
+            component_name=self.tls_manager.name,
         )
 
     def _remove_certificates(self, event: EventBase) -> None:
@@ -110,7 +95,7 @@ class TLSEvents(BaseEvents):
                 TLSStatuses.WAITING_FOR_TLS.value,
                 scope="unit",
                 statuses_state=self.state.statuses,
-                component_name=TLS_MANAGER_NAME,
+                component_name=self.tls_manager.name,
             )
 
         self.state.unit_server.update({"csr": "", "certificate": "", "ca-cert": ""})
@@ -128,8 +113,8 @@ class TLSEvents(BaseEvents):
 
     def _on_certificate_available(self, event: "CertificateAvailableEvent") -> None:
         """Handler for `certificates_available` event after provider updates signed certs."""
-        self.delete_status_if_present(
-            TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component=TLS_MANAGER_NAME
+        self.state.delete_status_if_present(
+            TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component=self.tls_manager.name
         )
 
         if event.certificate_signing_request != self.state.unit_server.csr:
@@ -170,7 +155,7 @@ class TLSEvents(BaseEvents):
             TLSStatuses.WAITING_FOR_TLS.value,
             scope="unit",
             statuses_state=self.state.statuses,
-            component_name=TLS_MANAGER_NAME,
+            component_name=self.tls_manager.name,
         )
 
         self.state.unit_server.update({"csr": new_csr.decode("utf-8").strip()})

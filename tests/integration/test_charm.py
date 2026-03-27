@@ -11,8 +11,6 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from single_kernel_opensearch_dashboards.common.literals import MSG_STATUS_DB_UNHEALTHY
-
 from .helpers import (
     CONFIG_OPTS,
     DASHBOARD_QUERY_PARAMS,
@@ -348,7 +346,7 @@ async def test_dashboard_status_changes(ops_test: OpsTest):
     assert await check_full_status(
         ops_test,
         status="blocked",
-        status_msg=MSG_STATUS_DB_UNHEALTHY,
+        status_msg="The OpenSearch service health is red",
     )
 
 

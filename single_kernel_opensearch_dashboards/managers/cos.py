@@ -2,11 +2,8 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""The COS manager.
+"""Manager for handling COS"""
 
-This class is purely there for separation of purposes, it will just include the
-right observability stack.
-"""
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 

@@ -2,10 +2,11 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""OpenSearch Dashboards Charm for advanced status handling."""
-from abc import ABC
+"""OpenSearch Dashboards Status Handler"""
+from abc import ABC, abstractmethod
 
 from data_platform_helpers.advanced_statuses import StatusHandler
+from ops import EventBase
 
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
@@ -22,3 +23,6 @@ class OpenSearchDashboardsStatusHandler(TypedCharmBase[CharmConfig], ABC):
 
     def __init__(self, *args):
         super().__init__(*args)
+
+    @abstractmethod
+    def emit_restart(self, event: EventBase) -> None: ...

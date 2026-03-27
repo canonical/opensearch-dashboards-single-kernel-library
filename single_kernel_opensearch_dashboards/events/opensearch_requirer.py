@@ -5,6 +5,7 @@
 """Event handler for related applications on the `opensearch-client` relation interface."""
 import logging
 
+from ops import Object
 from ops.charm import RelationBrokenEvent, RelationEvent
 
 from single_kernel_opensearch_dashboards.charms.base import (
@@ -12,44 +13,29 @@ from single_kernel_opensearch_dashboards.charms.base import (
 )
 from single_kernel_opensearch_dashboards.common.literals import OPENSEARCH_REL_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.events.base import BaseEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
-    RollingOpsManager,
-)
-from single_kernel_opensearch_dashboards.managers.config import ConfigManager
-from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.server import ServerManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
 
-class RequirerEvents(BaseEvents):
+class RequirerEvents(Object):
     """Event handlers for related applications on the `opensearch-client` relation interface."""
 
     def __init__(
         self,
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
-        health_manager: HealthManager,
-        config_manager: ConfigManager,
-        server_manager: ServerManager,
-        restart_manager: RollingOpsManager,
         tls_manager: TLSManager,
     ) -> None:
         super().__init__(
             charm,
-            state,
-            health_manager,
-            config_manager,
-            server_manager,
-            restart_manager,
-            tls_manager,
             "provider",
         )
+        self.charm = charm
+        self.state = state
         self.tls_manager = tls_manager
 
         self.requirer_events = OpenSearchRequiresEventHandlers(
@@ -69,7 +55,7 @@ class RequirerEvents(BaseEvents):
             return
 
         self.tls_manager.set_ca_opensearch()
-        self.emit_restart(event)
+        self.charm.emit_restart(event)
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.

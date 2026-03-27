@@ -99,12 +99,12 @@ class UpgradeManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the upgrade manager's statuses."""
         if not recompute:
-            statuses = self.state.statuses.get(scope, "upgrade_manager").root
+            statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []
 
-        if not self.version_compatible():
+        if not self.version_compatible() and scope == "unit":
             status_list.append(UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value)
         if not self.state.upgrade_idle:
             status_list.append(UpgradeStatuses.WAITING_FOR_UPGRADE.value)

@@ -153,7 +153,7 @@ class ConfigManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the config manager's statuses."""
         if not recompute:
-            statuses = self.state.statuses.get(scope, "config_manager").root
+            statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []

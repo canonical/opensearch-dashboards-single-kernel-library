@@ -11,7 +11,7 @@ import requests
 from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
-from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
+from tenacity import RetryCallState
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -44,7 +44,7 @@ class BaseManager(ManagerStatusProtocol):
         self,
         uri: str,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a "raw"" HTTP(S) request to the OS Rest API.
@@ -82,7 +82,7 @@ class BaseManager(ManagerStatusProtocol):
         self,
         endpoint: str,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a "raw"" HTTP(S) request to the OSD Rest API.
@@ -119,7 +119,7 @@ class BaseManager(ManagerStatusProtocol):
         uri: str,
         cert_path: PathProtocol,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a raw authenticated HTTP(S) request to the OpenSearch  or OSD API.

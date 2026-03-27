@@ -3,14 +3,12 @@
 # See LICENSE file for licensing details.
 
 import logging
-import time
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 import responses
 from requests import ReadTimeout
 
-from single_kernel_opensearch_dashboards.common.literals import CHARM_KEY
 from single_kernel_opensearch_dashboards.core.statuses import HealthStatuses
 
 logger = logging.getLogger(__name__)

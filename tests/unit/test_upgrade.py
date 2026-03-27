@@ -12,9 +12,10 @@ from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallErro
 from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     DEPENDENCIES,
-    MSG_INCOMPATIBLE_UPGRADE,
     OPENSEARCH_REL_NAME,
+    UPGRADE_MANAGER_NAME,
 )
+from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
@@ -58,7 +59,8 @@ def test_pre_upgrade_check_fails_if_workload_down(harness, mocker):
     ):
         with pytest.raises(ClusterNotReadyError):
             assert harness.charm.upgrade_events.pre_upgrade_check() is None
-            harness.charm.unit.status = BlockedStatus(MSG_INCOMPATIBLE_UPGRADE)
+            statuses = harness.state.statuses.get("unit", UPGRADE_MANAGER_NAME).root
+            assert UpgradeStatuses.DB_INCOMPATIBLE_VERSION in statuses
 
 
 @pytest.mark.parametrize(
