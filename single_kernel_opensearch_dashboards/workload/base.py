@@ -171,6 +171,7 @@ class WorkloadBase(ABC):
             path (str): The file path where the content should be written.
         """
         try:
+            path.exists()
             path.write_text(content)
         except (
             FileNotFoundError,

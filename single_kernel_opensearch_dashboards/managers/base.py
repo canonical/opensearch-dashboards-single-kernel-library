@@ -14,6 +14,7 @@ from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from ops.pebble import PathError
 from requests import RequestException
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -76,11 +77,13 @@ class BaseManager(ManagerStatusProtocol):
                 "Accept": "application/json",
                 "Content-Type": "application/json",
             }
+
         return self._request(
             uri,
             method=method,
             substrate=substrate,
             headers=headers,
+            opensearch=True,
             payload=payload,
             cert_path=self.workload.paths.opensearch_ca,
         )
@@ -133,6 +136,7 @@ class BaseManager(ManagerStatusProtocol):
         uri: str,
         cert_path: PathProtocol,
         substrate: Substrates,
+        opensearch: bool = False,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -196,8 +200,21 @@ class BaseManager(ManagerStatusProtocol):
                     DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
-                resp = s.request(**request_kwargs)
-                resp.raise_for_status()
+                if opensearch:
+                    # OpenSearch
+                    for attempt in Retrying(
+                        stop=stop_after_attempt(3),
+                        wait=wait_fixed(1),
+                        reraise=True,
+                    ):
+                        with attempt:
+                            resp = s.request(**request_kwargs)
+                            resp.raise_for_status()
+                else:
+                    # OpenSearch Dashboards
+                    resp = s.request(**request_kwargs)
+                    resp.raise_for_status()
+
         except requests.ReadTimeout as e:
             logger.error(f"Hanging, no response from {uri}: {e}.")
             raise

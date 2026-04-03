@@ -5,6 +5,8 @@
 """Event handler for handling OpensearchDashboards in-place upgrades."""
 import logging
 
+from lightkube import ApiError, Client
+from lightkube.resources.apps_v1 import StatefulSet
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
@@ -21,9 +23,11 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_m
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
+    KubernetesClientError,
     UpgradeGrantedEvent,
 )
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
@@ -42,6 +46,7 @@ class UpgradeEvents(DataUpgrade):
         substrate: Substrates,
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
+        tls_manager: TLSManager,
     ) -> None:
         DataUpgrade.__init__(
             self,
@@ -53,6 +58,28 @@ class UpgradeEvents(DataUpgrade):
         self.osd_state = state
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
+        self.tls_manager = tls_manager
+        self.framework.observe(self.charm.on.upgrade_charm, self._on_k8s_upgrade_charm)
+
+    def _on_k8s_upgrade_charm(self, event) -> None:
+        """Handle the K8s-specific upgrade flow."""
+        if self.substrate == Substrates.VM:
+            return
+
+        if self.osd_state.upgrade_idle:
+            logger.info("Pod restarted, but no upgrade is in progress. Skipping upgrade logic.")
+            return
+
+        try:
+            logger.debug("Running post-upgrade check...")
+            self.post_upgrade_check()
+
+            logger.debug("Marking unit completed...")
+            self.set_unit_completed()
+
+        except ClusterNotReadyError as e:
+            logger.error(e.cause)
+            self.set_unit_failed(cause=e.cause)
 
     def post_upgrade_check(self) -> None:
         """Runs necessary checks validating the unit is in a healthy state after upgrade."""
@@ -130,3 +157,26 @@ class UpgradeEvents(DataUpgrade):
         except ClusterNotReadyError as e:
             logger.error(e.cause)
             self.set_unit_failed(cause=e.cause)
+
+    @override
+    def _set_rolling_update_partition(self, partition: int) -> None:
+        """Patch the StatefulSet's `spec.updateStrategy.rollingUpdate.partition`."""
+        if self.substrate == Substrates.VM:
+            return
+
+        try:
+            patch = {"spec": {"updateStrategy": {"rollingUpdate": {"partition": partition}}}}
+            Client().patch(
+                res=StatefulSet,
+                name=self.charm.model.app.name,
+                namespace=self.charm.model.name,
+                obj=patch,
+            )
+            logger.debug(f"Kubernetes StatefulSet partition set to {partition}")
+
+        except ApiError as e:
+            if e.status.code == 403:
+                cause = "`juju trust` needed to patch StatefulSet"
+            else:
+                cause = str(e)
+            raise KubernetesClientError(message="Kubernetes StatefulSet patch failed", cause=cause)

@@ -15,6 +15,7 @@ from ops.model import Relation, Unit
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     DASHBOARD_INDEX,
+    DASHBOARD_INDEX_K8S,
     DASHBOARD_ROLE,
     JWT_REL_NAME,
     OAUTH_REL_NAME,
@@ -71,10 +72,15 @@ class ClusterState(Object, StatusesStateProtocol):
         self.peer_unit_data = DataPeerUnitData(
             self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_UNIT_SECRETS
         )
+
+        index = DASHBOARD_INDEX
+        if substrate == Substrates.K8S:
+            index = DASHBOARD_INDEX_K8S
+
         self.client_requires_data = OpenSearchRequiresData(
             self.model,
             relation_name=OPENSEARCH_REL_NAME,
-            index=DASHBOARD_INDEX,
+            index=index,
             extra_user_roles=DASHBOARD_ROLE,
         )
 
@@ -318,5 +324,56 @@ class ClusterState(Object, StatusesStateProtocol):
             self.statuses.delete(
                 status=status,
                 scope=scope,
+                component=component,
+            )
+
+    def delete_status_if_present_both(self, status: StatusObject, component: str) -> None:
+        """Delete a status from a specific component safely for both unit and app.
+
+        Checks if the status actually exists in the current state to avoid
+        logging unnecessary warnings when attempting to delete a non-existent status.
+
+        If unit is not leader, deletes only unit status
+
+        Args:
+            status (StatusObject): The status object to remove.
+            component (str): The name of the component holding the status.
+        """
+        current_statuses = self.statuses.get(scope="unit", component=component)
+        if status in current_statuses:
+            self.statuses.delete(
+                status=status,
+                scope="unit",
+                component=component,
+            )
+
+        if self.unit.is_leader():
+            current_statuses = self.statuses.get(scope="app", component=component)
+            if status in current_statuses:
+                self.statuses.delete(
+                    status=status,
+                    scope="app",
+                    component=component,
+                )
+
+    def add_status_to_both(self, status: StatusObject, component: str) -> None:
+        """Adds status to both app and unit
+
+        Checks if unit is leader, if not sets status only for unit
+
+        Args:
+            status (StatusObject): The status object to remove.
+            component (str): The name of the component holding the status.
+        """
+
+        self.statuses.add(
+            status=status,
+            scope="unit",
+            component=component,
+        )
+        if self.unit.is_leader():
+            self.statuses.add(
+                status=status,
+                scope="app",
                 component=component,
             )

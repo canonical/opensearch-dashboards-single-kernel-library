@@ -8,7 +8,6 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.literals import (
-    COS_MANAGER_NAME,
     COS_PORT,
     COS_RELATION_NAME,
     Substrates,
@@ -21,6 +20,15 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_m
 )
 from single_kernel_opensearch_dashboards.lib.charms.grafana_agent.v0.cos_agent import (
     COSAgentProvider,
+)
+from single_kernel_opensearch_dashboards.lib.charms.grafana_k8s.v0.grafana_dashboard import (
+    GrafanaDashboardProvider,
+)
+from single_kernel_opensearch_dashboards.lib.charms.loki_k8s.v1.loki_push_api import (
+    LogForwarder,
+)
+from single_kernel_opensearch_dashboards.lib.charms.prometheus_k8s.v0.prometheus_scrape import (
+    MetricsEndpointProvider,
 )
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -39,28 +47,49 @@ class COSManager(BaseManager):
         super().__init__(state, workload)
         self.substrate = substrate
         self.charm = charm
-        self.name = COS_MANAGER_NAME
+        self.name = "cos_manager"
 
         if self.substrate == Substrates.VM:
             self.cos_integration = COSAgentProvider(
                 self.charm,
                 relation_name=COS_RELATION_NAME,
                 metrics_endpoints=[],
-                scrape_configs=self.scrape_config,
+                scrape_configs=self.scrape_config(),
                 refresh_events=[self.charm.on.config_changed],
                 metrics_rules_dir=(self.charm.charm_dir / "src/alert_rules/prometheus").as_posix(),
                 log_slots=["opensearch-dashboards:logs"],
             )
 
+        elif self.substrate == Substrates.K8S:
+            # 1. Metrics (Prometheus)
+            self.metrics_endpoint = MetricsEndpointProvider(
+                self.charm,
+                relation_name="metrics-endpoint",
+                jobs=self.scrape_config(),
+                alert_rules_path="./src/alert_rules/prometheus",
+            )
+
+            # 2. Logs (Loki)
+            self.log_proxy = LogForwarder(
+                self.charm,
+                relation_name="logging",
+            )
+
+            # 3. Dashboards (Grafana)
+            self.grafana_dashboards = GrafanaDashboardProvider(
+                self.charm, relation_name="grafana-dashboard"
+            )
+
     def scrape_config(self) -> list[dict]:
         """Generates the scrape config as needed."""
+        target_ip = (
+            f"{self.state.unit_server.private_ip}" if self.substrate == Substrates.VM else "*"
+        )
+
         return [
             {
                 "metrics_path": "/metrics",
-                "static_configs": [
-                    {"targets": [f"{self.state.unit_server.private_ip}:{COS_PORT}"]}
-                ],
-                # "tls_config": {"ca": self.state.unit_server.ca},
+                "static_configs": [{"targets": [f"{target_ip}:{COS_PORT}"]}],
                 "scheme": "http",
             }
         ]

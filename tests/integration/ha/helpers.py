@@ -6,6 +6,7 @@ import json
 import logging
 import socket
 import subprocess
+import textwrap
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -52,10 +53,8 @@ def reachable(host: str, port: int) -> bool:
         s.close()
 
 
-def get_hosts_from_status(
-    ops_test: OpsTest, app_name: str = APP_NAME, port: int = SERVER_PORT
-) -> dict[str, str]:
-    """Manually calls `juju status` and grabs the host addresses from there for a given application.
+def get_hosts_from_status(ops_test: OpsTest, app_name: str = APP_NAME) -> dict[str, str]:
+    """Manually calls `juju status` and grabs the host addresses for a given application.
 
     Needed as after an ip change (e.g network cut test), OpsTest does not recognise the new address.
 
@@ -65,41 +64,57 @@ def get_hosts_from_status(
             Defaults to `opensearch-dashboards`
 
     Returns:
-        List of Opensearch Dashboards server addresses and ports
+        Dict mapping unit names to their IP addresses
+        (e.g., {'opensearch-dashboards/0': '10.1.2.3'})
     """
-    ips = subprocess.check_output(
-        f"JUJU_MODEL={ops_test.model_full_name} juju status {app_name} | grep '{APP_NAME}/[0-9]' "
-        " | sed -e s/\*// | awk -F ' *' '{ print $1 \":\" $5 }'",  # noqa
-        shell=True,
-        universal_newlines=True,
-    ).split()
+    cmd = ["juju", "status", app_name, "-m", ops_test.model_full_name, "--format", "json"]
 
-    return {ip.split(":")[0]: ip.split(":")[1] for ip in ips}
+    raw_status = subprocess.check_output(cmd, text=True)
+    status = json.loads(raw_status)
+
+    hosts = {}
+
+    units = status.get("applications", {}).get(app_name, {}).get("units", {})
+
+    for unit_name, unit_data in units.items():
+        ip_address = unit_data.get("public-address") or unit_data.get("address")
+        if ip_address:
+            hosts[unit_name] = ip_address
+
+    return hosts
 
 
 def get_unit_state_from_status(
-    ops_test: OpsTest, unit_name: str, app_name: str = APP_NAME, port: int = SERVER_PORT
+    ops_test: OpsTest, unit_name: str, app_name: str = APP_NAME, port: int = 8080
 ) -> list[str]:
-    """Manually calls `juju status` and grabs the host addresses from there for a given application.
+    """Manually calls `juju status` and grabs the requested data for a given unit.
 
     Needed as after an ip change (e.g network cut test), OpsTest does not recognise the new address.
 
     Args:
         ops_test: OpsTest
+        unit_name: The specific unit to query (e.g., 'opensearch-dashboards/0')
         app_name: the Juju application to get hosts from
             Defaults to `opensearch-dashboards`
+        port: The server port
 
     Returns:
-        List of Opensearch Dashboards server addresses and ports
+        List containing either [workload_state, agent_state] OR [ip_address, port]
     """
-    state = subprocess.check_output(
-        f"JUJU_MODEL={ops_test.model_full_name} juju status {app_name} | grep '{unit_name} ' "
-        " | sed -e s/\*// | awk -F ' *' '{ print $2 \":\" $3 }'",  # noqa
-        shell=True,
-        universal_newlines=True,
-    ).strip()
+    cmd = ["juju", "status", app_name, "-m", ops_test.model_full_name, "--format", "json"]
 
-    return state.split(":")
+    raw_status = subprocess.check_output(cmd, text=True, universal_newlines=True)
+    status = json.loads(raw_status)
+
+    try:
+        unit_data = status["applications"][app_name]["units"][unit_name]
+    except KeyError:
+        raise ValueError(f"Unit {unit_name} not found in application {app_name}")
+
+    workload_state = unit_data.get("workload-status", {}).get("current", "")
+    agent_state = unit_data.get("juju-status", {}).get("current", "")
+
+    return [workload_state, agent_state]
 
 
 def get_hosts(ops_test: OpsTest, app_name: str = APP_NAME, port: int = SERVER_PORT) -> str:
@@ -222,6 +237,103 @@ def network_throttle(machine_name: str) -> None:
     subprocess.check_call(limit_set_command.split())
 
 
+def network_throttle_k8s(pod_name: str, namespace: str) -> None:
+    """Throttles network bandwidth for a Kubernetes pod using Chaos Mesh.
+
+    Args:
+        pod_name: The Kubernetes pod name (e.g., 'opensearch-dashboards-k8s-0')
+        namespace: The Kubernetes namespace
+    """
+
+    chaos_yaml = textwrap.dedent(
+        f"""
+            apiVersion: chaos-mesh.org/v1alpha1
+            kind: NetworkChaos
+            metadata:
+              name: throttle-{pod_name}
+              namespace: {namespace}
+            spec:
+              action: loss
+              mode: one
+              selector:
+                pods:
+                  {namespace}:
+                    - {pod_name}
+              loss:
+                loss: '100'
+                correlation: '0'
+              duration: "60m"
+        """
+    ).strip()
+
+    try:
+        result = subprocess.run(
+            ["microk8s", "kubectl", "apply", "-f", "-"],
+            input=chaos_yaml,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        logger.debug(f"kubectl apply output: {result.stdout.strip()}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to apply Chaos Mesh. Error: {e.stderr}")
+        raise
+
+
+def network_restore_throttle_k8s(pod_name: str, namespace: str) -> None:
+    """Removes the Chaos Mesh network throttling from a Kubernetes pod.
+
+    Args:
+        pod_name: The Kubernetes pod name (e.g., 'opensearch-dashboards-k8s-0')
+        namespace: The Kubernetes namespace
+    """
+    resource_name = f"throttle-{pod_name}"
+
+    try:
+        result = subprocess.run(
+            [
+                "microk8s",
+                "kubectl",
+                "delete",
+                "networkchaos",
+                resource_name,
+                "--namespace",
+                namespace,
+                "--ignore-not-found=true",
+            ],
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        logger.debug(f"kubectl delete output: {result.stdout.strip()}")
+    except subprocess.CalledProcessError as e:
+        logger.warning(f"Failed to delete Chaos Mesh resource '{resource_name}': {e.stderr}")
+
+
+def network_cut_k8s(pod_name: str, namespace: str) -> None:
+    """Deletes pod to simulate ip change.
+
+    Args:
+        pod_name: The Kubernetes pod name (e.g., 'opensearch-dashboards-0')
+        namespace: The Kubernetes namespace
+    """
+    logger.info(f"Force deleting pod {pod_name} to simulate network cut...")
+    subprocess.run(
+        [
+            "microk8s",
+            "kubectl",
+            "delete",
+            "pod",
+            pod_name,
+            "-n",
+            namespace,
+            "--force",
+            "--grace-period=0",
+        ],
+        check=True,
+    )
+
+
 def network_release(machine_name: str) -> None:
     """Restore network from a lxc container (without causing the change of the unit IP address).
 
@@ -234,7 +346,11 @@ def network_release(machine_name: str) -> None:
 
 
 async def send_control_signal(
-    ops_test: OpsTest, unit_name: str, signal: str, app_name: str = APP_NAME
+    ops_test: OpsTest,
+    unit_name: str,
+    signal: str,
+    app_name: str = APP_NAME,
+    container_name: str = "",
 ) -> None:
     """Issues given job control signals to a server process on a given Juju unit.
 
@@ -245,8 +361,12 @@ async def send_control_signal(
             e.g `SIGKILL`, `SIGSTOP`, `SIGCONT` etc
         app_name: the Juju application
     """
-    process = PROCESS if app_name == APP_NAME else DB_PROCESS
-    kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"
+    if container_name:
+        kill_cmd = f"ssh --container opensearch-dashboards {unit_name} -- pebble signal {signal} opensearch_dashboards"
+    else:
+        process = PROCESS if app_name == APP_NAME else DB_PROCESS
+        kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"
+
     return_code, stdout, stderr = await ops_test.juju(*kill_cmd.split())
 
     if return_code != 0:
@@ -296,6 +416,17 @@ async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> boo
         return False
 
     return True
+
+
+async def get_service_pid(ops_test: OpsTest, unit_name: str) -> str:
+    """Gets the exact PID of the running pebble service."""
+    cmd = f"ssh --container opensearch_dashboards {unit_name} -- pgrep -x node"
+    return_code, stdout, stderr = await ops_test.juju(*cmd.split())
+
+    # pgrep returns 1 if no processes are matched
+    if return_code != 0:
+        return ""
+    return stdout.strip()
 
 
 async def is_service_down(ops_test: OpsTest, unit: str) -> bool:

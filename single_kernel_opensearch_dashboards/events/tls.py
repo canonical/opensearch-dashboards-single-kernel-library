@@ -124,6 +124,7 @@ class TLSEvents(Object):
         self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
 
         try:
+            self.tls_manager.create_cert_directory()
             self.tls_manager.set_private_key()
             self.tls_manager.set_ca()
             self.tls_manager.set_certificate()

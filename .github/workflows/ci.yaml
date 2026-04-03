@@ -132,6 +132,7 @@ jobs:
         path:
           - tests/integration/application_charm
           - tests/charms/vm
+          - tests/charms/k8s
     steps:
       - name: Install CLI
         run: pipx install git+https://github.com/canonical/data-platform-workflows@v31.1.1#subdirectory=python/cli

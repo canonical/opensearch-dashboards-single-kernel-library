@@ -106,8 +106,10 @@ backends:
           username: ubuntu
 
 suites:
-  tests/spread/:
-    summary: General test suite
+  tests/spread/vm/:
+    summary: General vm test suite
+  tests/spread/k8s/:
+    summary: General k8s test suite
 
 path: /root/spread_project
 
@@ -123,52 +125,46 @@ prepare: |
   cd "$SPREAD_PATH"
   snap install --classic concierge
 
-  if [[ $SPREAD_TASK == *"oauth"* ]]
+  # Running on IS-hosted runner; configure microk8s to use Docker Hub mirror
+  # Run before concierge prepare because of https://github.com/canonical/concierge/issues/75
+  sudo snap install microk8s  --classic
+  sudo snap install kubectl --classic 
+  sudo snap install yq
+  
+  if [[ -n "$DOCKERHUB_MIRROR" ]]
   then
-    # Running on IS-hosted runner; configure microk8s to use Docker Hub mirror
-    # Run before concierge prepare because of https://github.com/canonical/concierge/issues/75
-    sudo snap install microk8s  --classic
-    sudo snap install kubectl --classic 
-    sudo snap install yq
-    
-    if [[ -n "$DOCKERHUB_MIRROR" ]]
-    then
-      # Wait for microk8s to populate iptables
-      # https://chat.canonical.com/canonical/pl/jo5cg6wqjjrudqd5ybj6hhttee
-      until [[ -n $(iptables --list | grep -i "microk8s") ]]
-      do
-        echo "MicroK8s has not yet configured iptables."
-        sleep 10
-      done
-      # Use printf to avoid YAML/Heredoc indentation issues
-      printf 'server = "%s"\n[host."%s"]\ncapabilities = ["pull", "resolve"]\n' \
-        "$DOCKERHUB_MIRROR" "${DOCKERHUB_MIRROR#'https://'}" \
-        | sudo tee /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml > /dev/null
-    fi
-    microk8s stop
-    microk8s start
-    microk8s enable dns
-    microk8s enable hostpath-storage
-    microk8s enable metallb:10.64.140.43-10.64.140.49
-    mkdir -p ~/.kube
-    microk8s config > ~/.kube/config
-  
-    echo "Waiting for all pods to be in 'Running' phase..."
-    until kubectl get po -A --field-selector=status.phase!=Running 2>&1 | grep -q "No resources found"; do
-      echo "Some pods are not running. Retrying in 5 seconds..."
-      sleep 5
+    # Wait for microk8s to populate iptables
+    # https://chat.canonical.com/canonical/pl/jo5cg6wqjjrudqd5ybj6hhttee
+    until [[ -n $(iptables --list | grep -i "microk8s") ]]
+    do
+      echo "MicroK8s has not yet configured iptables."
+      sleep 10
     done
-    echo "Success: All pods are running!"
+    # Use printf to avoid YAML/Heredoc indentation issues
+    printf 'server = "%s"\n[host."%s"]\ncapabilities = ["pull", "resolve"]\n' \
+      "$DOCKERHUB_MIRROR" "${DOCKERHUB_MIRROR#'https://'}" \
+      | sudo tee /var/snap/microk8s/current/args/certs.d/docker.io/hosts.toml > /dev/null
   fi
-  
+  microk8s stop
+  microk8s start
+  microk8s enable dns
+  microk8s enable hostpath-storage
+  microk8s enable metallb:10.64.140.43-10.64.140.49
+  mkdir -p ~/.kube
+  microk8s config > ~/.kube/config
+
+  echo "Waiting for all pods to be in 'Running' phase..."
+  until kubectl get po -A --field-selector=status.phase!=Running 2>&1 | grep -q "No resources found"; do
+    echo "Some pods are not running. Retrying in 5 seconds..."
+    sleep 5
+  done
+  echo "Success: All pods are running!"
+
   # Install charmcraft & pipx (on lxd-vm backend)
   concierge prepare --trace
-  
-  if [[ $SPREAD_TASK == *"oauth"* ]]
-  then
-    /snap/bin/juju add-k8s uk8s --client --controller $(/snap/bin/juju show-controller | yq "keys | .[0]")
-  fi
 
+  /snap/bin/juju add-k8s uk8s --client --controller $(/snap/bin/juju show-controller | yq "keys | .[0]")
+  
   pipx install tox poetry
 prepare-each: |
   cd "$SPREAD_PATH"

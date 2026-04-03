@@ -14,8 +14,6 @@ from single_kernel_opensearch_dashboards.charms.base import (
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     CONTAINER_NAME,
-    EXPORTER_SERVICE,
-    OSD_SERVICE,
     UPGRADE_MANAGER_NAME,
     Substrates,
 )
@@ -87,7 +85,6 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define the initial Pebble layer and start the service."""
-        logger.debug("PEBBLE READY")
         container = self.charm.unit.get_container(CONTAINER_NAME)
         if not container.can_connect():
             self.state.statuses.add(
@@ -102,15 +99,6 @@ class OpenSearchDashboardsEvents(Object):
             scope="unit",
             component=self.cluster_manager.name,
         )
-        try:
-            container.add_layer(
-                "rockcraft-opensearch-dashboards", self._user_pebble_layer, combine=True
-            )
-            container.replan()
-
-        except (ops.pebble.PathError, ops.pebble.ProtocolError, ops.pebble.ConnectionError):
-            event.defer()
-            return
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -160,8 +148,7 @@ class OpenSearchDashboardsEvents(Object):
             event.defer()
             return
 
-        if self.state.unit_server.started:
-            self.charm.emit_restart(event)
+        self.charm.emit_restart(event)
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         """Handle the `config-changed` event."""
@@ -209,78 +196,37 @@ class OpenSearchDashboardsEvents(Object):
 
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""
+        # CONTAINER CHECK
+        if self.substrate == Substrates.K8S:
+            container = self.charm.unit.get_container(CONTAINER_NAME)
+            if not container.can_connect():
+                return False
+
         # PEER RELATION CHECK
         if not self.state.peer_relation:
             logger.debug("Waiting for peer relations")
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=ConfigStatuses.WAITING_FOR_PEER.value,
-                    scope="app",
-                    component=CONFIG_MANAGER_NAME,
-                )
-            self.state.statuses.add(
-                status=ConfigStatuses.WAITING_FOR_PEER.value,
-                scope="unit",
-                component=CONFIG_MANAGER_NAME,
+            self.state.add_status_to_both(
+                status=ConfigStatuses.WAITING_FOR_PEER.value, component=CONFIG_MANAGER_NAME
             )
             return False
 
-        self.state.delete_status_if_present(
+        self.state.delete_status_if_present_both(
             status=ConfigStatuses.WAITING_FOR_PEER.value,
-            scope="unit",
-            component=CONFIG_MANAGER_NAME,
-        )
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value,
-            scope="app",
             component=CONFIG_MANAGER_NAME,
         )
 
         # UPGRADE IDLE CHECK
         if not self.state.upgrade_idle:
             logger.debug("Waiting for upgrade relations to be idle")
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-                    scope="app",
-                    component=UPGRADE_MANAGER_NAME,
-                )
-            self.state.statuses.add(
+            self.state.add_status_to_both(
                 status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-                scope="unit",
                 component=UPGRADE_MANAGER_NAME,
             )
             return False
 
-        self.state.delete_status_if_present(
+        self.state.delete_status_if_present_both(
             status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-            scope="unit",
-            component=UPGRADE_MANAGER_NAME,
-        )
-        self.state.delete_status_if_present(
-            status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-            scope="app",
             component=UPGRADE_MANAGER_NAME,
         )
 
         return True
-
-    @property
-    def _user_pebble_layer(self) -> ops.pebble.Layer:
-        """Returns a new layer to force services to run as _daemon_."""
-        return ops.pebble.Layer(
-            {
-                "services": {
-                    OSD_SERVICE: {
-                        "override": "merge",
-                        "user": "_daemon_",
-                        "group": "_daemon_",
-                    },
-                    EXPORTER_SERVICE: {
-                        "override": "merge",
-                        "user": "_daemon_",
-                        "group": "_daemon_",
-                    },
-                },
-            }
-        )

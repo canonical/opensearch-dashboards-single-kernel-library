@@ -84,18 +84,19 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.state,
             self.tls_manager,
         )
-        self.requirer_events = RequirerEvents(
-            self,
-            self.state,
-            self.tls_manager,
-        )
+        self.requirer_events = RequirerEvents(self, self.state, self.tls_manager, self.substrate)
         self.oauth = OAuthEvents(
             self,
             self.state,
         )
 
         self.upgrade_events = UpgradeEvents(
-            self, self.state, self.substrate, self.upgrade_manager, self.health_manager
+            self,
+            self.state,
+            self.substrate,
+            self.upgrade_manager,
+            self.health_manager,
+            self.tls_manager,
         )
 
         self.status_handler = StatusHandler(
@@ -122,7 +123,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
 
     def restart(self, event: EventBase):
         """Restart method for RollingOpsManager"""
-        logger.debug(f"Creating properties for {event.framework.model.unit.name}")
+        logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
         self.config_manager.set_dashboard_properties()
 
         self.state.delete_status_if_present(
@@ -141,7 +142,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.state.unit_server.update({"state": "started"})
 
             # Set ca if unit was added after opensearch relation creation
-            self.tls_manager.set_ca_opensearch()
+            self.tls_manager.write_tls_files()
         else:
             self.status_handler.set_running_status(
                 status=ServerStatuses.RESTARTING_SERVER.value,
@@ -149,6 +150,10 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
                 scope="unit",
             )
             self.cluster_manager.restart_server()
+
+            # Set ca if pod was re-created
+            if self.substrate == Substrates.K8S:
+                self.tls_manager.write_tls_files()
 
         # Checking health after restart
         self.status_handler.set_running_status(
@@ -163,27 +168,13 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         Returns true if OSD server is healthy otherwise false
         """
         # OPENSEARCH CONNECTION
-        self.state.delete_status_if_present(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            scope="app",
-            component=self.cluster_manager.name,
-        )
-        self.state.delete_status_if_present(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            scope="unit",
-            component=self.cluster_manager.name,
+        self.state.delete_status_if_present_both(
+            status=ServerStatuses.DB_CONNECTION_MISSING.value, component=self.cluster_manager.name
         )
 
         if not self.state.opensearch_server:
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                    scope="app",
-                    component=self.cluster_manager.name,
-                )
-            self.state.statuses.add(
+            self.state.add_status_to_both(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                scope="unit",
                 component=self.cluster_manager.name,
             )
 

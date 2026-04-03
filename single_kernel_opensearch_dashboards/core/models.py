@@ -14,7 +14,6 @@ from typing_extensions import override
 from single_kernel_opensearch_dashboards.common.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     Data,
-    DataDict,
     RequirerData,
 )
 
@@ -42,7 +41,7 @@ class StateBase:
     @property
     def relation_data(self) -> MutableMapping[str, str]:
         """The raw relation data."""
-        return self._relation_data.data if isinstance(self._relation_data, DataDict) else {}
+        return self._relation_data
 
     def update(self, items: dict[str, str]) -> None:
         """Writes to relation_data."""

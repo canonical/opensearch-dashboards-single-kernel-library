@@ -1,8 +1,8 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: opensearch-dashboards
-display-name: Opensearch Dashboards
+name: opensearch-dashboards-k8s
+display-name: Opensearch Dashboards K8s
 description: |
     OpenSearch Dashboard is a community-driven, Apache 2.0-licensed open source 
     user interface that lets you visualize your OpenSearch data and run and scale
@@ -27,7 +27,7 @@ resources:
   opensearch-dashboards-image:
     type: oci-image
     description: OCI image for opensearch-dashboards
-    upstream-source: ghcr.io/canonical/opensearch-dashboards:2.19.4-24.04_stable
+    upstream-source: ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge
 
 peers:
   dashboard_peers:
@@ -55,8 +55,11 @@ requires:
     interface: jwt
     limit: 1
     optional: true
+  logging:
+    interface: loki_push_api
 
 provides:
-  cos-agent:
-    interface: cos_agent
-    limit: 1
+  metrics-endpoint:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard

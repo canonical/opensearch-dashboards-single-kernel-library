@@ -17,7 +17,6 @@ from ..helpers import (
     access_all_dashboards,
     access_all_prometheus_exporters,
     for_machines,
-    get_relation,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ DEFAULT_NUM_UNITS = 3
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, series: str) -> None:
+async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charmvm: str, series: str) -> None:
     """Build and deploy OpenSearch Dashboards.
 
     For this test, we will create a machine in multiple spaces and inject
@@ -70,7 +69,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, serie
         )
 
     await ops_test.model.deploy(
-        charm,
+        charmvm,
         num_units=DEFAULT_NUM_UNITS,
         series=series,
         constraints="spaces=alpha,client,cluster,backup",
@@ -105,10 +104,10 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, serie
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access_http(ops_test: OpsTest):
+async def test_dashboard_access_http(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, get_relation(ops_test).id)
-    assert await access_all_prometheus_exporters(ops_test)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s)
+    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)
 
 
 ##############################################################################
@@ -129,7 +128,7 @@ async def test_tls_on(ops_test: OpsTest) -> None:
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access_https(ops_test: OpsTest):
+async def test_dashboard_access_https(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, get_relation(ops_test).id, https=True)
-    assert await access_all_prometheus_exporters(ops_test)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)
+    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)

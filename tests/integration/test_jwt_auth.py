@@ -20,8 +20,10 @@ from .helpers_jwt import generate_json_web_token
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
+METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
+APP_NAME = METADATA_VM["name"]
+APP_NAME_K8S = METADATA_K8S["name"]
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
 OPENSEARCH_APP_NAME = "opensearch"
@@ -35,12 +37,31 @@ OPENSEARCH_CONFIG = {
         - [ 'sysctl', '-w', 'net.ipv4.tcp_retries2=5' ]
     """,
 }
+RESOURCE = {
+    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+}
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
+async def test_build_and_deploy(
+    ops_test: OpsTest, ops_test_microk8s: OpsTest, charmvm: str, charmk8s: str, series: str
+):
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
-    await ops_test.model.deploy(charm, application_name=APP_NAME, series=series)
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    charm = charmvm
+    app_name = APP_NAME
+    if is_cross_model:
+        charm = charmk8s
+        app_name = APP_NAME_K8S
+
+    if is_cross_model:
+        await ops_test_microk8s.model.deploy(
+            charm, application_name=app_name, series=series, resources=RESOURCE
+        )
+
+    else:
+        await ops_test_microk8s.model.deploy(charm, application_name=app_name, series=series)
+
     await ops_test.model.set_config(OPENSEARCH_CONFIG)
     config = {"ca-common-name": "CN_CA"}
     await ops_test.model.deploy(
@@ -62,8 +83,15 @@ async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
         status="active",
     )
 
-    logger.info(f"Integrating {APP_NAME} with {OPENSEARCH_APP_NAME}")
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
+    if is_cross_model:
+        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
+        await ops_test.model.create_offer(JWT_REL_NAME, JWT_APP_NAME, "jwt-integrator")
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{JWT_APP_NAME}")
+
+    logger.info(f"Integrating {app_name} with {OPENSEARCH_APP_NAME}")
+    await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
 
     logger.info("Create JWT configuration")
     global generated_jwt
@@ -87,16 +115,22 @@ async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
     await ops_test.model.integrate(JWT_APP_NAME, OPENSEARCH_APP_NAME)
     await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME, JWT_APP_NAME], status="active")
 
-    logger.info(f"Integrating {APP_NAME} with {JWT_APP_NAME}")
-    await ops_test.model.integrate(JWT_APP_NAME, APP_NAME)
-    await ops_test.model.wait_for_idle(apps=[APP_NAME, JWT_APP_NAME], status="active")
+    logger.info(f"Integrating {app_name} with {JWT_APP_NAME}")
+    await ops_test_microk8s.model.integrate(JWT_APP_NAME, app_name)
+    await ops_test.model.wait_for_idle(apps=[JWT_APP_NAME], status="active")
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active")
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access(ops_test: OpsTest):
+async def test_dashboard_access(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test access to dashboard unit with JWT and basic auth."""
-    unit = ops_test.model.applications[APP_NAME].units[0]
-    host = get_bind_address(ops_test.model.name, unit.name)
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    app_name = APP_NAME
+    if is_cross_model:
+        app_name = APP_NAME_K8S
+
+    unit = ops_test_microk8s.model.applications[app_name].units[0]
+    host = get_bind_address(ops_test_microk8s.model.name, unit.name)
     url = f"http://{host}:5601/api/status"
 
     logger.info("Test access with JWT")
@@ -106,19 +140,20 @@ async def test_dashboard_access(ops_test: OpsTest):
     assert jwt_result.status_code == 200, "Request failed"
     logger.info("Access with JWT successful")
 
-    logger.info(f"Remove relation of {JWT_APP_NAME} with {APP_NAME}")
-    remove_relation_cmd = (
-        f"remove-relation {JWT_APP_NAME}:{JWT_REL_NAME} {APP_NAME}:{JWT_REL_NAME}"
-    )
-    await ops_test.juju(*remove_relation_cmd.split(), check=True)
+    logger.info(f"Remove relation of {JWT_APP_NAME} with {app_name}")
+    await ops_test_microk8s.juju("remove-relation", JWT_APP_NAME, app_name)
 
     logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
-    remove_relation_cmd = (
-        f"remove-relation {JWT_APP_NAME}:{JWT_REL_NAME} {OPENSEARCH_APP_NAME}:{JWT_REL_NAME}"
-    )
-    await ops_test.juju(*remove_relation_cmd.split(), check=True)
+    await ops_test.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
+
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, OPENSEARCH_APP_NAME],
+        apps=[OPENSEARCH_APP_NAME],
+        status="active",
+        idle_period=60,
+    )
+
+    await ops_test_microk8s.model.wait_for_idle(
+        apps=[app_name],
         status="active",
         idle_period=60,
     )

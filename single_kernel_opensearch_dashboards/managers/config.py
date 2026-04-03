@@ -93,15 +93,11 @@ class ConfigManager(BaseManager):
             properties["opensearch.hosts"] = [
                 f"https://{endpoint}" for endpoint in self.state.opensearch_server.endpoints
             ]
-            properties |= {"opensearch_security.enabled": "false"}
 
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
 
-        if self.substrate == Substrates.K8S:
-            properties |= {"server.host": "0.0.0.0"}
-        else:
-            # We are using the address exposed by Juju as service address
-            properties |= {"server.host": str(self.state.bind_address)}
+        # We are using the address exposed by Juju as service address
+        properties |= {"server.host": str(self.state.bind_address)}
 
         if opensearch_user and opensearch_password:
             properties |= {

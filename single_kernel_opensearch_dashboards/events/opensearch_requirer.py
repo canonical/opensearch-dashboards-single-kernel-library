@@ -11,7 +11,10 @@ from ops.charm import RelationBrokenEvent, RelationEvent
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
-from single_kernel_opensearch_dashboards.common.literals import OPENSEARCH_REL_NAME
+from single_kernel_opensearch_dashboards.common.literals import (
+    OPENSEARCH_REL_NAME,
+    Substrates,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
@@ -29,6 +32,7 @@ class RequirerEvents(Object):
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
         tls_manager: TLSManager,
+        substrate: Substrates,
     ) -> None:
         super().__init__(
             charm,
@@ -37,12 +41,10 @@ class RequirerEvents(Object):
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
+        self.substrate = substrate
 
         self.requirer_events = OpenSearchRequiresEventHandlers(
             self.charm, self.state.client_requires_data
-        )
-        self.framework.observe(
-            self.charm.on[OPENSEARCH_REL_NAME].relation_created, self._on_client_relation_created
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed
@@ -51,24 +53,14 @@ class RequirerEvents(Object):
             self.charm.on[OPENSEARCH_REL_NAME].relation_broken, self._on_client_relation_broken
         )
 
-    def _on_client_relation_created(self, event: RelationEvent) -> None:
-        """Updates ACLs while handling `client_relation_changed` events."""
-        # Temporary solution to test k8s charm
-        # Cross model secret sharing of opensearch is not supported so we force data interfaces to not use them
-        # TODO: remove it
-        if not self.charm.unit.is_leader():
-            return
-        event.relation.data[self.charm.app]["requested-secrets"] = "[]"
-        event.relation.data[self.charm.app]["provided-secrets"] = "[]"
-
     def _on_client_relation_changed(self, event: RelationEvent) -> None:
         """Updates ACLs while handling `client_relation_changed` events."""
         if not self.state.stable:
             event.defer()
             return
 
-        self.tls_manager.set_ca_opensearch()
-        self.charm.emit_restart(event)
+        if self.tls_manager.set_ca_opensearch():
+            self.charm.emit_restart(event)
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.

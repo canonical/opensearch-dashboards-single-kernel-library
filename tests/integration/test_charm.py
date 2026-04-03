@@ -32,8 +32,14 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
+METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
+PROMETHEUS_APP = "prometheus-k8s"
+LOKI_APP = "loki-k8s"
+GRAFANA_APP = "grafana-k8s"
+COS_PORT = "9684"
+APP_NAME = METADATA_VM["name"]
+APP_NAME_K8S = METADATA_K8S["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 OPENSEARCH_CONFIG = {
@@ -52,112 +58,165 @@ DB_CLIENT_APP_NAME = "application"
 
 NUM_UNITS_APP = 3
 NUM_UNITS_DB = 3
+RESOURCE = {
+    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+}
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_build_and_deploy(
-    ops_test: OpsTest, charm: str, application_charm: str, series: str
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    application_charm: str,
+    series: str,
 ):
-    """Deploying all charms required for the tests, and wait for their complete setup to be done."""
+    """Deploying all charms required for the tests, and wait for complete setup."""
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    charm = charmvm
+    app_name = APP_NAME
+    if is_cross_model:
+        charm = charmk8s
+        app_name = APP_NAME_K8S
 
-    await ops_test.model.deploy(
-        charm, application_name=APP_NAME, num_units=NUM_UNITS_APP, series=series
-    )
+    # Always on VM model
     await ops_test.model.set_config(OPENSEARCH_CONFIG)
-
-    config = {"ca-common-name": "CN_CA"}
-    await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
     await ops_test.model.deploy(
         OPENSEARCH_APP_NAME,
         channel="2/edge",
         num_units=NUM_UNITS_DB,
         config=CONFIG_OPTS,
     )
+    await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
+
+    config = {"ca-common-name": "CN_CA"}
     await ops_test.model.deploy(
         TLS_CERTIFICATES_APP_NAME, channel=TLS_STABLE_CHANNEL, config=config
     )
-    await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
 
+    # Deploy rest on K8s model if testing K8s, otherwise VM model
+    if is_cross_model:
+        await ops_test_microk8s.model.deploy(
+            charm,
+            application_name=app_name,
+            num_units=NUM_UNITS_APP,
+            series=series,
+            resources=RESOURCE,
+        )
+
+    else:
+        await ops_test_microk8s.model.deploy(
+            charm, application_name=app_name, num_units=NUM_UNITS_APP, series=series
+        )
+        await ops_test_microk8s.model.deploy(
+            COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series
+        )
+
+    # Add TLS to OpenSearch
     await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
 
-    # integrate it to OpenSearch to set up TLS.
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="blocked", timeout=1000)
+
     await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME],
-        status="active",
-        timeout=1000,
-    )
 
-    async with ops_test.fast_forward():
-        await ops_test.model.block_until(
-            lambda: len(ops_test.model.applications[APP_NAME].units) == NUM_UNITS_APP
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+
+    if is_cross_model:
+        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+
+    # Wait for the Dashboards to block on its specific model
+    async with ops_test_microk8s.fast_forward():
+        await ops_test_microk8s.model.block_until(
+            lambda: len(ops_test_microk8s.model.applications[app_name].units) == NUM_UNITS_APP
         )
-        await ops_test.model.wait_for_idle(apps=[APP_NAME], timeout=1000, idle_period=30)
+        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], timeout=1000, idle_period=30)
 
-    assert ops_test.model.applications[APP_NAME].status == "blocked"
+    assert ops_test_microk8s.model.applications[app_name].status == "blocked"
 
-    # Relate both Dashboards and the Client to Opensearch
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
+    # Integrate the rest
     await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
+
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME],
+        apps=[DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME],
         status="active",
         timeout=1000,
     )
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access(ops_test: OpsTest):
+async def test_dashboard_access(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTP access to each dashboard unit."""
-
-    opensearch_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME)[0]
-    assert await access_all_dashboards(ops_test, opensearch_relation.id)
-    assert await access_all_prometheus_exporters(ops_test)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s)
+    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access_https(ops_test: OpsTest):
+async def test_dashboard_access_https(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTPS access to each dashboard unit."""
     # integrate it to OpenSearch to set up TLS.
-    await ops_test.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-    opensearch_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME)[0]
-
-    assert await access_all_dashboards(ops_test, opensearch_relation.id, https=True)
-    assert await access_all_prometheus_exporters(ops_test)
-
-    # Breaking the relation shouldn't impact service availability
-    # A new certificate is requested when the relation is joined again
-    await ops_test.juju("remove-relation", APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    app_name = APP_NAME
     server_cert = (
         "/var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/server.pem"
     )
-    unit = ops_test.model.applications[APP_NAME].units[0]
-    host_cert = get_file_contents(ops_test, unit, server_cert)
+    if is_cross_model:
+        app_name = APP_NAME_K8S
+        server_cert = "/etc/opensearch-dashboards/certificates/server.pem"
+        await ops_test.model.create_offer(
+            "certificates", TLS_CERTIFICATES_APP_NAME, "self-signed-certificates"
+        )
+        await ops_test_microk8s.model.consume(
+            f"admin/{ops_test.model_name}.{TLS_CERTIFICATES_APP_NAME}"
+        )
+
+    await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(
+        apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
+    )
+
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)
+    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)
+
+    # Breaking the relation shouldn't impact service availability
+    # A new certificate is requested when the relation is joined again
+    await ops_test_microk8s.juju("remove-relation", app_name, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.wait_for_idle(
+        apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
+    )
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+
+    unit = ops_test_microk8s.model.applications[app_name].units[0]
+    host_cert = get_file_contents(
+        ops_test_microk8s.model.name, unit.name, server_cert, is_cross_model
+    )
 
     # TLS Broken on relation removal we check the connection on HTTP
-    await access_all_dashboards(ops_test, opensearch_relation.id)
+    await access_all_dashboards(ops_test, ops_test_microk8s)
 
     # Restore relation for further tests
-    await ops_test.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
+        apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000, idle_period=20
     )
-    new_host_cert = get_file_contents(ops_test, unit, server_cert)
+    await ops_test_microk8s.model.wait_for_idle(
+        apps=[app_name], status="active", timeout=1000, idle_period=20
+    )
+    new_host_cert = get_file_contents(
+        ops_test_microk8s.model.name, unit.name, server_cert, is_cross_model
+    )
     assert host_cert != new_host_cert
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_client_data_access_https(ops_test: OpsTest):
+async def test_dashboard_client_data_access_https(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTPS access to each dashboard unit."""
     client_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME, DB_CLIENT_APP_NAME)[0]
 
@@ -201,6 +260,7 @@ async def test_dashboard_client_data_access_https(ops_test: OpsTest):
 
     result = await client_run_all_dashboards_request(
         ops_test,
+        ops_test_microk8s,
         unit_name,
         client_relation,
         "POST",
@@ -215,106 +275,176 @@ async def test_dashboard_client_data_access_https(ops_test: OpsTest):
 
 
 @pytest.mark.abort_on_fail
-async def test_cos_relations(ops_test: OpsTest):
-    await ops_test.model.integrate(COS_AGENT_APP_NAME, APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", timeout=1000, idle_period=30
-    )
-    await ops_test.model.wait_for_idle(
-        apps=[COS_AGENT_APP_NAME], status="blocked", timeout=1000, idle_period=30
-    )
+async def test_cos_relations(ops_test: OpsTest, ops_test_microk8s: OpsTest):
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    if is_cross_model:
+        await ops_test_microk8s.model.deploy(
+            PROMETHEUS_APP,
+            application_name=PROMETHEUS_APP,
+            channel="2/stable",
+            trust=True,
+        )
+        await ops_test_microk8s.model.deploy(
+            LOKI_APP,
+            application_name=LOKI_APP,
+            channel="2/stable",
+            trust=True,
+        )
+        await ops_test_microk8s.model.deploy(
+            GRAFANA_APP,
+            application_name=GRAFANA_APP,
+            channel="2/stable",
+            trust=True,
+        )
 
-    expected_results = [
-        {
+        await ops_test_microk8s.model.integrate(f"{APP_NAME_K8S}:metrics-endpoint", PROMETHEUS_APP)
+        await ops_test_microk8s.model.integrate(f"{APP_NAME_K8S}:logging", LOKI_APP)
+        await ops_test_microk8s.model.integrate(f"{APP_NAME_K8S}:grafana-dashboard", GRAFANA_APP)
+
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[APP_NAME_K8S, PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
+            status="active",
+            timeout=1000,
+            idle_period=30,
+        )
+
+        expected_results = {
             "metrics_path": "/metrics",
+            "static_configs": [{"targets": [f"*:{COS_PORT}"]}],
             "scheme": "http",
         }
-    ]
-    agent_unit = ops_test.model.applications[COS_AGENT_APP_NAME].units[0]
-    for unit in ops_test.model.applications[APP_NAME].units:
-        unit_ip = await get_address(ops_test, unit.name)
-        relation_data = get_unit_relation_data(
-            ops_test.model.name, agent_unit.name, COS_AGENT_RELATION_NAME
+
+        prom_unit = ops_test_microk8s.model.applications[PROMETHEUS_APP].units[0]
+
+        rc, stdout, stderr = await ops_test_microk8s.juju(
+            "show-unit", prom_unit.name, "--format=yaml"
         )
-        expected_results[0]["static_configs"] = [{"targets": [f"{unit_ip}:9684"]}]
-        unit_data = relation_data[unit.name]
-        unit_cos_config = json.loads(unit_data["data"]["config"])
-        for key, value in expected_results[0].items():
-            assert unit_cos_config["metrics_scrape_jobs"][0][key] == value
+        assert rc == 0, f"Failed to get unit data: {stderr}"
 
+        unit_data = yaml.safe_load(stdout)[prom_unit.name]
 
-@pytest.mark.abort_on_fail
-async def test_log_level_change(ops_test: OpsTest):
-    for unit in ops_test.model.applications[APP_NAME].units:
-        assert count_lines_with(
-            ops_test.model_full_name,
-            unit.name,
-            "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log",
-            "debug",
-        )
+        metrics_relation = None
+        for relation in unit_data.get("relation-info", []):
+            related_units = relation.get("related-units", {})
+            if any(unit.startswith(f"{APP_NAME_K8S}/") for unit in related_units.keys()):
+                metrics_relation = relation
+                break
 
-        await ops_test.model.applications[APP_NAME].set_config({"log_level": "ERROR"})
+        assert metrics_relation is not None, f"Could not find relation data for {APP_NAME_K8S}"
 
+        app_databag = metrics_relation.get("application-data", {})
+        published_jobs = json.loads(app_databag.get("scrape_jobs", "[]"))
+
+        assert len(published_jobs) > 0, "No scrape jobs were published to the relation."
+
+        unit_cos_config = published_jobs[0]
+        for key, value in expected_results.items():
+            assert unit_cos_config[key] == value
+
+    else:
+        await ops_test.model.integrate(COS_AGENT_APP_NAME, APP_NAME)
         await ops_test.model.wait_for_idle(
             apps=[APP_NAME], status="active", timeout=1000, idle_period=30
         )
+        await ops_test.model.wait_for_idle(
+            apps=[COS_AGENT_APP_NAME], status="blocked", timeout=1000, idle_period=30
+        )
+
+        expected_results = [
+            {
+                "metrics_path": "/metrics",
+                "scheme": "http",
+            }
+        ]
+        agent_unit = ops_test.model.applications[COS_AGENT_APP_NAME].units[0]
+        for unit in ops_test.model.applications[APP_NAME].units:
+            unit_ip = await get_address(ops_test, unit.name, APP_NAME)
+            relation_data = get_unit_relation_data(
+                ops_test.model.name, agent_unit.name, COS_AGENT_RELATION_NAME
+            )
+            expected_results[0]["static_configs"] = [{"targets": [f"{unit_ip}:9684"]}]
+            unit_data = relation_data[unit.name]
+            unit_cos_config = json.loads(unit_data["data"]["config"])
+            for key, value in expected_results[0].items():
+                assert unit_cos_config["metrics_scrape_jobs"][0][key] == value
+
+
+@pytest.mark.abort_on_fail
+async def test_log_level_change(ops_test, ops_test_microk8s):
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    log_path = "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log"
+    app_name = APP_NAME
+    container = ""
+    if is_cross_model:
+        app_name = APP_NAME_K8S
+        log_path = "/var/log/opensearch-dashboards/opensearch_dashboards.log"
+        container = "opensearch-dashboards"
+
+    for unit in ops_test_microk8s.model.applications[app_name].units:
+        assert count_lines_with(
+            ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
+        )
+
+        await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "ERROR"})
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], status="active", timeout=1000, idle_period=30
+        )
 
         debug_lines = count_lines_with(
-            ops_test.model_full_name,
-            unit.name,
-            "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log",
-            "debug",
+            ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
         )
 
         assert (
             count_lines_with(
-                ops_test.model_full_name,
-                unit.name,
-                "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log",
-                "debug",
+                ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
             )
             == debug_lines
         )
 
-    # Reset default loglevel
-    await ops_test.model.applications[APP_NAME].set_config({"log_level": "INFO"})
-
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", timeout=1000, idle_period=30
+    await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "INFO"})
+    await ops_test_microk8s.model.wait_for_idle(
+        apps=[app_name], status="active", timeout=1000, idle_period=30
     )
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_status_changes(ops_test: OpsTest):
+async def test_dashboard_status_changes(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Test HTTPS access to each dashboard unit."""
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    app_name = APP_NAME
+    if is_cross_model:
+        app_name = APP_NAME_K8S
 
     logger.info("Breaking opensearch connection")
-    await ops_test.juju("remove-relation", "opensearch", "opensearch-dashboards")
+    await ops_test_microk8s.juju("remove-relation", "opensearch", app_name)
     await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
 
-    async with ops_test.fast_forward("30s"):
-        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked")
+    async with ops_test_microk8s.fast_forward("30s"):
+        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="blocked")
 
     assert await check_full_status(
-        ops_test, status="blocked", status_msg="OpenSearch connection is missing"
+        ops_test_microk8s,
+        app_name=app_name,
+        status="blocked",
+        status_msg="OpenSearch connection is missing",
     )
 
     logger.info("Checking if Dashboards have become unavailable")
-    assert all_dashboards_unavailable(ops_test, https=True)
+    assert all_dashboards_unavailable(ops_test, ops_test_microk8s, https=True)
 
     logger.info("Restoring Opensearch connection")
-    await ops_test.model.integrate(APP_NAME, OPENSEARCH_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, OPENSEARCH_APP_NAME], status="active", timeout=1000
-    )
-    assert ops_test.model.applications[APP_NAME].status == "active"
+    await ops_test_microk8s.model.integrate(app_name, OPENSEARCH_APP_NAME)
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+
+    assert ops_test_microk8s.model.applications[app_name].status == "active"
     assert all(
-        unit.workload_status == "active" for unit in ops_test.model.applications[APP_NAME].units
+        unit.workload_status == "active"
+        for unit in ops_test_microk8s.model.applications[app_name].units
     )
 
     logger.info("Checking if Dashboards is available again")
-    opensearch_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME)[0]
-    assert await access_all_dashboards(ops_test, opensearch_relation.id, https=True)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)
 
     logger.info(
         "Adding a new index with shards allocated to a non existent node to make the cluster health red"
@@ -340,22 +470,27 @@ async def test_dashboard_status_changes(ops_test: OpsTest):
         "/bad_index",
         re.escape(payload),
     )
-    async with ops_test.fast_forward("30s"):
-        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked")
+    async with ops_test_microk8s.fast_forward("30s"):
+        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="blocked")
 
     assert await check_full_status(
-        ops_test,
+        ops_test_microk8s,
+        app_name=app_name,
         status="blocked",
         status_msg="The OpenSearch service health is red",
     )
 
 
 @pytest.mark.skip(reason="https://warthogs.atlassian.net/browse/DPE-5073")
-async def test_restore_opensearch_restores_osd(ops_test: OpsTest):
+async def test_restore_opensearch_restores_osd(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """This test shouldn't be separate but a native continuation of the previous one.
 
     Should be only split as long as it's not enabled.
     """
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    app_name = APP_NAME
+    if is_cross_model:
+        app_name = APP_NAME_K8S
 
     logger.info("Destroying and restoring the Opensearch cluster")
     await destroy_cluster(ops_test, app=OPENSEARCH_APP_NAME)
@@ -371,11 +506,11 @@ async def test_restore_opensearch_restores_osd(ops_test: OpsTest):
     async with ops_test.fast_forward("30s"):
         await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="blocked")
 
-    await ops_test.model.integrate(APP_NAME, OPENSEARCH_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, OPENSEARCH_APP_NAME], status="active", timeout=1000
-    )
+    await ops_test_microk8s.model.integrate(app_name, OPENSEARCH_APP_NAME)
+
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     logger.info("Checking if Dashboards is available again")
-    opensearch_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME)[0]
-    assert await access_all_dashboards(ops_test, opensearch_relation.id, https=True)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)

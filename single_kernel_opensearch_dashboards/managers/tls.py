@@ -54,7 +54,7 @@ class TLSManager(BaseManager):
 
         self.workload.write_text(self.state.unit_server.ca, self.workload.paths.ca)
 
-    def set_ca_opensearch(self) -> None:
+    def set_ca_opensearch(self) -> bool:
         """Sets the unit CA."""
         if (
             self.state.opensearch_server
@@ -65,6 +65,8 @@ class TLSManager(BaseManager):
             self.workload.write_text(
                 self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
             )
+            return True
+        return False
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
@@ -136,6 +138,29 @@ class TLSManager(BaseManager):
         )
 
         return csr
+
+    def create_cert_directory(self) -> None:
+        self.workload.paths.certificate_dir.mkdir(exist_ok=True)
+
+    def write_tls_files(self) -> None:
+        """Writes necessary data from databag to files.
+        Used for when k8s pod is recreated
+        Or a unit added after relation with OpenSearch was created
+        """
+
+        self.create_cert_directory()
+
+        if self.state.opensearch_server and self.state.opensearch_server.password:
+            self.set_ca_opensearch()
+
+        if self.state.unit_server.private_key:
+            self.set_private_key()
+
+        if self.state.unit_server.ca:
+            self.set_ca()
+
+        if self.state.unit_server.certificate:
+            self.set_certificate()
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the tls manager's statuses."""

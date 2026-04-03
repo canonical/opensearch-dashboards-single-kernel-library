@@ -8,7 +8,6 @@ from ops.log import JujuLogHandler
 from ops.main import main
 
 from single_kernel_opensearch_dashboards.charms.k8s import OpenSearchK8sCharm
-from single_kernel_opensearch_dashboards.charms.vm import OpenSearchVMCharm
 
 # Show logger name (module name) in logs
 root_logger = logging.getLogger()

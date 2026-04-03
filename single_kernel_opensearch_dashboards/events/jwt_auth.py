@@ -30,7 +30,7 @@ class JwtEvents(Object):
     ) -> None:
         super().__init__(
             charm,
-            "provider",
+            "jwt_events",
         )
         self.charm = charm
         self.state = state

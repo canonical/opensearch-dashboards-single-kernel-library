@@ -116,7 +116,7 @@ class HealthManager(BaseManager):
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             return True
 
         logger.info(f"Checking health")
@@ -159,8 +159,7 @@ class HealthManager(BaseManager):
         ):
             opensearch_healthy, status = self.opensearch_status()
             if not opensearch_healthy and status:
-                self.state.statuses.add(status=status, scope="app", component=self.name)
-                self.state.statuses.add(status=status, scope="unit", component=self.name)
+                self.state.add_status_to_both(status=status, component=self.name)
 
     def check_osd_health(self) -> None:
         """Coordinate and execute all comprehensive health checks.
@@ -171,16 +170,8 @@ class HealthManager(BaseManager):
         Returns true if OSD is healthy otherwise false
         """
         if not self.service_healthy():
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                    scope="app",
-                    component=self.name,
-                )
-            self.state.statuses.add(
-                status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                scope="unit",
-                component=self.name,
+            self.state.add_status_to_both(
+                status=HealthStatuses.WORKLOAD_IS_DOWN.value, component=self.name
             )
             return
 
@@ -191,7 +182,7 @@ class HealthManager(BaseManager):
         self.state.statuses.clear(scope="unit", component=self.name)
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             return
 
         self.wait_for_unit_health()

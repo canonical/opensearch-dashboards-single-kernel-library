@@ -49,10 +49,10 @@ CONFIG_MANAGER_NAME = "config_manager"
 HEALTH_MANAGER_NAME = "health_manager"
 UPGRADE_MANAGER_NAME = "upgrade_manager"
 TLS_MANAGER_NAME = "tls_manager"
-COS_MANAGER_NAME = "cos_manager"
 
 # OpenSearch user and role
 DASHBOARD_INDEX = ".opensearch-dashboards"
+DASHBOARD_INDEX_K8S = ".opensearch-dashboards-k8s"
 DASHBOARD_USER = "kibanaserver"
 DASHBOARD_ROLE = "kibana_server"
 

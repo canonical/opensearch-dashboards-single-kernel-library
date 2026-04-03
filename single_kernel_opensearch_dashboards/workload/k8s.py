@@ -4,12 +4,13 @@
 
 """Kubernetes Workload."""
 import logging
-from typing import Any, override
+from typing import Any
 
 import ops
 import yaml
 from charmlibs import pathops
 from tenacity import retry, retry_if_not_result, stop_after_attempt, wait_fixed
+from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.literals import (
     EXPORTER_SERVICE,

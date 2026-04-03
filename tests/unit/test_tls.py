@@ -74,6 +74,7 @@ def test_certificates_available_succeeds(harness):
     # implicitly tests these method calls
     with patch.multiple(
         "single_kernel_opensearch_dashboards.managers.tls.TLSManager",
+        create_cert_directory=DEFAULT,
         set_private_key=DEFAULT,
         set_ca=DEFAULT,
         set_certificate=DEFAULT,
