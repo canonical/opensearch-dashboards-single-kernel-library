@@ -9,8 +9,9 @@ from typing import Any
 
 import requests
 from charmlibs.pathops import PathProtocol
+from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
-from tenacity import RetryCallState, Retrying, stop_after_attempt, wait_fixed
+from tenacity import RetryCallState
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -27,11 +28,13 @@ HEADERS = {
 }
 
 
-class BaseManager:
+class BaseManager(ManagerStatusProtocol):
     """Base OSD Manager.
 
     Include a set of functions and properties useful to other managers.
     """
+
+    state: ClusterState
 
     def __init__(self, state: ClusterState, workload: WorkloadBase):
         self.state = state
@@ -41,7 +44,7 @@ class BaseManager:
         self,
         uri: str,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a "raw"" HTTP(S) request to the OS Rest API.
@@ -79,7 +82,7 @@ class BaseManager:
         self,
         endpoint: str,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a "raw"" HTTP(S) request to the OSD Rest API.
@@ -116,7 +119,7 @@ class BaseManager:
         uri: str,
         cert_path: PathProtocol,
         method: str = "GET",
-        headers: dict = None,
+        headers: dict | None = None,
         payload: dict[str, Any] | None = None,
     ) -> tuple[int, dict[str, Any]]:
         """Issue a raw authenticated HTTP(S) request to the OpenSearch  or OSD API.
@@ -171,15 +174,8 @@ class BaseManager:
                     DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
-                for attempt in Retrying(
-                    stop=stop_after_attempt(3),
-                    wait=wait_fixed(1),
-                    reraise=True,
-                    before_sleep=log_retry,
-                ):
-                    with attempt:
-                        resp = s.request(**request_kwargs)
-                        resp.raise_for_status()
+                resp = s.request(**request_kwargs)
+                resp.raise_for_status()
         except requests.ReadTimeout as e:
             logger.error(f"Hanging, no response from {uri}: {e}.")
             raise

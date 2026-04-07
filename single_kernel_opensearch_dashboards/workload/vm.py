@@ -125,7 +125,7 @@ class VMWorkload(WorkloadBase):
 
     @override
     @retry(
-        wait=wait_fixed(1),
+        wait=wait_fixed(3),
         stop=stop_after_attempt(5),
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_if_not_result(lambda result: True if result else False),

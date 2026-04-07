@@ -6,23 +6,21 @@
 
 import logging
 
-from ops import BlockedStatus, EventBase, ModelError, Object
+from ops import EventBase, ModelError, Object
 
+from single_kernel_opensearch_dashboards.charms.base import (
+    OpenSearchDashboardsStatusHandler,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
-    MSG_STATUS_OAUTH_INFO_FAILED,
+    CLUSTER_MANAGER_NAME,
+    CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.events.shared_events import SharedEvents
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
+from single_kernel_opensearch_dashboards.core.statuses import (
+    ConfigStatuses,
+    ServerStatuses,
 )
-from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
-    ClientConfig,
-    OAuthRequirer,
-)
-from single_kernel_opensearch_dashboards.utils.helpers import set_global_status
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +30,15 @@ class OAuthEvents(Object):
 
     def __init__(
         self,
-        charm: TypedCharmBase[CharmConfig],
+        charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
-        shared_events: SharedEvents,
     ) -> None:
-        super().__init__(charm, "oauth")
+        super().__init__(
+            charm,
+            "oauth",
+        )
         self.charm = charm
         self.state = state
-        self.shared_events = shared_events
 
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_changed, self._on_oauth_relation_changed
@@ -47,22 +46,34 @@ class OAuthEvents(Object):
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
         )
-
-        self.oauth = OAuthRequirer(
-            self.charm, self._oauth_client_config(), relation_name=OAUTH_REL_NAME
-        )
-        self.oauth.update_client_config(self._oauth_client_config())
+        self.state.oauth_require.update_client_config(self.state.oauth_client_config())
 
     def _on_oauth_relation_changed(self, event: EventBase) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
         if not self.state.servers:
+            self.state.statuses.add(
+                status=ServerStatuses.SERVERS_IS_DOWN.value,
+                scope="app",
+                component=CLUSTER_MANAGER_NAME,
+            )
             event.defer()
             return
+
+        self.state.delete_status_if_present(
+            status=ServerStatuses.SERVERS_IS_DOWN.value,
+            scope="app",
+            component=CLUSTER_MANAGER_NAME,
+        )
+
         try:
-            provider_info = self.oauth.get_provider_info()
+            provider_info = self.state.oauth_require.get_provider_info()
         except ModelError as e:
             logger.error("OAuth provider info not available: %s", e)
-            set_global_status(self.charm, BlockedStatus(MSG_STATUS_OAUTH_INFO_FAILED))
+            self.state.statuses.add(
+                status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
+                scope="app",
+                component=CONFIG_MANAGER_NAME,
+            )
             event.defer()
             return
         self.state.cluster.update(
@@ -74,15 +85,10 @@ class OAuthEvents(Object):
                 ),
             }
         )
-
-        self.shared_events.reconcile(event)
-
-    def _oauth_client_config(self) -> ClientConfig:
-        """Generates actual client config for the OAuth."""
-        return ClientConfig(
-            audience=["opensearch"],
-            redirect_uri=f"{self.state.url}/auth/openid/login",
-            scope="openid profile email phone offline address",
-            grant_types=["authorization_code"],
-            token_endpoint_auth_method="client_secret_post",
+        self.state.delete_status_if_present(
+            status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
+            scope="app",
+            component=CONFIG_MANAGER_NAME,
         )
+
+        self.charm.emit_restart(event)

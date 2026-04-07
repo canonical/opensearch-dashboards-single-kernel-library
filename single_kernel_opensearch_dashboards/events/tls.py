@@ -8,16 +8,19 @@ import logging
 import re
 from subprocess import CalledProcessError
 
+from ops import Object
 from ops.charm import ActionEvent
-from ops.framework import EventBase, Object
+from ops.framework import EventBase
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
-from single_kernel_opensearch_dashboards.common.literals import CERTS_REL_NAME
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
+from single_kernel_opensearch_dashboards.charms.base import (
+    OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
+from single_kernel_opensearch_dashboards.common.literals import (
+    CERTS_REL_NAME,
+)
+from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import TLSStatuses
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
@@ -34,11 +37,14 @@ class TLSEvents(Object):
 
     def __init__(
         self,
-        charm: TypedCharmBase[CharmConfig],
+        charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
         tls_manager: TLSManager,
     ) -> None:
-        super().__init__(charm, "tls")
+        super().__init__(
+            charm,
+            "tls",
+        )
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
@@ -72,11 +78,24 @@ class TLSEvents(Object):
         self.state.unit_server.update({"csr": csr.decode("utf-8").strip()})
         self.certificates.request_certificate_creation(certificate_signing_request=csr)
 
+        self.charm.status_handler.set_running_status(
+            TLSStatuses.WAITING_FOR_TLS.value,
+            scope="unit",
+            statuses_state=self.state.statuses,
+            component_name=self.tls_manager.name,
+        )
+
     def _remove_certificates(self, event: EventBase) -> None:
         """Cleanup any existing certificates."""
         if self.state.cluster.tls_enabled and self.state.unit_server.csr:
             self.certificates.request_certificate_revocation(
                 self.state.unit_server.csr.encode("utf-8")
+            )
+            self.charm.status_handler.set_running_status(
+                TLSStatuses.WAITING_FOR_TLS.value,
+                scope="unit",
+                statuses_state=self.state.statuses,
+                component_name=self.tls_manager.name,
             )
 
         self.state.unit_server.update({"csr": "", "certificate": "", "ca-cert": ""})
@@ -94,6 +113,10 @@ class TLSEvents(Object):
 
     def _on_certificate_available(self, event: "CertificateAvailableEvent") -> None:
         """Handler for `certificates_available` event after provider updates signed certs."""
+        self.state.delete_status_if_present(
+            TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component=self.tls_manager.name
+        )
+
         if event.certificate_signing_request != self.state.unit_server.csr:
             logger.error("Can't use certificate, found unknown CSR")
             return
@@ -126,6 +149,13 @@ class TLSEvents(Object):
         self.certificates.request_certificate_renewal(
             old_certificate_signing_request=self.state.unit_server.csr.encode("utf-8"),
             new_certificate_signing_request=new_csr,
+        )
+
+        self.charm.status_handler.set_running_status(
+            TLSStatuses.WAITING_FOR_TLS.value,
+            scope="unit",
+            statuses_state=self.state.statuses,
+            component_name=self.tls_manager.name,
         )
 
         self.state.unit_server.update({"csr": new_csr.decode("utf-8").strip()})

@@ -9,12 +9,7 @@ import pytest
 import responses
 from requests import ReadTimeout
 
-from single_kernel_opensearch_dashboards.common.literals import (
-    MSG_STATUS_DB_DOWN,
-    MSG_STATUS_DB_UNHEALTHY,
-    MSG_STATUS_HANGING,
-    MSG_STATUS_UNAVAIL,
-)
+from single_kernel_opensearch_dashboards.core.statuses import HealthStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +86,9 @@ def test_health_status_ok(harness):
         json=expected_response,
     )
 
-    response = harness.charm.health_manager.status_ok()
+    response = harness.charm.health_manager.dashboards_status()
     assert response[0]
-    assert response[1] == ""
+    assert response[1] is None
 
 
 @pytest.mark.parametrize(
@@ -119,9 +114,9 @@ def test_health_status_service_uniavail(harness):
         body="OpenSearch Dashboards server is not ready yet",
     )
 
-    response = harness.charm.health_manager.status_ok()
+    response = harness.charm.health_manager.dashboards_status()
     assert not response[0]
-    assert response[1] == MSG_STATUS_UNAVAIL
+    assert response[1] == HealthStatuses.STATUS_UNAVAILABLE.value
 
 
 @pytest.mark.parametrize(
@@ -147,9 +142,9 @@ def test_health_status_service_unresponsive(harness):
         body=ReadTimeout(),
     )
 
-    response = harness.charm.health_manager.status_ok()
+    response = harness.charm.health_manager.dashboards_status()
     assert not response[0]
-    assert response[1] == MSG_STATUS_HANGING
+    assert response[1] == HealthStatuses.STATUS_HANGING.value
 
 
 @pytest.mark.parametrize(
@@ -194,7 +189,10 @@ def test_health_opensearch_ok(harness):
         json=opensearch_status,
     )
 
-    assert harness.charm.health_manager.opensearch_ok()
+    assert harness.charm.health_manager.opensearch_status()
+    response = harness.charm.health_manager.opensearch_status()
+    assert response[0]
+    assert response[1] is None
 
 
 @responses.activate
@@ -234,10 +232,10 @@ def test_health_opensearch_not_ok(harness, status):
         if status == "red":
             assert (
                 False,
-                MSG_STATUS_DB_UNHEALTHY,
-            ) == harness.charm.health_manager.opensearch_ok()
+                HealthStatuses.DB_UNHEALTHY.value,
+            ) == harness.charm.health_manager.opensearch_status()
         else:
-            assert (True, "") == harness.charm.health_manager.opensearch_ok()
+            assert (True, None) == harness.charm.health_manager.opensearch_status()
 
 
 @responses.activate
@@ -274,8 +272,8 @@ def test_health_opensearch_unavailable(harness):
     ):
         assert (
             False,
-            MSG_STATUS_DB_DOWN,
-        ) == harness.charm.health_manager.opensearch_ok()
+            HealthStatuses.DB_DOWN.value,
+        ) == harness.charm.health_manager.opensearch_status()
 
 
 @pytest.mark.parametrize(
@@ -285,7 +283,6 @@ def test_health_opensearch_unavailable(harness):
 )
 @responses.activate
 def test_api_request(harness):
-    harness.set_leader(True)
     expected_response = {
         "name": "juju-3e401b-2",
         "uuid": "6e2def14-8870-4a70-bc84-82cdc99823e4",
@@ -355,8 +352,6 @@ def test_api_request(harness):
 )
 @responses.activate
 def test_status(harness):
-
-    harness.set_leader(True)
     expected_response = {
         "name": "juju-3e401b-2",
         "uuid": "6e2def14-8870-4a70-bc84-82cdc99823e4",

@@ -25,6 +25,8 @@ peers:
     interface: rolling_op
   upgrade:
     interface: upgrade
+  status-peers:
+    interface: status-peers
 
 requires:
   opensearch-client:
