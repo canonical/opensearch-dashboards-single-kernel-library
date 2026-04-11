@@ -1,0 +1,197 @@
+# Copyright 2026 Canonical Ltd.
+# See LICENSE file for licensing details.
+name: Tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'
+  schedule:
+    - cron: '53 0 * * *' # Daily at 00:53 UTC
+  # Triggered on push to branch "main" by .github/workflows/release.yaml
+  workflow_call:
+
+
+jobs:
+  lint:
+    name: Lint
+    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v32.1.0
+
+  lib-check:
+    name: Check libraries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          # Workaround for https://github.com/canonical/charmcraft/issues/1389#issuecomment-1880921728
+          touch requirements.txt
+      - name: Check libs
+        uses: canonical/charming-actions/check-libraries@2.7.0
+        continue-on-error: true
+        with:
+          charm-path: ./single-kernel-opensearch-dashboards/
+          credentials: ${{ secrets.CHARMHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          use-labels: false
+          fail-build: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      pull-requests: write
+
+  unit-test:
+    name: Unit test charm
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install tox & poetry
+        run: |
+          pipx install tox
+          pipx install poetry
+      - name: Run tests
+        run: tox run -e unit
+
+  promtool:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # prometheus snap includes promtool
+      - name: Install prometheus snap
+        run: sudo snap install prometheus
+
+      - name: Check validity of prometheus alert rules
+        run: |
+          promtool check rules tests/charms/vm/src/alert_rules/prometheus/*.yaml
+
+      - name: Run unit tests for prometheus alert rules
+        run: |
+          promtool test rules tests/unit/test_alert_rules/*.yaml
+
+  terraform-test:
+    name: Terraform - Lint and Simple Deployment
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: lint charm module
+        run: |
+          pushd ./terraform
+          terraform init && terraform fmt && terraform validate
+          popd
+      - name: run checks - prepare
+        run: |
+          sudo snap install juju --channel=3.6 --classic
+      - name: LXD setup
+        run: |
+          sudo snap refresh lxd --channel=latest/stable
+          sudo adduser "$USER" 'lxd'
+          # `newgrp` does not work in GitHub Actions; use `sg` instead
+          sg 'lxd' -c "lxd waitready"
+          sg 'lxd' -c "lxd init --auto"
+          sg 'lxd' -c "lxc network set lxdbr0 ipv6.address none"
+          sudo iptables -F FORWARD
+          sudo iptables -P FORWARD ACCEPT
+      - name: Juju setup
+        run: |
+          sg 'lxd' -c "juju bootstrap 'localhost' --config model-logs-size=10G"
+          juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
+          juju add-model test
+      - name: Terraform deploy
+        run: |
+          MODEL_UUID=$(juju show-model test | grep "model-uuid" | awk '{split($0, a, ": "); print a[2]}')
+          pushd ./terraform
+          terraform apply -var="model_uuid=$MODEL_UUID" -auto-approve
+          popd
+      - name: Wait for model and applications
+        run: |
+          juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
+          juju wait-for model test --query='life=="alive" && status=="available"'
+
+  build:
+    name: Build test charms
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      matrix:
+        path:
+          - tests/integration/application_charm
+          - tests/charms/vm
+    steps:
+      - name: Install CLI
+        run: pipx install git+https://github.com/canonical/data-platform-workflows@v31.1.1#subdirectory=python/cli
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install tox & poetry
+        shell: bash
+        run: |
+          pipx install tox poetry
+          pipx inject poetry poetry-plugin-export
+      - name: Set up environment
+        run: |
+          sudo snap install lxd
+          # shellcheck disable=SC2078
+          # (shellcheck sees it as constant, but GitHub Actions expression is not constant between workflow runs)
+          sudo adduser "$USER" lxd
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxd waitready
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxd init --auto
+          # Workaround for Docker & LXD on same machine
+          sudo iptables -F FORWARD
+          sudo iptables -P FORWARD ACCEPT
+
+          sudo snap install charmcraft --classic
+          pipx install charmcraftcache
+      - name: Set up python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'poetry'
+      - name: Update lib and build charm
+        shell: bash
+        run: |
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- bash scripts/build.sh ${{ matrix.path }}
+        env:
+          CI_CACHE: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute path in artifact
+        id: path-in-artifact
+        run: compute-path-in-artifact '${{ matrix.path }}'
+      - name: Upload charm
+        uses: actions/upload-artifact@v4
+        with:
+          name: packed-charm-${{ steps.path-in-artifact.outputs.path }}
+          path: |
+            ${{ matrix.path }}/*.charm
+            .empty
+          if-no-files-found: error
+
+  integration-test:
+    name: Integration test charm
+    needs:
+      - lint
+      - unit-test
+      - build
+    uses: ./.github/workflows/integration_test.yaml
+    with:
+      artifact-prefix: packed-charm
+    secrets: inherit
+    permissions:
+      contents: write # Needed for Allure Report
