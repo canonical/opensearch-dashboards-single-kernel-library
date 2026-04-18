@@ -13,7 +13,9 @@ from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    DASHBOARDS_NAME,
     RESTART_REL_NAME,
+    SERVER_PORT,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -22,6 +24,7 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     HealthStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.events.ingress import IngressEvents
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
 from single_kernel_opensearch_dashboards.events.oauth import OAuthEvents
 from single_kernel_opensearch_dashboards.events.opensearch_dashboards import (
@@ -39,6 +42,7 @@ from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -54,12 +58,14 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.name = DASHBOARDS_NAME
         # --- State ---
         self.state = ClusterState(self, self.substrate)
 
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
         self.health_manager = HealthManager(self.state, self.workload, self.substrate)
+        self.ingress_manager = IngressManager(self, self.state, self.workload)
         self.config_manager = ConfigManager(self.state, self.workload, self.substrate)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)
@@ -69,7 +75,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         self.cos_manager = COSManager(self, self.state, self.workload, self.substrate)
 
         # --- Event Handlers ---
-        self.opensearch_events = OpenSearchDashboardsEvents(
+        self.opensearch_dashboards_events = OpenSearchDashboardsEvents(
             self,
             self.state,
             self.cluster_manager,
@@ -89,6 +95,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self,
             self.state,
         )
+        self.ingress_events = IngressEvents(self, self.state)
 
         self.upgrade_events = UpgradeEvents(
             self,
@@ -103,6 +110,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self,
             self.config_manager,
             self.cluster_manager,
+            self.ingress_manager,
             self.health_manager,
             self.upgrade_manager,
             self.tls_manager,
@@ -154,6 +162,9 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             # Set ca if pod was re-created
             if self.substrate == Substrates.K8S:
                 self.tls_manager.write_tls_files()
+
+        # open the port
+        self.unit.open_port(protocol="tcp", port=SERVER_PORT)
 
         # Checking health after restart
         self.status_handler.set_running_status(

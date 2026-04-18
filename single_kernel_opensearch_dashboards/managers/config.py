@@ -58,9 +58,7 @@ class ConfigManager(BaseManager):
 
     def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""
-        if self.load_dashboard_properties() == self.dashboard_properties():
-            return False
-        return True
+        return self.load_dashboard_properties() != self.dashboard_properties()
 
     def set_dashboard_properties(self) -> None:
         """Writes built config file."""
@@ -97,7 +95,11 @@ class ConfigManager(BaseManager):
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
 
         # We are using the address exposed by Juju as service address
-        properties |= {"server.host": str(self.state.bind_address)}
+        properties |= {
+            "server.host": (
+                self.state.unit_server.host if self.state.substrate == Substrates.VM else "0.0.0.0"
+            )
+        }
 
         if opensearch_user and opensearch_password:
             properties |= {
@@ -114,6 +116,16 @@ class ConfigManager(BaseManager):
             properties |= {
                 "server.ssl.certificate": self.workload.paths.certificate.as_posix(),
                 "server.ssl.key": self.workload.paths.server_key.as_posix(),
+            }
+
+        if (
+            self.state.substrate == Substrates.K8S
+            and self.state.ingress_relation
+            and self.state.ingress.url
+        ):
+            properties |= {
+                "server.rewriteBasePath": True,
+                "server.basePath": f"/{self.state.ingress.base_path}",
             }
 
         if self.state.oauth_relation:

@@ -143,8 +143,8 @@ class TLSEvents(Object):
         new_csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
             subject=self.state.unit_server.host,
-            sans_ip=self.state.unit_server.sans.get("sans_ip", []),
-            sans_dns=self.state.unit_server.sans.get("sans_dns", []),
+            sans_ip=self.state.unit_server.sans.get("sans_ip"),
+            sans_dns=self.state.unit_server.sans.get("sans_dns"),
         )
 
         self.certificates.request_certificate_renewal(
