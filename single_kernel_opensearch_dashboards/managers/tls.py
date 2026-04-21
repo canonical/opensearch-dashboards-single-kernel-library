@@ -120,21 +120,17 @@ class TLSManager(BaseManager):
         if not self.state.unit_server.private_key:
             self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
 
-        sans_ip = set(
-            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
-        )
-        sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
-
-        logger.debug(
-            "Requesting certificate for: "
-            f"host {self.state.unit_server.host}, with IP {sans_ip}, DNS {sans_dns}"
-        )
-
         csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
-            subject=str(self.state.bind_address or self.state.unit_server.private_ip),
-            sans_ip=list(sans_ip or ""),
-            sans_dns=list(sans_dns),
+            subject=self.state.unit_server.host,
+            sans_ip=self.state.unit_server.sans.get("sans_ip"),
+            sans_dns=self.state.unit_server.sans.get("sans_dns"),
+        )
+        logger.debug(
+            "Requesting certificate for: host: %s, with sans_ip: %s, sans_dns: %s",
+            self.state.unit_server.host,
+            self.state.unit_server.sans.get("sans_ip"),
+            self.state.unit_server.sans.get("sans_dns"),
         )
 
         return csr

@@ -4,7 +4,6 @@
 
 """Collection of global cluster state."""
 import logging
-from ipaddress import IPv4Address, IPv6Address
 from typing import Literal, Optional, Set
 
 from data_platform_helpers.advanced_statuses import StatusesState, StatusObject
@@ -17,6 +16,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_INDEX,
     DASHBOARD_INDEX_K8S,
     DASHBOARD_ROLE,
+    INGRESS_REL_NAME,
     JWT_REL_NAME,
     OAUTH_REL_NAME,
     OPENSEARCH_REL_NAME,
@@ -31,6 +31,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.models import (
     JWT,
+    Ingress,
     OAuth,
     OpensearchServer,
     OSDCluster,
@@ -118,6 +119,11 @@ class ClusterState(Object, StatusesStateProtocol):
         """Return the jwt relation if present."""
         return self.jwt.jwt_relation
 
+    @property
+    def ingress_relation(self) -> Relation | None:
+        """Return the ingress relation if present."""
+        return self.model.get_relation(INGRESS_REL_NAME)
+
     # --- CORE COMPONENTS---
     @property
     def unit(self) -> Unit:
@@ -137,6 +143,7 @@ class ClusterState(Object, StatusesStateProtocol):
             data_interface=self.peer_unit_data,
             component=self.model.unit,
             substrate=self.substrate,
+            bind_address=self.bind_address,
         )
 
     @property
@@ -181,6 +188,7 @@ class ClusterState(Object, StatusesStateProtocol):
                     data_interface=data_interface,
                     component=unit,
                     substrate=self.substrate,
+                    bind_address=self.bind_address,
                 )
             )
         servers.add(self.unit_server)
@@ -208,14 +216,20 @@ class ClusterState(Object, StatusesStateProtocol):
         return JWT(model=self.model, relation_name=JWT_REL_NAME)
 
     @property
-    def bind_address(self) -> IPv4Address | IPv6Address | str | None:
+    def ingress(self) -> Ingress:
+        """The ingress relation state."""
+        return Ingress(relation=self.ingress_relation)
+
+    @property
+    def bind_address(self) -> str | None:
         """The network binding address from the peer relation."""
-        bind_address = None
-        if self.peer_relation:
-            if binding := self.model.get_binding(self.peer_relation):
-                bind_address = binding.network.bind_address
-        # If the relation does not exist, then we get None
-        return bind_address
+        if not self.peer_relation:
+            return None
+
+        if not (binding := self.model.get_binding(self.peer_relation)):
+            return None
+
+        return str(binding.network.bind_address)
 
     # --- OAUTH ---
     @property
@@ -235,7 +249,7 @@ class ClusterState(Object, StatusesStateProtocol):
         """Generates actual client config for the OAuth."""
         return ClientConfig(
             audience=["opensearch"],
-            redirect_uri=f"{self.url}/auth/openid/login",
+            redirect_uri=f"{self.ingress_url}/auth/openid/login",
             scope="openid profile email phone offline address",
             grant_types=["authorization_code"],
             token_endpoint_auth_method="client_secret_post",
@@ -267,7 +281,18 @@ class ClusterState(Object, StatusesStateProtocol):
     def url(self) -> str:
         """Service URL."""
         scheme = "https" if self.unit_server.tls_enabled else "http"
-        return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
+        if not self.ingress_relation or not self.ingress.url:
+            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
+
+        return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}/{self.ingress.base_path}"
+
+    @property
+    def ingress_url(self) -> str:
+        """Ingress service url."""
+        if not self.ingress_relation or not self.ingress.url:
+            return self.url
+
+        return self.ingress.url
 
     # --- UPGRADE RELATED ---
     @property

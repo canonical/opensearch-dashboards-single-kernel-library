@@ -137,6 +137,15 @@ class ServerStatuses(Enum):
         action="Integrate OpenSearch and OpenSearch Dashboards charms",
     )
 
+    INGRESS_RELATION_MISSING = StatusObject(
+        status="blocked",
+        message="Ingress relation missing",
+        action="Integrate traefik-k8s with the current application",
+    )
+    INGRESS_RELATION_NOT_READY = StatusObject(
+        status="waiting", message="Ingress relation not ready."
+    )
+
     WAITING_ON_RESTART = StatusObject(
         status="waiting", message="Waiting on lock for server start/restart"
     )

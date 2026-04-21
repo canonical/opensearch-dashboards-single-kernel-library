@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Collection of state objects for relations, apps and units."""
+import json
 import logging
 import socket
 from typing import MutableMapping
@@ -150,9 +151,11 @@ class OSDServer(StateBase):
         data_interface: Data,
         component: Unit,
         substrate: Substrates,
+        bind_address: str | None = None,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
+        self.bind_address = bind_address
 
     @property
     def unit_id(self) -> int:
@@ -177,13 +180,41 @@ class OSDServer(StateBase):
     @property
     def hostname(self) -> str:
         """The hostname for the unit."""
-        return socket.gethostname()
+        if self.substrate.VM:
+            return socket.gethostname()
+        return f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
 
     @property
     def fqdn(self) -> str:
         """The Fully Qualified Domain Name for the unit."""
         # return socket.getfqdn(self.private_ip)
-        return socket.getfqdn(self.private_ip)
+        if self.substrate == Substrates.VM:
+            return socket.getfqdn(self.private_ip)
+
+        try:
+            info = socket.getaddrinfo(
+                self.host,
+                None,
+                family=socket.AF_UNSPEC,
+                flags=socket.AI_CANONNAME,
+                type=socket.SOCK_STREAM,
+            )
+        except socket.gaierror as e:
+            logger.warning(
+                "Failed to resolve canonical name for %s: %s. \nFalling back on default fqdn.",
+                self.host,
+                e,
+            )
+            return socket.getfqdn(self.host)
+
+        for entry in info:
+            if canonname := entry[3]:
+                return canonname
+
+        logger.warning(
+            "Failed to resolve canonical name for %s. \nFalling back on default fqdn.", self.host
+        )
+        return socket.getfqdn(self.host)
 
     @property
     def private_ip(self) -> str:
@@ -198,16 +229,10 @@ class OSDServer(StateBase):
     @property
     def host(self) -> str:
         """The hostname for the unit."""
-        host = ""
         if self.substrate == Substrates.VM:
-            for key in ["hostname", "ip", "private-address"]:
-                if host := self.relation_data.get(key, ""):
-                    break
+            return self.bind_address
 
-        if self.substrate == Substrates.K8S:
-            host = f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
-
-        return host
+        return self.hostname
 
     # --- TLS ---
 
@@ -239,12 +264,16 @@ class OSDServer(StateBase):
     @property
     def sans(self) -> dict[str, list[str]]:
         """The Subject Alternative Name for the unit's TLS certificates."""
-        if not all([self.private_ip, self.hostname, self.fqdn]):
-            return {}
+        sans_dns = {self.hostname, self.fqdn}
+        sans_ip = {}
+        if self.substrate == Substrates.K8S:
+            sans_dns.add(self.host)
+        else:
+            sans_ip = {self.private_ip, self.public_ip, self.bind_address}
 
         return {
-            "sans_ip": [self.private_ip, self.public_ip],
-            "sans_dns": [dns for dns in {self.hostname, self.fqdn} if dns],
+            "sans_ip": list(sans_ip),
+            "sans_dns": list(sans_dns),
         }
 
     # --- Config ---
@@ -333,7 +362,38 @@ class JWT(RequirerData):
 
     def get_jwt_url(self) -> str:
         """Return the jwt urls if jwt relation is present."""
-        if self.jwt_relation is None:
+        if not self.jwt_relation:
             return ""
         relation_data = self.fetch_relation_data([self.jwt_relation.id])
         return relation_data[self.jwt_relation.id].get("jwt-url-parameter")
+
+
+class Ingress:
+    """State collection of the Ingress relation metadata for requirer."""
+
+    def __init__(self, relation: Relation | None):
+        self.relation = relation
+
+    @property
+    def relation_data(self) -> MutableMapping[str, str]:
+        """Ingress relation data object."""
+        if not self.relation or not self.relation.app:
+            return {}
+
+        return self.relation.data[self.relation.app]
+
+    @property
+    def url(self) -> str | None:
+        """The ingress url returned by the provider."""
+        if not self.relation_data:
+            return None
+
+        return json.loads(self.relation_data.get("ingress", "{}")).get("url")
+
+    @property
+    def base_path(self) -> str | None:
+        """Return the ingress base path."""
+        if not self.url:
+            return None
+
+        return self.url.split("/")[-1]
