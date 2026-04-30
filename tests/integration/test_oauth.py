@@ -143,7 +143,8 @@ class TestOAuth:
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
                 await ops_test_microk8s.model.integrate(
-                    f"{TRAEFIK_APP_NAME}:certificates", "certificates")
+                    f"{TRAEFIK_APP_NAME}:certificates", "certificates"
+                )
 
             await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
 
