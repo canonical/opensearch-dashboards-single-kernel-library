@@ -31,42 +31,34 @@ jobs:
           import os
           import subprocess
           import pathlib
-          import sys
 
-          try:
-            process = subprocess.run(
+          spread_jobs = (
+              subprocess.run(
                 [pathlib.Path.home() / "go/bin/spread", "-list", "github-ci"],
                 capture_output=True,
                 check=True,
                 text=True,
-            )
-          except subprocess.CalledProcessError as e:
-              print(f"::error::Spread command failed with exit code {e.returncode}", file=sys.stderr)
-              print(f"STDOUT:\n{e.stdout}", file=sys.stderr)
-              print(f"STDERR:\n{e.stderr}", file=sys.stderr)
-              sys.exit(1)
-          
-          spread_jobs = [job for job in process.stdout.strip().split("\n") if job]
+              )
+              .stdout.strip()
+              .split("\n")
+          )
 
           jobs = []
 
           for job in spread_jobs:
-              parts = job.split(":")
+              # Example `job`: "github-ci:ubuntu-24.04:tests/spread/vm/test_charm.py:juju36"
+              # or "github-ci:ubuntu-24.04:tests/spread/k8s/test_charm.py:juju36"
+              _, runner, task, variant = job.split(":")
               
-              # Safely handle tasks whether they have variants or not
-              if len(parts) == 4:
-                  _, runner, task, variant = parts
-              elif len(parts) == 3:
-                  _, runner, task = parts
-                  variant = "default" 
-              else:
-                  print(f"::warning::Skipping unexpected job format: {job}")
-                  continue
-                  
+              # Removes the root test directory prefix
+              # This will leave tasks looking like "vm/test_charm.py" or "k8s/test_charm.py"
               task = task.removeprefix("tests/spread/")
               
               # For IS-hosted runners
-              architecture = "arm64" if "arm64" in runner else "amd64"
+              if "arm64" in runner:
+                  architecture = "arm64"
+              else:
+                  architecture = "amd64"
                   
               # Example: "vm/test_charm.py:juju36 | amd64"
               name = f"{task}:{variant} | {architecture}"
@@ -83,7 +75,7 @@ jobs:
           output = f"jobs={json.dumps(jobs)}"
           print(output)
           with open(os.environ["GITHUB_OUTPUT"], "a") as file:
-              file.write(output + "\n")
+              file.write(output)
       - name: Generate Allure default test results
         if: ${{ github.event_name == 'schedule' && github.run_attempt == '1' }}
         run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results

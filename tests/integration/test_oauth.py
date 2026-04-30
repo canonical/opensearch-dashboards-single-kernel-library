@@ -128,6 +128,9 @@ class TestOAuth:
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
+        if traefik and is_cross_model:
+            await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+
         if tls:
             await ops_test_oauth.model.create_offer(
                 "certificates", "certificates", "self-signed-certificates"
@@ -139,6 +142,9 @@ class TestOAuth:
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
+                await ops_test_microk8s.model.integrate(
+                    f"{TRAEFIK_APP_NAME}:certificates", "certificates")
+
             await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
 
         if is_cross_model:
@@ -152,9 +158,6 @@ class TestOAuth:
         await ops_test_microk8s.model.integrate(
             f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{app_name}:opensearch-client"
         )
-
-        if traefik and is_cross_model:
-            await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
 
         await gather(
             ops_test.model.wait_for_idle(status="active"),
