@@ -2,7 +2,7 @@ summary: test_charm.py
 environment:
   TEST_MODULE: test_charm.py
 
-  SCENARIO/v1_all-true: "TEST_TLS=true"
+  SCENARIO/v1_all_true: "TEST_TLS=true"
   SCENARIO/v2_all_false: "TEST_TLS=false"
 
 execute: |

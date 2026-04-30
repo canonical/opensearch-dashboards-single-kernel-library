@@ -287,6 +287,17 @@ class OSDServer(StateBase):
         """Set log level value."""
         self.update({"log_level": value})
 
+    @property
+    def unit_dying(self) -> bool:
+        """Return whether relation broken event should be skipped."""
+        return self.relation.data[self.unit].get(f"unit_departing", "").lower() == "true"
+
+    @unit_dying.setter
+    def unit_dying(self, value: bool) -> None:
+        """Set whether relation broken event should be skipped."""
+        v = "true" if value == True else "false"
+        self.update({f"unit_departing": v})
+
 
 class OAuth:
     """State collection metadata for the oauth relation."""

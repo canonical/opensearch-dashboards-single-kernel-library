@@ -6,7 +6,7 @@
 
 import logging
 
-from ops import EventBase, ModelError, Object
+from ops import EventBase, ModelError, Object, RelationDepartedEvent
 
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
@@ -46,10 +46,15 @@ class OAuthEvents(Object):
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
         )
+        self.framework.observe(
+            self.charm.on[OAUTH_REL_NAME].relation_departed, self._on_oauth_departed
+        )
         self.state.oauth_require.update_client_config(self.state.oauth_client_config())
 
     def _on_oauth_relation_changed(self, event: EventBase) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
+        if self.state.unit_server.unit_dying:
+            return
         if not self.state.servers:
             self.state.statuses.add(
                 status=ServerStatuses.SERVERS_IS_DOWN.value,
@@ -92,3 +97,8 @@ class OAuthEvents(Object):
         )
 
         self.charm.emit_restart(event)
+
+    def _on_oauth_departed(self, event: RelationDepartedEvent) -> None:
+        """Handle unit dying."""
+        if event.departing_unit == self.charm.unit:
+            self.state.unit_server.unit_dying = True

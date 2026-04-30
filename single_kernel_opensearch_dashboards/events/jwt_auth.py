@@ -5,7 +5,7 @@
 
 import logging
 
-from ops import Object, RelationBrokenEvent, RelationChangedEvent
+from ops import Object, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
 
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
@@ -41,6 +41,9 @@ class JwtEvents(Object):
         self.framework.observe(
             self.charm.on[JWT_REL_NAME].relation_broken, self._on_jwt_relation_broken
         )
+        self.framework.observe(
+            self.charm.on[JWT_REL_NAME].relation_departed, self._on_jwt_departed
+        )
 
     def _on_jwt_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle changed relation data."""
@@ -62,9 +65,16 @@ class JwtEvents(Object):
 
     def _on_jwt_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle broken relation data."""
+        if self.state.unit_server.unit_dying:
+            return
         self.state.delete_status_if_present(
             status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
             scope="app",
             component=CONFIG_MANAGER_NAME,
         )
         self.charm.emit_restart(event)
+
+    def _on_jwt_departed(self, event: RelationDepartedEvent) -> None:
+        """Handle unit dying."""
+        if event.departing_unit == self.charm.unit:
+            self.state.unit_server.unit_dying = True

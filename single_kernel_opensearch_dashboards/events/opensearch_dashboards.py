@@ -78,6 +78,7 @@ class OpenSearchDashboardsEvents(Object):
         self.framework.observe(
             self.charm.on[PEERS_REL_NAME].relation_departed, self._on_relation_departed
         )
+
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
         if self.state.substrate == Substrates.K8S:
             self.framework.observe(
@@ -148,7 +149,7 @@ class OpenSearchDashboardsEvents(Object):
         """Handle the peer `relation-departed` event."""
         # do not restart unit that is dying
         if event.departing_unit == self.charm.unit:
-            logger.warning("Got dying unit, doing nothing")
+            self.state.unit_server.unit_dying = True
             return
 
         if not self.pre_restart_check():

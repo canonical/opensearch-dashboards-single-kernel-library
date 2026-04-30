@@ -9,7 +9,7 @@ import re
 from subprocess import CalledProcessError
 
 from ops import Object
-from ops.charm import ActionEvent
+from ops.charm import ActionEvent, RelationDepartedEvent
 from ops.framework import EventBase
 
 from single_kernel_opensearch_dashboards.charms.base import (
@@ -65,7 +65,9 @@ class TLSEvents(Object):
         self.framework.observe(
             self.charm.on[CERTS_REL_NAME].relation_broken, self._on_certs_relation_broken
         )
-
+        self.framework.observe(
+            self.charm.on[CERTS_REL_NAME].relation_departed, self._on_client_departed
+        )
         self.framework.observe(
             self.certificates.on.certificate_available, self._on_certificate_available
         )
@@ -185,6 +187,9 @@ class TLSEvents(Object):
     def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
+        if self.state.unit_server.unit_dying:
+            return
+
         if self.state.substrate == Substrates.K8S and self.state.ingress:
             self.ingress_manager.ingress.provide_ingress_requirements(
                 scheme="http", port=SERVER_PORT
@@ -203,3 +208,8 @@ class TLSEvents(Object):
 
         self.state.unit_server.update({"private-key": private_key})
         self._on_certificate_expiring(event)
+
+    def _on_client_departed(self, event: RelationDepartedEvent) -> None:
+        """Handle unit dying."""
+        if event.departing_unit == self.charm.unit:
+            self.state.unit_server.unit_dying = True

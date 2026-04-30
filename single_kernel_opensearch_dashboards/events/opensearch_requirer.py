@@ -6,7 +6,7 @@
 import logging
 
 from ops import Object
-from ops.charm import RelationBrokenEvent, RelationEvent
+from ops.charm import RelationBrokenEvent, RelationDepartedEvent, RelationEvent
 
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
@@ -50,6 +50,9 @@ class RequirerEvents(Object):
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_broken, self._on_client_relation_broken
         )
+        self.framework.observe(
+            self.charm.on[OPENSEARCH_REL_NAME].relation_departed, self._on_client_departed
+        )
 
     def _on_client_relation_changed(self, event: RelationEvent) -> None:
         """Updates ACLs while handling `client_relation_changed` events."""
@@ -70,9 +73,17 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
+        if self.state.unit_server.unit_dying:
+            return
+
         # Don't remove anything if the service is going down
         if self.charm.app.planned_units == 0 or not self.charm.unit.is_leader():
             return
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)
+
+    def _on_client_departed(self, event: RelationDepartedEvent) -> None:
+        """Handle unit dying."""
+        if event.departing_unit == self.charm.unit:
+            self.state.unit_server.unit_dying = True
