@@ -186,12 +186,12 @@ class TestJWTAuth:
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_access(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
     ):
         """Test access to dashboard unit with JWT and basic auth."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        tls = config_matrix.get("tls", False)
-        traefik = config_matrix.get("traefik", False)
+        tls = config_matrix_rest.get("tls", False)
+        traefik = config_matrix_rest.get("traefik", False)
 
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
 

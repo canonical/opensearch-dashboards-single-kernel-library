@@ -160,14 +160,14 @@ class TestUpgrade:
         ops_test_microk8s: OpsTest,
         charmvm: str,
         charmk8s: str,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Test the in-place upgrade handling the appropriate protocol (HTTP/HTTPS)."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
         charm = charmk8s if is_cross_model else charmvm
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
+        tls = config_matrix_rest["tls"]
+        traefik = config_matrix_rest["traefik"]
 
         leader_unit = None
         for unit in ops_test_microk8s.model.applications[app_name].units:

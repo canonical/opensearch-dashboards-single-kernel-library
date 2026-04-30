@@ -120,13 +120,13 @@ class TestOAuth:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         ops_test_oauth: OpsTest,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Establish all the required relations."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
+        tls = config_matrix_rest["tls"]
+        traefik = config_matrix_rest["traefik"]
 
         if tls:
             await ops_test_oauth.model.create_offer(
@@ -185,12 +185,12 @@ class TestOAuth:
         ops_test_oauth: OpsTest,
         page: Page,
         ext_idp_service: ExternalIdpService,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Ensure that SSO works for OpenSearch Dashboards login."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
+        tls = config_matrix_rest["tls"]
 
         opensearch_dashboards_ip = await get_address(
             ops_test_microk8s,
