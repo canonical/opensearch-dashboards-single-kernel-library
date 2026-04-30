@@ -55,7 +55,6 @@ INGRESS_MANAGER_NAME = "ingress_manager"
 
 # OpenSearch user and role
 DASHBOARD_INDEX = ".opensearch-dashboards"
-DASHBOARD_INDEX_K8S = ".opensearch-dashboards-k8s"
 DASHBOARD_USER = "kibanaserver"
 DASHBOARD_ROLE = "kibana_server"
 

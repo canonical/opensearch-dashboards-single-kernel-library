@@ -4,11 +4,15 @@
 
 """Kubernetes Workload."""
 import logging
+import os
+import tempfile
 from typing import Any
 
 import ops
 import yaml
 from charmlibs import pathops
+from charmlibs.pathops import PathProtocol
+from ops.pebble import PathError
 from tenacity import retry, retry_if_not_result, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
@@ -203,3 +207,30 @@ class K8sWorkload(WorkloadBase):
         Therefore, no explicit installation steps are required here.
         """
         return
+
+    @override
+    def ready(self) -> bool:
+        """Checks if workload is ready."""
+        if not self.container.can_connect():
+            return False
+        return True
+
+    @override
+    def copy_certs(self, path: PathProtocol) -> str | None:
+        """Copies certs to another container and returns the local path"""
+        # request library is run on other container than the opensearch is located so we temporarily
+        # copy certificates and remove them after request
+        try:
+            ca_content = self.container.pull(path.as_posix()).read()
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
+                local_ca_file.write(ca_content)
+                return local_ca_file.name
+        except PathError:
+            # We don't move ca if it's not exists so `requests` handles it (ignoring it for HTTP, erroring for HTTPS).
+            return None
+
+    @override
+    def remove_certs(self, local_ca_path: str) -> None:
+        """Removes certs from container"""
+        if os.path.exists(local_ca_path):
+            os.remove(local_ca_path)

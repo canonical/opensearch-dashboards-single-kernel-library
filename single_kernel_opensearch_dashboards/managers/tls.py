@@ -135,16 +135,11 @@ class TLSManager(BaseManager):
 
         return csr
 
-    def create_cert_directory(self) -> None:
-        self.workload.paths.certificate_dir.mkdir(exist_ok=True)
-
     def write_tls_files(self) -> None:
         """Writes necessary data from databag to files.
         Used for when k8s pod is recreated
         Or a unit added after relation with OpenSearch was created
         """
-
-        self.create_cert_directory()
 
         if self.state.opensearch_server and self.state.opensearch_server.password:
             self.set_ca_opensearch()

@@ -69,6 +69,7 @@ pyyaml = "^6.0.2"
 requests = "^2.32.4"
 
 # TODO: clean any of the notes below and their deps.
+jubilant = "^1.8.0"
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
 ops = "^2.23.2"

@@ -14,7 +14,6 @@ from ops.model import Relation, Unit
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     DASHBOARD_INDEX,
-    DASHBOARD_INDEX_K8S,
     DASHBOARD_ROLE,
     INGRESS_REL_NAME,
     JWT_REL_NAME,
@@ -74,14 +73,10 @@ class ClusterState(Object, StatusesStateProtocol):
             self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_UNIT_SECRETS
         )
 
-        index = DASHBOARD_INDEX
-        if substrate == Substrates.K8S:
-            index = DASHBOARD_INDEX_K8S
-
         self.client_requires_data = OpenSearchRequiresData(
             self.model,
             relation_name=OPENSEARCH_REL_NAME,
-            index=index,
+            index=DASHBOARD_INDEX,
             extra_user_roles=DASHBOARD_ROLE,
         )
 
@@ -122,6 +117,8 @@ class ClusterState(Object, StatusesStateProtocol):
     @property
     def ingress_relation(self) -> Relation | None:
         """Return the ingress relation if present."""
+        if self.substrate == Substrates.VM:
+            return None
         return self.model.get_relation(INGRESS_REL_NAME)
 
     # --- CORE COMPONENTS---
@@ -247,9 +244,11 @@ class ClusterState(Object, StatusesStateProtocol):
 
     def oauth_client_config(self) -> ClientConfig:
         """Generates actual client config for the OAuth."""
+        scheme = "https" if self.unit_server.tls_enabled else "http"
+        url = self.url if self.substrate == Substrates.VM else f"{scheme}://0.0.0.0:{SERVER_PORT}"
         return ClientConfig(
             audience=["opensearch"],
-            redirect_uri=f"{self.ingress_url}/auth/openid/login",
+            redirect_uri=f"{url}/auth/openid/login",
             scope="openid profile email phone offline address",
             grant_types=["authorization_code"],
             token_endpoint_auth_method="client_secret_post",
@@ -281,18 +280,12 @@ class ClusterState(Object, StatusesStateProtocol):
     def url(self) -> str:
         """Service URL."""
         scheme = "https" if self.unit_server.tls_enabled else "http"
-        if not self.ingress_relation or not self.ingress.url:
+        if self.substrate != Substrates.K8S or not self.ingress_relation or not self.ingress.url:
+            return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
+        elif self.ingress_relation and self.ingress.url:
+            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}/{self.ingress.base_path}"
+        else:
             return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
-
-        return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}/{self.ingress.base_path}"
-
-    @property
-    def ingress_url(self) -> str:
-        """Ingress service url."""
-        if not self.ingress_relation or not self.ingress.url:
-            return self.url
-
-        return self.ingress.url
 
     # --- UPGRADE RELATED ---
     @property
@@ -328,7 +321,7 @@ class ClusterState(Object, StatusesStateProtocol):
 
     # --- STATUS ---
     def delete_status_if_present(
-        self, status: StatusObject, scope: Literal["unit", "app"], component: str
+        self, status: StatusObject, scope: Literal["unit", "app", "both"], component: str
     ) -> None:
         """Delete a status from a specific component safely.
 
@@ -340,44 +333,19 @@ class ClusterState(Object, StatusesStateProtocol):
             scope (Literal["unit", "app"]): The scope from which to remove the status.
             component (str): The name of the component holding the status.
         """
-        if scope == "app" and not self.unit.is_leader():
-            return
+        target_scopes: list[Literal["unit", "app"]] = (
+            ["unit", "app"] if scope == "both" else [scope]
+        )
 
-        current_statuses = self.statuses.get(scope=scope, component=component)
+        for s in target_scopes:
+            if s == "app" and not self.unit.is_leader():
+                continue
 
-        if status in current_statuses:
-            self.statuses.delete(
-                status=status,
-                scope=scope,
-                component=component,
-            )
-
-    def delete_status_if_present_both(self, status: StatusObject, component: str) -> None:
-        """Delete a status from a specific component safely for both unit and app.
-
-        Checks if the status actually exists in the current state to avoid
-        logging unnecessary warnings when attempting to delete a non-existent status.
-
-        If unit is not leader, deletes only unit status
-
-        Args:
-            status (StatusObject): The status object to remove.
-            component (str): The name of the component holding the status.
-        """
-        current_statuses = self.statuses.get(scope="unit", component=component)
-        if status in current_statuses:
-            self.statuses.delete(
-                status=status,
-                scope="unit",
-                component=component,
-            )
-
-        if self.unit.is_leader():
-            current_statuses = self.statuses.get(scope="app", component=component)
+            current_statuses = self.statuses.get(scope=s, component=component)
             if status in current_statuses:
                 self.statuses.delete(
                     status=status,
-                    scope="app",
+                    scope=s,
                     component=component,
                 )
 

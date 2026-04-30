@@ -1,7 +1,23 @@
 summary: test_jwt_auth.py
 environment:
   TEST_MODULE: test_jwt_auth.py
+  SCENARIO/1-all-true:
+    TEST_TLS: "true"
+    TEST_TRAEFIK: "true"
+  SCENARIO/2-tls-no-traefik:
+    TEST_TLS: "true"
+    TEST_TRAEFIK: "false"
+  SCENARIO/3-no-tls-traefik:
+    TEST_TLS: "false"
+    TEST_TRAEFIK: "true"
+  SCENARIO/4-all-false:
+    TEST_TLS: "false"
+    TEST_TRAEFIK: "false"
+
 execute: |
+  export TEST_TLS
+  export TEST_TRAEFIK
+  
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results" --k8s-charm
 artifacts:
   - allure-results

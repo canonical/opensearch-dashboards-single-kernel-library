@@ -42,7 +42,7 @@ from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
+from single_kernel_opensearch_dashboards.managers.ingres import IngressManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -64,33 +64,26 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
 
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
-        self.health_manager = HealthManager(self.state, self.workload, self.substrate)
+        self.health_manager = HealthManager(self.state, self.workload)
         self.ingress_manager = IngressManager(self, self.state, self.workload)
-        self.config_manager = ConfigManager(self.state, self.workload, self.substrate)
+        self.config_manager = ConfigManager(self.state, self.workload)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)
         self.restart_manager = RollingOpsManager(
             self, relation=RESTART_REL_NAME, callback=self.restart
         )
-        self.cos_manager = COSManager(self, self.state, self.workload, self.substrate)
+        self.cos_manager = COSManager(self, self.state, self.workload)
 
         # --- Event Handlers ---
         self.opensearch_dashboards_events = OpenSearchDashboardsEvents(
-            self,
-            self.state,
-            self.cluster_manager,
-            self.substrate,
+            self, self.state, self.cluster_manager, self.tls_manager
         )
         self.jwt_events = JwtEvents(
             self,
             self.state,
         )
-        self.tls_events = TLSEvents(
-            self,
-            self.state,
-            self.tls_manager,
-        )
-        self.requirer_events = RequirerEvents(self, self.state, self.tls_manager, self.substrate)
+        self.tls_events = TLSEvents(self, self.state, self.tls_manager, self.ingress_manager)
+        self.requirer_events = RequirerEvents(self, self.state, self.tls_manager)
         self.oauth = OAuthEvents(
             self,
             self.state,
@@ -100,10 +93,8 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         self.upgrade_events = UpgradeEvents(
             self,
             self.state,
-            self.substrate,
             self.upgrade_manager,
             self.health_manager,
-            self.tls_manager,
         )
 
         self.status_handler = StatusHandler(
@@ -149,8 +140,6 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             self.cluster_manager.init_server()
             self.state.unit_server.update({"state": "started"})
 
-            # Set ca if unit was added after opensearch relation creation
-            self.tls_manager.write_tls_files()
         else:
             self.status_handler.set_running_status(
                 status=ServerStatuses.RESTARTING_SERVER.value,
@@ -158,10 +147,6 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
                 scope="unit",
             )
             self.cluster_manager.restart_server()
-
-            # Set ca if pod was re-created
-            if self.substrate == Substrates.K8S:
-                self.tls_manager.write_tls_files()
 
         # open the port
         self.unit.open_port(protocol="tcp", port=SERVER_PORT)
@@ -179,14 +164,28 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         Returns true if OSD server is healthy otherwise false
         """
         # OPENSEARCH CONNECTION
-        self.state.delete_status_if_present_both(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value, component=self.cluster_manager.name
+        self.state.delete_status_if_present(
+            status=ServerStatuses.DB_CONNECTION_MISSING.value,
+            component=self.cluster_manager.name,
+            scope="both",
         )
 
         if not self.state.opensearch_server:
             self.state.add_status_to_both(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
                 component=self.cluster_manager.name,
+            )
+
+        self.state.delete_status_if_present(
+            status=ServerStatuses.INGRESS_RELATION_MISSING.value,
+            component=self.ingress_manager.name,
+            scope="both",
+        )
+
+        if self.substrate == Substrates.K8S and not self.state.ingress.relation:
+            self.state.add_status_to_both(
+                status=ServerStatuses.INGRESS_RELATION_MISSING.value,
+                component=self.ingress_manager.name,
             )
 
         # HEALTH

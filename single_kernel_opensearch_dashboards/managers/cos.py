@@ -42,14 +42,12 @@ class COSManager(BaseManager):
         charm: TypedCharmBase[CharmConfig],
         state: ClusterState,
         workload: WorkloadBase,
-        substrate: Substrates,
     ) -> None:
         super().__init__(state, workload)
-        self.substrate = substrate
         self.charm = charm
         self.name = "cos_manager"
 
-        if self.substrate == Substrates.VM:
+        if self.state.substrate == Substrates.VM:
             self.cos_integration = COSAgentProvider(
                 self.charm,
                 relation_name=COS_RELATION_NAME,
@@ -60,7 +58,7 @@ class COSManager(BaseManager):
                 log_slots=["opensearch-dashboards:logs"],
             )
 
-        elif self.substrate == Substrates.K8S:
+        elif self.state.substrate == Substrates.K8S:
             # 1. Metrics (Prometheus)
             self.metrics_endpoint = MetricsEndpointProvider(
                 self.charm,
@@ -83,7 +81,9 @@ class COSManager(BaseManager):
     def scrape_config(self) -> list[dict]:
         """Generates the scrape config as needed."""
         target_ip = (
-            f"{self.state.unit_server.private_ip}" if self.substrate == Substrates.VM else "*"
+            f"{self.state.unit_server.private_ip}"
+            if self.state.substrate == Substrates.VM
+            else "*"
         )
 
         return [

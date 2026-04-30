@@ -41,6 +41,10 @@ class IngressManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the ingress manager's statuses."""
+        if not recompute:
+            statuses = self.state.statuses.get(scope, self.name).root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
+
         if self.state.substrate == Substrates.VM:
             return [CharmStatuses.ACTIVE_IDLE.value]
 

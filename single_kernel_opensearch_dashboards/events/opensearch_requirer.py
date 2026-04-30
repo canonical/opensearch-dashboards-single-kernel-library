@@ -11,9 +11,9 @@ from ops.charm import RelationBrokenEvent, RelationEvent
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     OPENSEARCH_REL_NAME,
-    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
@@ -32,7 +32,6 @@ class RequirerEvents(Object):
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
         tls_manager: TLSManager,
-        substrate: Substrates,
     ) -> None:
         super().__init__(
             charm,
@@ -41,7 +40,6 @@ class RequirerEvents(Object):
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
-        self.substrate = substrate
 
         self.requirer_events = OpenSearchRequiresEventHandlers(
             self.charm, self.state.client_requires_data
@@ -58,9 +56,13 @@ class RequirerEvents(Object):
         if not self.state.stable:
             event.defer()
             return
-
-        if self.tls_manager.set_ca_opensearch():
-            self.charm.emit_restart(event)
+        try:
+            if self.tls_manager.set_ca_opensearch():
+                self.charm.emit_restart(event)
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            event.defer()
+            return
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.

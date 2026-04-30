@@ -11,9 +11,9 @@ from pydantic import ValidationError
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
-    CONTAINER_NAME,
     UPGRADE_MANAGER_NAME,
     Substrates,
 )
@@ -24,6 +24,7 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 from ops import (
@@ -51,7 +52,7 @@ class OpenSearchDashboardsEvents(Object):
         charm: OpenSearchDashboardsStatusHandler,
         state: ClusterState,
         cluster_manager: ClusterManager,
-        substrate: Substrates,
+        tls_manager: TLSManager,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
         super().__init__(
@@ -61,7 +62,7 @@ class OpenSearchDashboardsEvents(Object):
         self.charm = charm
         self.state = state
         self.cluster_manager = cluster_manager
-        self.substrate = substrate
+        self.tls_manager = tls_manager
 
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.start, self._on_start)
@@ -78,15 +79,14 @@ class OpenSearchDashboardsEvents(Object):
             self.charm.on[PEERS_REL_NAME].relation_departed, self._on_relation_departed
         )
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
-        if self.substrate == Substrates.K8S:
+        if self.state.substrate == Substrates.K8S:
             self.framework.observe(
                 self.charm.on.opensearch_dashboards_pebble_ready, self._on_pebble_ready
             )
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define the initial Pebble layer and start the service."""
-        container = self.charm.unit.get_container(CONTAINER_NAME)
-        if not container.can_connect():
+        if not self.cluster_manager.ready():
             self.state.statuses.add(
                 status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
                 scope="unit",
@@ -99,6 +99,13 @@ class OpenSearchDashboardsEvents(Object):
             scope="unit",
             component=self.cluster_manager.name,
         )
+        try:
+            # Set ca if pod was re-created
+            self.tls_manager.write_tls_files()
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            event.defer()
+            return
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -109,6 +116,13 @@ class OpenSearchDashboardsEvents(Object):
         )
 
         self.cluster_manager.install_osd_server()
+        # Set ca if unit was added after opensearch relation creation
+        try:
+            self.tls_manager.write_tls_files()
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            event.defer()
+            return
 
     def _on_start(self, event: EventBase) -> None:
         """Handle the `start` event."""
@@ -197,10 +211,8 @@ class OpenSearchDashboardsEvents(Object):
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""
         # CONTAINER CHECK
-        if self.substrate == Substrates.K8S:
-            container = self.charm.unit.get_container(CONTAINER_NAME)
-            if not container.can_connect():
-                return False
+        if not self.cluster_manager.ready():
+            return False
 
         # PEER RELATION CHECK
         if not self.state.peer_relation:
@@ -210,9 +222,10 @@ class OpenSearchDashboardsEvents(Object):
             )
             return False
 
-        self.state.delete_status_if_present_both(
+        self.state.delete_status_if_present(
             status=ConfigStatuses.WAITING_FOR_PEER.value,
             component=CONFIG_MANAGER_NAME,
+            scope="both",
         )
 
         # UPGRADE IDLE CHECK
@@ -224,9 +237,10 @@ class OpenSearchDashboardsEvents(Object):
             )
             return False
 
-        self.state.delete_status_if_present_both(
+        self.state.delete_status_if_present(
             status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
             component=UPGRADE_MANAGER_NAME,
+            scope="both",
         )
 
         return True

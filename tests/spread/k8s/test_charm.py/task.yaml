@@ -1,7 +1,32 @@
 summary: test_charm.py
 environment:
   TEST_MODULE: test_charm.py
+  SCENARIO/1-all-true:
+    TEST_TRAEFIK_TRUST: "true"
+    TEST_TLS: "true"
+    TEST_TRAEFIK: "true"
+  SCENARIO/2-no-trust-tls-traefik:
+    TEST_TRAEFIK_TRUST: "false"
+    TEST_TLS: "true"
+    TEST_TRAEFIK: "true"
+  SCENARIO/3-no-trust-tls-no-traefik:
+    TEST_TRAEFIK_TRUST: "false"
+    TEST_TLS: "true"
+    TEST_TRAEFIK: "false"
+  SCENARIO/4-no-trust-no-tls-traefik:
+    TEST_TRAEFIK_TRUST: "false"
+    TEST_TLS: "false"
+    TEST_TRAEFIK: "true"
+  SCENARIO/5-all-false:
+    TEST_TRAEFIK_TRUST: "false"
+    TEST_TLS: "false"
+    TEST_TRAEFIK: "false"
+
 execute: |
+  export TEST_TLS
+  export TEST_TRAEFIK
+  export TEST_TRAEFIK_TRUST
+  
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results" --k8s-charm
 artifacts:
   - allure-results

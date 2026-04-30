@@ -75,7 +75,6 @@ async def chaos_mesh(ops_test: OpsTest, ops_test_microk8s: OpsTest):
         return
 
     env = os.environ.copy()
-    env["KUBECONFIG"] = os.path.expanduser("~/.kube/config")
     subprocess.check_call(
         " ".join(
             [

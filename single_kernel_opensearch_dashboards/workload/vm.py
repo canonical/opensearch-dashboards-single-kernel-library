@@ -7,6 +7,7 @@ import logging
 import subprocess
 
 from charmlibs import pathops
+from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
@@ -184,3 +185,18 @@ class VMWorkload(WorkloadBase):
             raise OSDInstallError(
                 "failed to install the Opensearch Dashboards snap. check logs for more details"
             )
+
+    @override
+    def ready(self) -> bool:
+        """Checks if workload is ready."""
+        return True
+
+    @override
+    def copy_certs(self, path: PathProtocol) -> str | None:
+        """Copies certs to another container"""
+        return
+
+    @override
+    def remove_certs(self, local_ca_path: str) -> None:
+        """Removes certs from container"""
+        return

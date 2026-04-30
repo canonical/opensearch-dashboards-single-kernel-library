@@ -16,7 +16,6 @@ from data_platform_helpers.advanced_statuses.types import Scope
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     RESTART_TIMEOUT,
-    SERVER_PORT,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -39,7 +38,6 @@ class ClusterManager(BaseManager):
 
         logger.info("starting Opensearch Dashboards service")
         self.workload.start()
-        self.state.unit.open_port("tcp", port=SERVER_PORT)
         logger.info("Opensearch Dashboards service started")
 
     def restart_server(self) -> None:
@@ -58,6 +56,10 @@ class ClusterManager(BaseManager):
         self.workload.install()
         logger.info("Opensearch Dashboards installed")
 
+    def ready(self) -> bool:
+        """Checks if workload is ready"""
+        return self.workload.ready()
+
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the server manager's statuses."""
         if not recompute:
@@ -68,6 +70,10 @@ class ClusterManager(BaseManager):
 
         if not self.state.servers:
             status_list.append(ServerStatuses.SERVERS_IS_DOWN.value)
+
+        if scope == "unit":
+            if not self.workload.ready():
+                status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
 
         if not self.state.opensearch_server:
             status_list.append(

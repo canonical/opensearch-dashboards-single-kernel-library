@@ -180,7 +180,7 @@ class OSDServer(StateBase):
     @property
     def hostname(self) -> str:
         """The hostname for the unit."""
-        if self.substrate.VM:
+        if self.substrate == Substrates.VM:
             return socket.gethostname()
         return f"{self.component.name.split('/')[0]}-{self.unit_id}.{self.component.name.split('/')[0]}-endpoints"
 
@@ -365,7 +365,7 @@ class JWT(RequirerData):
         if not self.jwt_relation:
             return ""
         relation_data = self.fetch_relation_data([self.jwt_relation.id])
-        return relation_data[self.jwt_relation.id].get("jwt-url-parameter")
+        return relation_data[self.jwt_relation.id].get("jwt-url-parameter") or ""
 
 
 class Ingress:

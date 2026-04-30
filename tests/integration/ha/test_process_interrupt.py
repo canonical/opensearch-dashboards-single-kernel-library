@@ -178,7 +178,9 @@ async def _recover_from_signal(
             logger.info(f"Sending {signal} {app_name}:{units}...")
             await asyncio.gather(
                 *[
-                    send_control_signal(ops_test_microk8s, unit, signal, app_name, container)
+                    send_control_signal(
+                        ops_test_microk8s, unit, signal, app_name, True if container else False
+                    )
                     for unit in units
                 ]
             )

@@ -16,6 +16,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     CLUSTER_MANAGER_NAME,
     HEALTH_MANAGER_NAME,
+    INGRESS_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
     UPGRADE_MANAGER_NAME,
 )

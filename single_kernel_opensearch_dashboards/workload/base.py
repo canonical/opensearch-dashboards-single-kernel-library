@@ -28,49 +28,49 @@ class Paths:
 
     # SNAP-SPECIFIC PATHS
     @property
-    def base_snap_dir(self) -> "PathProtocol":
+    def base_snap_dir(self) -> PathProtocol:
         """Return path to the Base snap directory."""
         return self.root / BASE_SNAP_DIR
 
     @property
-    def snap_current(self) -> "PathProtocol":
+    def snap_current(self) -> PathProtocol:
         """Return path to the snap data directory."""
         return self.base_snap_dir / SNAP_DATA
 
     @property
-    def snap_common(self) -> "PathProtocol":
+    def snap_common(self) -> PathProtocol:
         """Return path to the snap common directory."""
         return self.base_snap_dir / SNAP_COMMON
 
     @property
-    def snap(self) -> "PathProtocol":
+    def snap(self) -> PathProtocol:
         """Return path to the snap directory."""
         return self.root / SNAP
 
     # DYNAMIC BASE PATHS
     @property
-    def data(self) -> "PathProtocol":
+    def data(self) -> PathProtocol:
         """The base directory where Opensearch Dashboards will store data."""
         if self.substrate == Substrates.K8S:
             return self.root / OpenSearchDashboardsPaths.DATA
         return self.snap_common / OpenSearchDashboardsPaths.DATA
 
     @property
-    def config_dir(self) -> "PathProtocol":
+    def config_dir(self) -> PathProtocol:
         """The directory where Opensearch Dashboards will store configs."""
         if self.substrate == Substrates.K8S:
             return self.root / OpenSearchDashboardsPaths.CONF
         return self.snap_current / OpenSearchDashboardsPaths.CONF
 
     @property
-    def bin_dir(self) -> "PathProtocol":
+    def bin_dir(self) -> PathProtocol:
         """The directory containing Opensearch Dashboards binaries."""
         if self.substrate == Substrates.K8S:
             return self.root / OpenSearchDashboardsPaths.BIN
         return self.snap / OpenSearchDashboardsPaths.BIN
 
     @property
-    def log_dir(self) -> "PathProtocol":
+    def log_dir(self) -> PathProtocol:
         """The directory where Opensearch Dashboards will store logs."""
         if self.substrate == Substrates.K8S:
             return self.root / OpenSearchDashboardsPaths.LOGS
@@ -78,37 +78,37 @@ class Paths:
 
     # RELATIVE PATHS
     @property
-    def data_dir(self) -> "PathProtocol":
+    def data_dir(self) -> PathProtocol:
         """The directory where Opensearch Dashboards will store the in-memory database snapshots."""
         return self.data / "data"
 
     @property
-    def properties(self) -> "PathProtocol":
+    def properties(self) -> PathProtocol:
         """The main properties filepath. Contains all the main configuration for the service."""
         return self.config_dir / "opensearch_dashboards.yml"
 
     @property
-    def certificate_dir(self) -> "PathProtocol":
+    def certificate_dir(self) -> PathProtocol:
         """The directory for the certificates."""
         return self.config_dir / "certificates"
 
     @property
-    def server_key(self) -> "PathProtocol":
+    def server_key(self) -> PathProtocol:
         """The private-key for the service to identify itself with for TLS auth."""
         return self.certificate_dir / "server.key"
 
     @property
-    def ca(self) -> "PathProtocol":
+    def ca(self) -> PathProtocol:
         """The shared cluster CA."""
         return self.certificate_dir / "ca.pem"
 
     @property
-    def certificate(self) -> "PathProtocol":
+    def certificate(self) -> PathProtocol:
         """The certificate for the service to identify itself with for TLS auth."""
         return self.certificate_dir / "server.pem"
 
     @property
-    def opensearch_ca(self) -> "PathProtocol":
+    def opensearch_ca(self) -> PathProtocol:
         """The certificate for Opensearch to identify itself with for TLS auth."""
         return self.certificate_dir / "opensearch_ca.pem"
 
@@ -163,6 +163,21 @@ class WorkloadBase(ABC):
         """Install OSD."""
         ...
 
+    @abstractmethod
+    def ready(self) -> bool:
+        """Checks if workload is ready."""
+        ...
+
+    @abstractmethod
+    def copy_certs(self, path: PathProtocol) -> str | None:
+        """Copies certs to another container"""
+        ...
+
+    @abstractmethod
+    def remove_certs(self, local_ca_path: str) -> None:
+        """Removes certs from container"""
+        ...
+
     def write_text(self, content: str, path: PathProtocol) -> None:
         """Write content to a file on disk.
 
@@ -171,7 +186,6 @@ class WorkloadBase(ABC):
             path (str): The file path where the content should be written.
         """
         try:
-            path.exists()
             path.write_text(content)
         except (
             FileNotFoundError,
@@ -196,8 +210,69 @@ class WorkloadBase(ABC):
             return path.read_text()
         except (
             FileNotFoundError,
-            UnicodeError,
+            LookupError,
+            NotADirectoryError,
             PermissionError,
             pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def exists(self, path: pathops.PathProtocol) -> bool:
+        """Checks if folder exists.
+
+        Args:
+            path (str): The file path to read from.
+
+        Returns:
+            bool: File exists.
+        """
+        try:
+            return path.exists()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def create_folder(self, path: pathops.PathProtocol) -> None:
+        """Creates folder at path
+
+        Args:
+            path (str): The file path to read from.
+
+        """
+        try:
+            return path.mkdir()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def unlink(self, path: pathops.PathProtocol) -> None:
+        """Unlinks file if it's not a directory
+
+        Args:
+            path (str): The file path to read from.
+
+        """
+        try:
+            path.unlink()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
         ) as e:
             raise OSDFileOperationError(e)

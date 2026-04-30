@@ -5,23 +5,18 @@
 """Base manager for common methods"""
 import json
 import logging
-import os
-import tempfile
 from typing import Any
 
 import requests
 from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
-from ops.pebble import PathError
 from requests import RequestException
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
-    CONTAINER_NAME,
     DASHBOARD_USER,
     REQUEST_TIMEOUT,
-    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -48,7 +43,6 @@ class BaseManager(ManagerStatusProtocol):
     def request_opensearch(
         self,
         uri: str,
-        substrate: Substrates,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -60,7 +54,6 @@ class BaseManager(ManagerStatusProtocol):
 
         Args:
             uri: URI of Opensearch
-            substrate: VM or K8s
             method: matching the known http methods.
             headers: request headers as a dict
             payload: JSON / map body payload.
@@ -81,9 +74,7 @@ class BaseManager(ManagerStatusProtocol):
         return self._request(
             uri,
             method=method,
-            substrate=substrate,
             headers=headers,
-            opensearch=True,
             payload=payload,
             cert_path=self.workload.paths.opensearch_ca,
         )
@@ -91,7 +82,6 @@ class BaseManager(ManagerStatusProtocol):
     def request_opensearch_dashboards(
         self,
         endpoint: str,
-        substrate: Substrates,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -103,7 +93,6 @@ class BaseManager(ManagerStatusProtocol):
 
         Args:
             endpoint: relative to the base uri.
-            substrate: VM or K8s
             method: matching the known http methods.
             headers: request headers as a dict
             payload: JSON / map body payload.
@@ -125,7 +114,6 @@ class BaseManager(ManagerStatusProtocol):
         return self._request(
             uri,
             method=method,
-            substrate=substrate,
             headers=headers,
             payload=payload,
             cert_path=self.workload.paths.ca,
@@ -135,8 +123,6 @@ class BaseManager(ManagerStatusProtocol):
         self,
         uri: str,
         cert_path: PathProtocol,
-        substrate: Substrates,
-        opensearch: bool = False,
         method: str = "GET",
         headers: dict | None = None,
         payload: dict[str, Any] | None = None,
@@ -170,29 +156,18 @@ class BaseManager(ManagerStatusProtocol):
             raise OSDAPIError(
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."
             )
-
-        # request library is run on other container than the opensearch is located so we temporarily
-        # copy certificates and remove them after request
-        local_ca_path = cert_path.as_posix()
-        if substrate == Substrates.K8S:
-            container = self.state.unit.get_container(CONTAINER_NAME)
-            try:
-                ca_content = container.pull(local_ca_path).read()
-                with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
-                    local_ca_file.write(ca_content)
-                    local_ca_path = local_ca_file.name
-            except PathError:
-                # We don't move ca if it's not exists so `requests` handles it (ignoring it for HTTP, erroring for HTTPS).
-                pass
-
+        path = None
         request_kwargs = {
             "url": uri,
             "method": method.upper(),
-            "verify": local_ca_path,
+            "verify": cert_path.as_posix(),
             "headers": headers,
             "timeout": REQUEST_TIMEOUT,
             "data": json.dumps(payload),
         }
+        path = self.workload.copy_certs(cert_path)
+        if path:
+            request_kwargs["verify"] = path
 
         try:
             with requests.Session() as s:
@@ -200,31 +175,29 @@ class BaseManager(ManagerStatusProtocol):
                     DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
-                if opensearch:
-                    # OpenSearch
-                    for attempt in Retrying(
-                        stop=stop_after_attempt(3),
-                        wait=wait_fixed(1),
-                        reraise=True,
-                    ):
-                        with attempt:
-                            resp = s.request(**request_kwargs)
-                            resp.raise_for_status()
-                else:
-                    # OpenSearch Dashboards
-                    resp = s.request(**request_kwargs)
-                    resp.raise_for_status()
+                # OpenSearch
+                for attempt in Retrying(
+                    stop=stop_after_attempt(3),
+                    wait=wait_fixed(1),
+                    reraise=True,
+                ):
+                    with attempt:
+                        resp = s.request(**request_kwargs)
+                        resp.raise_for_status()
+                    #
+                    # # OpenSearch Dashboards
+                    # resp = s.request(**request_kwargs)
+                    # resp.raise_for_status()
 
         except requests.ReadTimeout as e:
             logger.error(f"Hanging, no response from {uri}: {e}.")
             raise
         except RequestException as e:
-            logger.error(f"Request {method} to {uri} with payload: {payload} failed. \n{e}")
+            logger.warning(f"Request {method} to {uri} with payload: {payload} failed. \n{e}")
             raise
         finally:
-            if os.path.exists(local_ca_path) and substrate == Substrates.K8S:
-                os.remove(local_ca_path)
-
+            if path:
+                self.workload.remove_certs(path)
         try:
             return resp.status_code, resp.json()
         except requests.exceptions.JSONDecodeError:

@@ -350,7 +350,7 @@ async def send_control_signal(
     unit_name: str,
     signal: str,
     app_name: str = APP_NAME,
-    container_name: str = "",
+    k8s: bool = False,
 ) -> None:
     """Issues given job control signals to a server process on a given Juju unit.
 
@@ -360,8 +360,9 @@ async def send_control_signal(
         signal: the signal to issue
             e.g `SIGKILL`, `SIGSTOP`, `SIGCONT` etc
         app_name: the Juju application
+        k8s: if substrate is k8s
     """
-    if container_name:
+    if k8s:
         kill_cmd = f"ssh --container opensearch-dashboards {unit_name} -- pebble signal {signal} opensearch_dashboards"
     else:
         process = PROCESS if app_name == APP_NAME else DB_PROCESS

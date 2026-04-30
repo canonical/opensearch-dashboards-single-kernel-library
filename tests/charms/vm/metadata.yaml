@@ -12,6 +12,7 @@ summary: The Charmed Opensearch Dashboards operator
 docs: https://discourse.charmhub.io/t/charmed-opensearch-dashboards-home/14117
 source: https://github.com/canonical/opensearch-dashboards-operator
 issues: https://github.com/canonical/opensearch-dashboards-operator/issues
+charm-user: non-root
 
 maintainers:
   - Canonical Data Platform Team <data-platform@lists.launchpad.net>

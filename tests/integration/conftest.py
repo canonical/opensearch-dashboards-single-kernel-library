@@ -72,6 +72,23 @@ def pytest_addoption(parser):
     )
 
 
+@pytest.fixture(scope="class")
+def config_matrix_charm():
+    """Fixture to provide TLS and Traefik configuration groups from Spread."""
+    tls_enabled = os.environ.get("TEST_TLS", "false").lower() == "true"
+    traefik_trust_enabled = os.environ.get("TEST_TRAEFIK_TRUST", "false").lower() == "true"
+    traefik_enabled = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
+    return {"tls": tls_enabled, "traefik": traefik_enabled, "traefik_trust": traefik_trust_enabled}
+
+
+@pytest.fixture(scope="class")
+def config_matrix_rest():
+    """Fixture to provide TLS and Traefik configuration groups from Spread."""
+    tls_enabled = os.environ.get("TEST_TLS", "false").lower() == "true"
+    traefik_enabled = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
+    return {"tls": tls_enabled, "traefik": traefik_enabled}
+
+
 @pytest.fixture(scope="module")
 async def ops_test_microk8s(
     request, tmp_path_factory, ops_test: OpsTest

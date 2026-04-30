@@ -10,6 +10,9 @@ from ops import Object
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.literals import (
+    Substrates,
+)
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
     IngressPerAppReadyEvent,
@@ -30,17 +33,16 @@ class IngressEvents(Object):
         super().__init__(charm, "ingress_events")
         self.charm = charm
         self.state = state
-
-        self.framework.observe(
-            getattr(self.charm, "ingress_manager").ingress.on.ready, self._on_ingress_ready
-        )
-        self.framework.observe(
-            getattr(self.charm, "ingress_manager").ingress.on.revoked, self._on_ingress_revoked
-        )
+        if self.state.substrate == Substrates.K8S:
+            self.framework.observe(
+                getattr(self.charm, "ingress_manager").ingress.on.ready, self._on_ingress_ready
+            )
+            self.framework.observe(
+                getattr(self.charm, "ingress_manager").ingress.on.revoked, self._on_ingress_revoked
+            )
 
     def _on_ingress_ready(self, event: IngressPerAppReadyEvent) -> None:
         """Handle ingress ready event."""
-        logger.info("Ingress ready at: %s", event.url)
         self.charm.emit_restart(event)
 
     def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent) -> None:

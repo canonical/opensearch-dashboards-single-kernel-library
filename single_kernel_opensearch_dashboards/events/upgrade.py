@@ -27,7 +27,6 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
     UpgradeGrantedEvent,
 )
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
@@ -42,23 +41,20 @@ class UpgradeEvents(DataUpgrade):
     def __init__(
         self,
         charm: TypedCharmBase[CharmConfig],
-        state: ClusterState,
-        substrate: Substrates,
+        osd_state: ClusterState,
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
-        tls_manager: TLSManager,
     ) -> None:
         DataUpgrade.__init__(
             self,
             charm,
             OpensearchDashboardsDependencyModel(**DEPENDENCIES),
             "upgrade",
-            "vm" if substrate == Substrates.VM else "k8s",
+            "vm" if osd_state.substrate == Substrates.VM else "k8s",
         )
-        self.osd_state = state
+        self.osd_state = osd_state
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
-        self.tls_manager = tls_manager
         self.framework.observe(self.charm.on.upgrade_charm, self._on_k8s_upgrade_charm)
 
     def _on_k8s_upgrade_charm(self, event) -> None:

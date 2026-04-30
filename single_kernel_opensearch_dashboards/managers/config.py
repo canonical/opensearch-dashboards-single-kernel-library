@@ -51,10 +51,9 @@ LOG_PROPERTIES = {
 class ConfigManager(BaseManager):
     """Manager for handling configuration building + writing."""
 
-    def __init__(self, state: ClusterState, workload: WorkloadBase, substrate: Substrates):
+    def __init__(self, state: ClusterState, workload: WorkloadBase):
         super().__init__(state, workload)
         self.name = CONFIG_MANAGER_NAME
-        self.substrate = substrate
 
     def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""

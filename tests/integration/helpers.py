@@ -9,6 +9,7 @@ import subprocess
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, check_output
 from typing import Dict
+from urllib.parse import urlparse
 
 import requests
 import yaml
@@ -43,10 +44,11 @@ OPENSEARCH_CONFIG = {
 }
 
 TLS_CERTIFICATES_APP_NAME = "self-signed-certificates"
-TLS_STABLE_CHANNEL = "latest/stable"
+TLS_STABLE_CHANNEL = "1/stable"
 COS_AGENT_APP_NAME = "grafana-agent"
 COS_AGENT_RELATION_NAME = "cos-agent"
 DB_CLIENT_APP_NAME = "application"
+TRAEFIK_APP_NAME = "traefik-k8s"
 
 
 logger = logging.getLogger(__name__)
@@ -140,17 +142,98 @@ async def access_all_prometheus_exporters(ops_test: OpsTest, ops_test_microk8s: 
     return result
 
 
+async def get_dashboard_routing(ops_test_microk8s: OpsTest, unit_name: str):
+    """Returns (host, port, path) dynamically based on Traefik endpoints."""
+    if TRAEFIK_APP_NAME in ops_test_microk8s.model.applications:
+        traefik_app = ops_test_microk8s.model.applications[TRAEFIK_APP_NAME]
+
+        traefik_unit = traefik_app.units[0]
+        for unit in traefik_app.units:
+            if await unit.is_leader_from_status():
+                traefik_unit = unit
+                break
+
+        action = await traefik_unit.run_action("show-proxied-endpoints")
+        action_result = await action.wait()
+
+        endpoints_json = action_result.results.get("proxied-endpoints", "{}")
+        endpoints = json.loads(endpoints_json)
+
+        if APP_NAME_K8S in endpoints:
+            url = endpoints[APP_NAME_K8S]["url"]
+            parsed_url = urlparse(url)
+
+            host = parsed_url.hostname
+            port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
+            path = parsed_url.path
+
+            return host, port, path
+        else:
+            raise RuntimeError(
+                f"Endpoint for {APP_NAME_K8S} not found in Traefik's proxied-endpoints."
+            )
+
+    # Fallback when Traefik is not deployed
+    host = get_bind_address(ops_test_microk8s.model.name, unit_name)
+    return host, 5601, ""
+
+
+def access_dashboard(
+    host: str,
+    password: str,
+    username: str = "kibanaserver",
+    ssl: bool = False,
+    verify: bool = False,
+    port: int = 5601,
+    path: str = None,
+) -> bool:
+    try:
+        # Normal IP address
+        socket.inet_aton(host)
+    except OSError:
+        socket.inet_pton(socket.AF_INET6, host)
+        host = f"[{host}]"
+
+    protocol = "https" if ssl else "http"
+
+    # Handle NoneType for path safely
+    path_str = path if path else ""
+
+    # URL Construction
+    if path_str != "":
+        url = f"{protocol}://{host}{path_str}/auth/login"
+    else:
+        url = f"{protocol}://{host}:{port}/auth/login"
+
+    data = {"username": username, "password": password}
+    request_headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "osd-xsrf": "true",
+    }
+
+    arguments = {"url": url, "headers": request_headers, "json": data}
+    if verify:
+        arguments["verify"] = "./ca.pem"
+    logger.info(f"Sending request to {url}")
+    response = requests.post(**arguments)
+    logger.info(f"Got response:{response} from url:{url}")
+    return response.status_code == 200
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(5),
     retry_error_callback=lambda _: False,
     retry=lambda x: x is False,
 )
-def dashboard_unavailable(host: str, https: bool = False) -> bool:
-    """A single OSD instance is impossible to contact."""
-    protocol = "http" if not https else "https"
-    url = f"{protocol}://{host}:5601/auth/login"
+def dashboard_unavailable(
+    host: str, https: bool = False, port: int = 5601, path: str = None
+) -> bool:
+    protocol = "https" if https else "http"
+    url = f"{protocol}://{host}:{port}{path}/auth/login"
     arguments = {"url": url}
+
     if https:
         arguments["verify"] = "./ca.pem"
 
@@ -167,77 +250,18 @@ def dashboard_unavailable(host: str, https: bool = False) -> bool:
     retry_error_callback=lambda _: False,
     retry=retry_if_result(lambda x: x is False),
 )
-def all_dashboards_unavailable(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, https: bool = False
-) -> bool:
-    """None of the OSD units are possible to contact."""
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    app_name = APP_NAME
-    if is_cross_model:
-        app_name = APP_NAME_K8S
-
-    unavail = True
-    for unit in ops_test_microk8s.model.applications[app_name].units:
-
-        if https:
-            if not get_dashboard_ca_cert(ops_test_microk8s.model.name, unit, is_cross_model):
-                logger.info(f"Couldn't retrieve host certificate for unit {unit}")
-                continue
-
-        host = get_bind_address(ops_test_microk8s.model.name, unit.name)
-
-        # We should retry until a host could be retrieved
-        if not host:
-            continue
-
-        unavail = unavail and dashboard_unavailable(host, https)
-        if not unavail:
-            logger.error("Host {host} still available")
-    return unavail
-
-
-def access_dashboard(
-    host: str, password: str, username: str = "kibanaserver", ssl: bool = False
-) -> bool:
-    try:
-        # Normal IP address
-        socket.inet_aton(host)
-    except OSError:
-        socket.inet_pton(socket.AF_INET6, host)
-        host = f"[{host}]"
-
-    protocol = "http" if not ssl else "https"
-    url = f"{protocol}://{host}:5601/auth/login"
-    data = {"username": username, "password": password}
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "osd-xsrf": "true",
-    }
-
-    arguments = {"url": url, "headers": headers, "json": data}
-    if ssl:
-        arguments["verify"] = "./ca.pem"
-    response = requests.post(**arguments)
-    logger.info(f"Got response:{response} from url:{url}")
-    return response.status_code == 200
-
-
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_fixed(15),
-    retry_error_callback=lambda _: False,
-    retry=retry_if_result(lambda x: x is False),
-)
 async def access_all_dashboards(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, https: bool = False, skip: list[str] = []
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    https: bool = False,
+    verify: bool = True,
+    skip: list[str] = None,
 ):
-    """Check if all dashboard instances are accessible."""
+    skip = skip or []
     is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
     if not is_cross_model:
         app_name = APP_NAME
         relation_id = get_relations(ops_test, "opensearch-client", app_name)[0].id
-
     else:
         app_name = APP_NAME_K8S
         relation_id = get_relations(ops_test, "opensearch-client")[0].id
@@ -250,10 +274,10 @@ async def access_all_dashboards(
         ops_test, f"opensearch-client.{relation_id}.user.secret"
     )
     dashboard_password = dashboard_credentials["password"]
-
+    result = True
     # Copying the Dashboard's CA cert locally to use it for SSL verification
     # We only get it once for pipeline efficiency, as it's the same on all units
-    if https:
+    if verify:
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         unit = ops_test_microk8s.model.applications[app_name].units[0].name
         if unit not in skip and not get_dashboard_ca_cert(
@@ -262,22 +286,57 @@ async def access_all_dashboards(
             logger.error(f"Couldn't retrieve host certificate for unit {unit}")
             return False
 
-    result = True
     for unit in ops_test_microk8s.model.applications[app_name].units:
         if unit.name in skip:
             continue
-        host = get_bind_address(ops_test_microk8s.model.name, unit.name)
+
+        host, port, path = await get_dashboard_routing(
+            ops_test_microk8s,
+            unit.name,
+        )
+
         if not host:
-            logger.error(f"No hostname found for {unit.name}, can't check connection.")
+            logger.error(f"No hostname provided for {unit.name}, can't check connection.")
             return False
-        logger.info(f"Attempting to login to {host} with password {dashboard_password}")
-        result &= access_dashboard(host=host, password=dashboard_password, ssl=https)
-        if result:
-            logger.info(f"Host {unit.name}, {host} passed access check")
-        else:
-            # dump_all(ops_test, unit)
-            pass
+
+        logger.info(
+            f"Attempting to login to {host}:{port} with password {dashboard_password} and path: {path}"
+        )
+        result &= access_dashboard(
+            host=host, password=dashboard_password, ssl=https, verify=verify, port=port, path=path
+        )
+
     return result
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_fixed(15),
+    retry_error_callback=lambda _: False,
+    retry=retry_if_result(lambda x: x is False),
+)
+async def all_dashboards_unavailable(
+    ops_test: OpsTest, ops_test_microk8s: OpsTest, https: bool = False
+) -> bool:
+    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+    app_name = APP_NAME_K8S if is_cross_model else APP_NAME
+
+    unavail = True
+    for unit in ops_test_microk8s.model.applications[app_name].units:
+
+        if https:
+            if not get_dashboard_ca_cert(ops_test_microk8s.model.name, unit, is_cross_model):
+                logger.info(f"Couldn't retrieve host certificate for unit {unit}")
+                continue
+
+        host, port, path = await get_dashboard_routing(ops_test_microk8s, unit.name)
+
+        # We should retry until a host could be retrieved
+        if not host:
+            continue
+
+        unavail = unavail and dashboard_unavailable(host, https, port, path)
+    return unavail
 
 
 @retry(
@@ -535,23 +594,26 @@ async def client_run_dashboards_request(
     host: str,
     endpoint: str,
     payload: str = None,
-    https=False,
+    https: bool = False,
+    port: int = 5601,
+    path: str = None,
 ):
-    """Client applicatoin issuing a request to Opensearch Dashboards."""
     action = "run-dashboards-request"
-    headers = {
+    req_headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "osd-xsrf": "osd-fetch",
     }
+
     proto = "https" if https else "http"
-    server_uri = f"{proto}://{host}:5601"
+    server_uri = f"{proto}://{host}:{port}{path}"
+
     return await client_run_request(
         ops_test,
         unit_name,
         relation,
         method,
-        headers,
+        req_headers,
         endpoint,
         payload,
         action,
@@ -581,13 +643,14 @@ async def client_run_all_dashboards_request(
         return False
 
     for dashboards_unit in ops_test_microk8s.model.applications[app_name].units:
-        host = get_bind_address(ops_test_microk8s.model.name, dashboards_unit.name)
+        host, port, path = await get_dashboard_routing(ops_test_microk8s, dashboards_unit.name)
+
         if not host:
             logger.debug(f"No hostname found for {dashboards_unit.name}, can't check connection.")
             return False
 
         response = await client_run_dashboards_request(
-            ops_test, unit_name, relation, method, host, endpoint, payload, https
+            ops_test, unit_name, relation, method, host, endpoint, payload, https, port, path
         )
         if "results" in response:
             result.append(json.loads(response["results"])["rawResponse"])
