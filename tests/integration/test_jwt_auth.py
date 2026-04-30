@@ -14,7 +14,7 @@ from .helpers import (
     CONFIG_OPTS,
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
-    get_bind_address,
+    get_bind_address, get_dashboard_routing,
 )
 from .helpers_jwt import generate_json_web_token
 
@@ -120,11 +120,12 @@ class TestJWTAuth:
         await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
 
         logger.info("Create JWT configuration")
-        self.generated_jwt = generate_json_web_token()
+        global generated_jwt
+        generated_jwt = generate_json_web_token()
 
         secret_name = "jwt-signing-key"
         secret_id = await ops_test.model.add_secret(
-            name=secret_name, data_args=[f"signing-key={self.generated_jwt['signing-key']}"]
+            name=secret_name, data_args=[f"signing-key={generated_jwt['signing-key']}"]
         )
         await ops_test.model.grant_secret(secret_name=secret_name, application=JWT_APP_NAME)
 
@@ -206,12 +207,15 @@ class TestJWTAuth:
         protocol = "https" if https else "http"
 
         unit = ops_test_microk8s.model.applications[app_name].units[0]
-        host = get_bind_address(ops_test_microk8s.model.name, unit.name)
-        url = f"{protocol}://{host}:5601/api/status"
+        host, port, path = await get_dashboard_routing(
+            ops_test_microk8s,
+            unit.name,
+        )
+        url = f"{protocol}://{host}:{port}{path}/api/status"
 
-        logger.info("Test access with JWT")
+        logger.info(f"Test access with JWT to {url}")
         jwt_result = requests.get(
-            url, headers={"Authorization": f"Bearer {self.generated_jwt['token']}"}, verify=False
+            url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
         )
         assert jwt_result.status_code == 200, "Request failed"
         logger.info("Access with JWT successful")
@@ -236,7 +240,7 @@ class TestJWTAuth:
 
         logger.info("Test access with JWT after disabling")
         jwt_result = requests.get(
-            url, headers={"Authorization": f"Bearer {self.generated_jwt['token']}"}, verify=False
+            url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
         )
         assert jwt_result.status_code == 401, "`Unauthorized` error expected"
         logger.info("Access with JWT failed as expected")

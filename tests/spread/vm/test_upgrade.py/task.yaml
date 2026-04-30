@@ -1,13 +1,12 @@
 summary: test_upgrade.py
 environment:
   TEST_MODULE: test_upgrade.py
-  SCENARIO/1-tls:
-    TEST_TLS: "true"
-  SCENARIO/2-no-tls:
-    TEST_TLS: "false"
+
+  SCENARIO/1-all-true: "TEST_TLS=true"
+  SCENARIO/2-all-false: "TEST_TLS=false"
 
 execute: |
-  export TEST_TLS
+  export $SCENARIO
   
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
 artifacts:

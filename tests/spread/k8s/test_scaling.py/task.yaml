@@ -1,22 +1,14 @@
 summary: test_scaling.py
 environment:
   TEST_MODULE: ha/test_scaling.py
-  SCENARIO/1-all-true:
-    TEST_TLS: "true"
-    TEST_TRAEFIK: "true"
-  SCENARIO/2-tls-no-traefik:
-    TEST_TLS: "true"
-    TEST_TRAEFIK: "false"
-  SCENARIO/3-no-tls-traefik:
-    TEST_TLS: "false"
-    TEST_TRAEFIK: "true"
-  SCENARIO/4-all-false:
-    TEST_TLS: "false"
-    TEST_TRAEFIK: "false"
+
+  SCENARIO/1-all-true: "TEST_TLS=true TEST_TRAEFIK=true"
+  SCENARIO/2-no-tls-traefik: "TEST_TLS=false TEST_TRAEFIK=true"
+  SCENARIO/3-tls-no-traefik: "TEST_TLS=true TEST_TRAEFIK=false"
+  SCENARIO/4-all-false: "TEST_TLS=false TEST_TRAEFIK=false"
 
 execute: |
-  export TEST_TLS
-  export TEST_TRAEFIK
+  export $SCENARIO
   
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results" --k8s-charm
 artifacts:
