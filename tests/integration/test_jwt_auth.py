@@ -39,7 +39,9 @@ OPENSEARCH_CONFIG = {
     """,
 }
 RESOURCE = {
-    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
 }
 
 
@@ -55,12 +57,12 @@ class TestJWTAuth:
         charmvm: str,
         charmk8s: str,
         series: str,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        tls = config_matrix.get("tls", False)
-        traefik = config_matrix.get("traefik", False)
+        tls = config_matrix_rest.get("tls")
+        traefik = config_matrix_rest.get("traefik")
 
         charm = charmk8s if is_cross_model else charmvm
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME

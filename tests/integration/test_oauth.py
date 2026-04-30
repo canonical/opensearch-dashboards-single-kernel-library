@@ -45,7 +45,9 @@ DATA_INTEGRATOR_CONFIG = {
     "extra-user-roles": "admin",
 }
 RESOURCE = {
-    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
 }
 
 
@@ -62,7 +64,7 @@ class TestOAuth:
         charmvm: str,
         charmk8s: str,
         series: str,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
@@ -77,7 +79,7 @@ class TestOAuth:
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         charm = charmk8s if is_cross_model else charmvm
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        traefik = config_matrix["traefik"]
+        traefik = config_matrix_rest["traefik"]
 
         if is_cross_model:
             await ops_test_microk8s.model.deploy(

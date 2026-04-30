@@ -64,7 +64,9 @@ LONG_TIMEOUT = 3000
 LONG_WAIT = 30
 
 RESOURCE = {
-    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
 }
 
 

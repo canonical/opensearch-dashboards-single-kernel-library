@@ -40,11 +40,13 @@ NUM_UNITS_APP = 3
 NUM_UNITS_DB = 3
 
 RESOURCE = {
-    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge"
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
 }
 
 
-@pytest.mark.usefixtures("config_matrix")
+@pytest.mark.usefixtures("config_matrix_rest")
 class TestUpgrade:
     """Grouped in-place upgrade tests for OpenSearch Dashboards."""
 
@@ -57,14 +59,14 @@ class TestUpgrade:
         charmvm: str,
         charmk8s: str,
         series: str,
-        config_matrix: dict,
+        config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         charm = charmk8s if is_cross_model else charmvm
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
+        tls = config_matrix_rest["tls"]
+        traefik = config_matrix_rest["traefik"]
 
         if is_cross_model:
             await ops_test_microk8s.model.deploy(

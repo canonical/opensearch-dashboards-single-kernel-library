@@ -60,7 +60,9 @@ DB_CLIENT_APP_NAME = "application"
 NUM_UNITS_APP = 3
 NUM_UNITS_DB = 3
 RESOURCE = {
-    "opensearch-dashboards-image": "ghcr.io/canonical/charmed-opensearch-dashboards@sha256:d48e898c0a49ca0ddba123a4d5afbe8359bed770c59de3df8553d7fdaad10e94"
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
 }
 
 
