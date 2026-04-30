@@ -39,7 +39,6 @@ class OAuthEvents(Object):
         )
         self.charm = charm
         self.state = state
-
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_changed, self._on_oauth_relation_changed
         )

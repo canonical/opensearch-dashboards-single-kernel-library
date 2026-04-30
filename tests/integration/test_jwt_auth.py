@@ -57,7 +57,7 @@ class TestJWTAuth:
         ops_test_microk8s: OpsTest,
         charmvm: str,
         charmk8s: str,
-        series: str,
+        charm_base: str,
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
@@ -70,10 +70,10 @@ class TestJWTAuth:
 
         if is_cross_model:
             await ops_test_microk8s.model.deploy(
-                charm, application_name=app_name, series=series, resources=RESOURCE
+                charm, application_name=app_name, base=charm_base, resources=RESOURCE
             )
         else:
-            await ops_test_microk8s.model.deploy(charm, application_name=app_name, series=series)
+            await ops_test_microk8s.model.deploy(charm, application_name=app_name, base=charm_base)
 
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
         config = {"ca-common-name": "CN_CA"}

@@ -92,6 +92,7 @@ def test_post_upgrade_check_succeeds(version, harness, mocker):
 )
 def test_post_upgrade_check_fails_major(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -116,6 +117,7 @@ def test_post_upgrade_check_fails_major(harness, mocker):
 )
 def test_post_upgrade_check_fails_minor(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -205,6 +207,7 @@ def test_upgrade_granted_sets_failed_if_failed_snap(harness, mocker):
 )
 def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",

@@ -23,38 +23,29 @@ def opensearch_sysctl_settings():
 
 
 @pytest.fixture
-def ubuntu_base():
-    """charm base version to use for testing."""
-    return os.environ["CHARM_UBUNTU_BASE"]
+def charm_base():
+    """Returns the base in the modern format, e.g., 'ubuntu@22.04'."""
+    # Default to 22.04 if the env var isn't set
+    base_version = os.environ.get("CHARM_UBUNTU_BASE", "22.04")
+    return f"ubuntu@{base_version}"
 
 
 @pytest.fixture
-def series(ubuntu_base):
-    """Workaround: python-libjuju does not support deploy base="ubuntu@22.04"; use series"""
-    if ubuntu_base == "22.04":
-        return "jammy"
-    elif ubuntu_base == "24.04":
-        return "noble"
-    else:
-        raise NotImplementedError
-
-
-@pytest.fixture
-def charmvm(ubuntu_base):
+def charmvm(charm_base):
     """Path to the vm charm file to use for testing."""
     # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./tests/charms/vm/opensearch-dashboards_ubuntu@{ubuntu_base}-amd64.charm"
+    return f"./tests/charms/vm/opensearch-dashboards_{charm_base}-amd64.charm"
 
 
 @pytest.fixture
-def charmk8s(ubuntu_base):
+def charmk8s(charm_base):
     """Path to the k8s charm file to use for testing."""
     # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./tests/charms/k8s/opensearch-dashboards-k8s_ubuntu@{ubuntu_base}-amd64.charm"
+    return f"./tests/charms/k8s/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
 
 
 @pytest.fixture

@@ -27,7 +27,9 @@ DEFAULT_NUM_UNITS = 3
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charmvm: str, series: str) -> None:
+async def test_build_and_deploy(
+    ops_test: OpsTest, lxd_spaces, charmvm: str, charm_base: str
+) -> None:
     """Build and deploy OpenSearch Dashboards.
 
     For this test, we will create a machine in multiple spaces and inject
@@ -44,7 +46,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charmvm: str, ser
                 "add-machine",
                 f"--model={ops_test.model.name}",
                 "--constraints=spaces=alpha,cluster,backup,client",
-                f"--series={series}",
+                f"--base={charm_base}",
             ]
         )
 
@@ -71,7 +73,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charmvm: str, ser
     await ops_test.model.deploy(
         charmvm,
         num_units=DEFAULT_NUM_UNITS,
-        series=series,
+        base=charm_base,
         constraints="spaces=alpha,client,cluster,backup",
         bind={"": "cluster"},
         to=[str(i) for i in range(DEFAULT_NUM_UNITS)],

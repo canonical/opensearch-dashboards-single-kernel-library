@@ -54,7 +54,7 @@ class UpgradeManager(BaseManager):
         """
 
         # When there's no Opensearch connection, we shouldn't report version mismatch
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             return True
 
         if not (srv_version_actual := self.state.opensearch_server.version):

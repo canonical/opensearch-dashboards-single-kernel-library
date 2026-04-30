@@ -152,7 +152,7 @@ class BaseManager(ManagerStatusProtocol):
                 after retries are exhausted.
             requests.exceptions.JSONDecodeError: If the response body is not valid JSON.
         """
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             raise OSDAPIError(
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."
             )

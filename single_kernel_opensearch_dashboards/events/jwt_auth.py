@@ -34,7 +34,6 @@ class JwtEvents(Object):
         )
         self.charm = charm
         self.state = state
-
         self.framework.observe(
             self.charm.on[JWT_REL_NAME].relation_changed, self._on_jwt_relation_changed
         )

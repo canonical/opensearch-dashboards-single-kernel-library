@@ -8,6 +8,7 @@ import logging
 import socket
 from typing import MutableMapping
 
+import ops
 import requests
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
@@ -156,6 +157,7 @@ class OSDServer(StateBase):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
         self.bind_address = bind_address
+        self._stored_state = ops.StoredState
 
     @property
     def unit_id(self) -> int:
@@ -290,13 +292,15 @@ class OSDServer(StateBase):
     @property
     def unit_dying(self) -> bool:
         """Return whether relation broken event should be skipped."""
-        return self.relation.data[self.unit].get(f"unit_departing", "").lower() == "true"
+        try:
+            return self._stored_state.unit_dying
+        except AttributeError:
+            return False
 
     @unit_dying.setter
     def unit_dying(self, value: bool) -> None:
         """Set whether relation broken event should be skipped."""
-        v = "true" if value == True else "false"
-        self.update({f"unit_departing": v})
+        self._stored_state.unit_dying = value
 
 
 class OAuth:

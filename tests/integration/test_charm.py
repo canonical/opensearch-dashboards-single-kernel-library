@@ -78,22 +78,22 @@ class TestOpenSearchDashboards:
         charmvm: str,
         charmk8s: str,
         application_charm: str,
-        series: str,
-        config_matrix: dict,
+        charm_base: str,
+        config_matrix_charm: dict,
     ):
         """Deploying all charms required for the tests, and wait for complete setup."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik = config_matrix_charm["traefik"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         active_vm = [OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME]
         charm = charmk8s if is_cross_model else charmvm
         config = {"ca-common-name": "CN_CA"}
         deploy_kwargs = {
             "application_name": app_name,
             "num_units": NUM_UNITS_APP,
-            "series": series,
+            "base": charm_base,
         }
 
         # 1. Deploy OpenSearch, Certificates, and Test Application charms and COS
@@ -111,7 +111,7 @@ class TestOpenSearchDashboards:
         await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
 
         if not is_cross_model:
-            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
+            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL)
         else:
             await ops_test_microk8s.model.deploy(
                 PROMETHEUS_APP,
@@ -202,13 +202,13 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_access(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         """Test HTTP/HTTPS access based on the group configuration."""
-        tls = config_matrix["tls"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        traefik = config_matrix["traefik"]
+        traefik = config_matrix_charm["traefik"]
         https = False
         if (
             (traefik and tls and not traefik_trust)
@@ -222,14 +222,14 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_tls_lifecycle(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         """Test HTTPS relation lifecycle (breaking and restoring)."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik = config_matrix_charm["traefik"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         verify = True if tls else False
         if not tls:
             pytest.skip("Skipping TLS lifecycle test as TLS is disabled in this matrix run.")
@@ -292,13 +292,13 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_client_data_access(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         """Test API access to each dashboard unit."""
-        tls = config_matrix["tls"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        traefik = config_matrix["traefik"]
+        traefik = config_matrix_charm["traefik"]
         https = False
         if (
             (traefik and tls and not traefik_trust)
@@ -363,7 +363,7 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.abort_on_fail
     async def test_cos_relations(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         if is_cross_model:
@@ -480,14 +480,14 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_status_changes(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         """Test status changes based on backend failures."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik = config_matrix_charm["traefik"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         https = False
         if (
             (traefik and tls and not traefik_trust)
@@ -567,14 +567,14 @@ class TestOpenSearchDashboards:
 
     @pytest.mark.skip(reason="https://warthogs.atlassian.net/browse/DPE-5073")
     async def test_restore_opensearch_restores_osd(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix: dict
+        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         """This test shouldn't be separate but a native continuation of the previous one."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix["tls"]
-        traefik = config_matrix["traefik"]
-        traefik_trust = config_matrix["traefik_trust"]
+        tls = config_matrix_charm["tls"]
+        traefik = config_matrix_charm["traefik"]
+        traefik_trust = config_matrix_charm["traefik_trust"]
         https = False
         if (
             (traefik and tls and not traefik_trust)

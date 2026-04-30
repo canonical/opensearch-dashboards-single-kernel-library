@@ -56,7 +56,6 @@ class TLSEvents(Object):
         self.state = state
         self.tls_manager = tls_manager
         self.ingress_manager = ingress_manager
-
         self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
 
         self.framework.observe(

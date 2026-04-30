@@ -40,7 +40,6 @@ class RequirerEvents(Object):
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
-
         self.requirer_events = OpenSearchRequiresEventHandlers(
             self.charm, self.state.client_requires_data
         )

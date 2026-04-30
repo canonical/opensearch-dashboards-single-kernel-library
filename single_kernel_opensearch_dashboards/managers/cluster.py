@@ -75,7 +75,7 @@ class ClusterManager(BaseManager):
             if not self.workload.ready():
                 status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
 
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             status_list.append(
                 ServerStatuses.DB_CONNECTION_MISSING.value,
             )

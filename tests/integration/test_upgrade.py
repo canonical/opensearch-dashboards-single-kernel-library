@@ -58,7 +58,7 @@ class TestUpgrade:
         ops_test_microk8s: OpsTest,
         charmvm: str,
         charmk8s: str,
-        series: str,
+        charm_base: str,
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
@@ -73,13 +73,13 @@ class TestUpgrade:
                 charm,
                 application_name=app_name,
                 num_units=NUM_UNITS_APP,
-                series=series,
+                base=charm_base,
                 resources=RESOURCE,
                 trust=True,
             )
         else:
             await ops_test_microk8s.model.deploy(
-                charm, application_name=app_name, num_units=NUM_UNITS_APP, series=series
+                charm, application_name=app_name, num_units=NUM_UNITS_APP, base=charm_base
             )
 
         await ops_test.model.set_config(OPENSEARCH_CONFIG)

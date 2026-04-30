@@ -81,7 +81,7 @@ async def restart_delay(ops_test: OpsTest, ops_test_microk8s: OpsTest):
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, charmvm: str, charmk8s: str, series: str
+    ops_test: OpsTest, ops_test_microk8s: OpsTest, charmvm: str, charmk8s: str, charm_base: str
 ):
     """Tests that the charm deploys safely"""
     is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
@@ -96,13 +96,13 @@ async def test_build_and_deploy(
             charm,
             application_name=app_name,
             num_units=NUM_UNITS_APP,
-            series=series,
+            base=charm_base,
             resources=RESOURCE,
         )
 
     else:
         await ops_test_microk8s.model.deploy(
-            charm, application_name=app_name, num_units=NUM_UNITS_APP, series=series
+            charm, application_name=app_name, num_units=NUM_UNITS_APP, base=charm_base
         )
 
     # Opensearch

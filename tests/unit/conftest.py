@@ -94,6 +94,7 @@ def harness(request):
     if options["add_opensearch"]:
         opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, "opensearch")
         harness.add_relation_unit(opensearch_rel_id, "opensearch/0")
+        harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
         if options["opensearch_data"]:
             for key, value in options["opensearch_data"].items():
                 harness.update_relation_data(opensearch_rel_id, "opensearch", {key: value})

@@ -170,7 +170,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
             scope="both",
         )
 
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             self.state.add_status_to_both(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
                 component=self.cluster_manager.name,

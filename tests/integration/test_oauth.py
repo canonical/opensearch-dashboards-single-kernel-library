@@ -63,7 +63,7 @@ class TestOAuth:
         ops_test_microk8s: OpsTest,
         charmvm: str,
         charmk8s: str,
-        series: str,
+        charm_base: str,
         config_matrix_rest: dict,
     ):
         """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
@@ -83,14 +83,14 @@ class TestOAuth:
 
         if is_cross_model:
             await ops_test_microk8s.model.deploy(
-                charm, application_name=app_name, series=series, resources=RESOURCE
+                charm, application_name=app_name, base=charm_base, resources=RESOURCE
             )
             if traefik:
                 await ops_test_microk8s.model.deploy(
                     TRAEFIK_APP_NAME, channel="latest/stable", trust=True
                 )
         else:
-            await ops_test_microk8s.model.deploy(charm, application_name=app_name, series=series)
+            await ops_test_microk8s.model.deploy(charm, application_name=app_name, base=charm_base)
 
     @pytest.mark.abort_on_fail
     @pytest.mark.skip_if_deployed
@@ -128,8 +128,9 @@ class TestOAuth:
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
-        if traefik and is_cross_model:
+        if traefik:
             await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+            await ops_test_microk8s.model.wait_for_idle(timeout=1000)
 
         if tls:
             await ops_test_oauth.model.create_offer(
@@ -142,12 +143,12 @@ class TestOAuth:
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
-                await ops_test_microk8s.model.integrate(
-                    f"{TRAEFIK_APP_NAME}:certificates", "certificates"
-                )
 
             await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
-
+            await ops_test_microk8s.model.integrate(
+                f"{TRAEFIK_APP_NAME}:certificates", "certificates"
+            )
+            await ops_test_microk8s.model.wait_for_idle(timeout=1000)
         if is_cross_model:
             await ops_test.model.create_offer(
                 "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
@@ -161,8 +162,8 @@ class TestOAuth:
         )
 
         await gather(
-            ops_test.model.wait_for_idle(status="active"),
-            ops_test_microk8s.model.wait_for_idle(raise_on_error=False),
+            ops_test.model.wait_for_idle(status="active", timeout=1000),
+            ops_test_microk8s.model.wait_for_idle(timeout=1000),
             ops_test_oauth.model.wait_for_idle(raise_on_error=False),
         )
 
@@ -177,7 +178,7 @@ class TestOAuth:
 
         await gather(
             ops_test.model.wait_for_idle(status="active"),
-            ops_test_microk8s.model.wait_for_idle(raise_on_error=False),
+            ops_test_microk8s.model.wait_for_idle(),
             ops_test_oauth.model.wait_for_idle(raise_on_error=False),
         )
 

@@ -63,7 +63,6 @@ class OpenSearchDashboardsEvents(Object):
         self.state = state
         self.cluster_manager = cluster_manager
         self.tls_manager = tls_manager
-
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
@@ -149,7 +148,6 @@ class OpenSearchDashboardsEvents(Object):
         """Handle the peer `relation-departed` event."""
         # do not restart unit that is dying
         if event.departing_unit == self.charm.unit:
-            self.state.unit_server.unit_dying = True
             return
 
         if not self.pre_restart_check():

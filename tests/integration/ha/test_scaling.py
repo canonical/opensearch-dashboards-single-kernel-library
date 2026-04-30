@@ -54,7 +54,7 @@ class TestScaling:
         ops_test_microk8s: OpsTest,
         charmvm: str,
         charmk8s: str,
-        series: str,
+        charm_base: str,
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for complete setup."""
@@ -64,14 +64,11 @@ class TestScaling:
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
-        deploy_kwargs = {
-            "application_name": app_name,
-            "num_units": 1,
-        }
+        deploy_kwargs = {"application_name": app_name, "num_units": 1, "base": charm_base}
         if is_cross_model:
             deploy_kwargs["resources"] = RESOURCE
         else:
-            deploy_kwargs["series"] = series
+            deploy_kwargs["base"] = charm_base
 
         # 1. Deploy OpenSearch and Certificates
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
