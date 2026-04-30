@@ -17,7 +17,7 @@ from oauth_tools import (
 from playwright.async_api._generated import Page
 from pytest_operator.plugin import OpsTest
 
-from .helpers import CONFIG_OPTS, get_address
+from .helpers import CONFIG_OPTS, get_address, get_dashboard_routing
 
 pytest_plugins = ["oauth_tools.fixtures"]
 
@@ -191,19 +191,29 @@ class TestOAuth:
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
         tls = config_matrix_rest["tls"]
+        traefik = config_matrix_rest["traefik"]
 
-        opensearch_dashboards_ip = await get_address(
+        # Calculate protocol depending on tls/traefik state
+        https = False
+        if (
+            (traefik and tls)
+            or (not is_cross_model and tls)
+            or (is_cross_model and tls and not traefik)
+        ):
+            https = True
+        protocol = "https" if https else "http"
+
+        unit = ops_test_microk8s.model.applications[app_name].units[0]
+        host, port, path = await get_dashboard_routing(
             ops_test_microk8s,
-            ops_test_microk8s.model.applications[app_name].units[0].name,
-            app_name,
+            unit.name,
         )
-
-        protocol = "https" if tls else "http"
+        url = f"{protocol}://{host}:{port}{path}/api/status"
 
         await access_application_login_page(
             page=page,
-            url=f"{protocol}://{opensearch_dashboards_ip}:5601",
-            redirect_login_url=f"{protocol}://{opensearch_dashboards_ip}:5601/app/login",
+            url=url,
+            redirect_login_url=f"{url}/app/login",
         )
         await click_on_sign_in_button_by_text(page=page, text="Log in with single sign-on")
         await complete_auth_code_login(
