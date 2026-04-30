@@ -62,7 +62,7 @@ NUM_UNITS_DB = 2
 
 LONG_TIMEOUT = 3000
 LONG_WAIT = 30
-
+TRAEFIK_APP_NAME = "traefik-k8s"
 RESOURCE = {
     "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
         "upstream-source"
@@ -162,15 +162,19 @@ async def test_build_and_deploy(
     if is_cross_model:
         await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+        await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], status="blocked", timeout=1000
+        )
 
     pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
 
-    await ops_test_microk8s.model.wait_for_idle(
-        apps=[app_name], wait_for_active=True, timeout=1000
-    )
+    if is_cross_model:
+        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
 
 ##############################################################################

@@ -58,7 +58,7 @@ NUM_UNITS_DB = 3
 
 LONG_TIMEOUT = 3000
 LONG_WAIT = 30
-
+TRAEFIK_APP_NAME = "traefik-k8s"
 RESOURCE = {
     "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
         "upstream-source"
@@ -138,13 +138,17 @@ async def test_build_and_deploy(
     if is_cross_model:
         await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+        await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], status="blocked", timeout=1000
+        )
 
     pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
+    if is_cross_model:
+        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
-    )
-    await ops_test_microk8s.model.wait_for_idle(
-        apps=[app_name], wait_for_active=True, timeout=1000
     )
 
 
@@ -160,6 +164,7 @@ async def _recover_from_signal(
     units: list[str],
     app_name: str = APP_NAME,
     https: bool = False,
+    verify: bool = False,
 ):
     is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
     container = ""
@@ -209,7 +214,7 @@ async def _recover_from_signal(
     )
 
     logger.info("Checking OSD access...")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https, verify=verify)
 
 
 ##############################################################################
@@ -301,6 +306,9 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
             "certificates", TLS_CERT_APP_NAME, "self-signed-certificates"
         )
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model_name}.{TLS_CERT_APP_NAME}")
+        await ops_test_microk8s.model.integrate(
+            f"{TLS_CERT_APP_NAME}:certificates", TLS_CERT_APP_NAME
+        )
 
     await ops_test_microk8s.model.integrate(app_name, TLS_CERT_APP_NAME)
 
@@ -312,7 +320,7 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     )
 
     logger.info("Checking Dashboard access after TLS is configured")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True, verify=True)
 
 
 ##############################################################################
@@ -332,6 +340,7 @@ async def test_signal_opensearch_process_leader_https(
         [db_leader_name],
         app_name=OPENSEARCH_APP_NAME,
         https=True,
+        verify=True,
     )
 
 
@@ -349,6 +358,7 @@ async def test_sigstop_opensearch_process_leader_https(
         [db_leader_name],
         app_name=OPENSEARCH_APP_NAME,
         https=True,
+        verify=True,
     )
 
 
@@ -362,7 +372,9 @@ async def test_signal_dashboard_process_leader_https(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     leader_name = await get_leader_name(ops_test, app_name)
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name], https=True)
+    await _recover_from_signal(
+        ops_test, ops_test_microk8s, signal, [leader_name], https=True, verify=True
+    )
 
 
 @pytest.mark.abort_on_fail
@@ -373,7 +385,13 @@ async def test_signal_opensearch_process_cluster_https(
     """Signals Opensearch leader process and checks recovery + re-election."""
     db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
     await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, db_units, app_name=OPENSEARCH_APP_NAME, https=True
+        ops_test,
+        ops_test_microk8s,
+        signal,
+        db_units,
+        app_name=OPENSEARCH_APP_NAME,
+        https=True,
+        verify=True,
     )
 
 
@@ -384,7 +402,9 @@ async def test_sigstop_opensearch_process_cluster_https(
 ):
     """Signals Opensearch leader process and checks recovery + re-election."""
     db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, "SIGSTOP", db_units, https=True)
+    await _recover_from_signal(
+        ops_test, ops_test_microk8s, "SIGSTOP", db_units, https=True, verify=True
+    )
 
 
 @pytest.mark.abort_on_fail
@@ -397,4 +417,4 @@ async def test_signal_dashboard_process_cluster_https(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     units = [unit.name for unit in ops_test.model.applications[app_name].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units, https=True)
+    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units, https=True, verify=True)

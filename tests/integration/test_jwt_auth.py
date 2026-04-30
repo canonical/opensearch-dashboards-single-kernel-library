@@ -14,7 +14,8 @@ from .helpers import (
     CONFIG_OPTS,
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
-    get_bind_address, get_dashboard_routing,
+    get_bind_address,
+    get_dashboard_routing,
 )
 from .helpers_jwt import generate_json_web_token
 

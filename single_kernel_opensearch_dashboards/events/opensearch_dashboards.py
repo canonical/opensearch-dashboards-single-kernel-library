@@ -148,6 +148,7 @@ class OpenSearchDashboardsEvents(Object):
         """Handle the peer `relation-departed` event."""
         # do not restart unit that is dying
         if event.departing_unit == self.charm.unit:
+            logger.warning("Got dying unit, doing nothing")
             return
 
         if not self.pre_restart_check():
