@@ -2,8 +2,8 @@ summary: test_oauth.py
 environment:
   TEST_MODULE: test_oauth.py
 
-  SCENARIO/1-all-true: "TEST_TLS=true"
-  SCENARIO/2-all-false: "TEST_TLS=false"
+  SCENARIO/v1_all-true: "TEST_TLS=true"
+  SCENARIO/v2_all_false: "TEST_TLS=false"
 
 execute: |
   export $SCENARIO

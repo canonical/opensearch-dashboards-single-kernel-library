@@ -208,7 +208,7 @@ class TestOAuth:
             ops_test_microk8s,
             unit.name,
         )
-        url = f"{protocol}://{host}:{port}{path}/api/status"
+        url = f"{protocol}://{host}:{port}{path}"
 
         await access_application_login_page(
             page=page,
