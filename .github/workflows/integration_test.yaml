@@ -31,6 +31,7 @@ jobs:
           import os
           import subprocess
           import pathlib
+          import sys
 
           try:
             process = subprocess.run(
