@@ -9,7 +9,7 @@ import socket
 from typing import MutableMapping
 
 import requests
-from ops import StoredState, BoundStoredState
+from ops import BoundStoredState, StoredState
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -145,6 +145,7 @@ class OSDCluster(StateBase):
 
 class OSDServer(StateBase):
     """State collection metadata for a charm unit."""
+
     def __init__(
         self,
         relation: Relation | None,

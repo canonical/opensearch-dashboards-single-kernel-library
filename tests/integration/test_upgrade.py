@@ -147,21 +147,20 @@ class TestUpgrade:
                 await ops_test_microk8s.model.integrate(
                     TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
                 )
-            await ops_test_microk8s.model.wait_for_idle(apps=[app_name],
-                                                        status="active",
-                                                        timeout=1000)
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="active", timeout=1000
+            )
         elif is_cross_model:
-            await ops_test_microk8s.model.wait_for_idle(apps=[app_name],
-                                                        status="blocked",
-                                                        timeout=1000)
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000
+            )
         else:
-            await ops_test_microk8s.model.wait_for_idle(apps=[app_name],
-                                                        status="active",
-                                                        timeout=1000)
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="active", timeout=1000
+            )
         await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
         )
-
 
     @pytest.mark.abort_on_fail
     async def test_in_place_upgrade(

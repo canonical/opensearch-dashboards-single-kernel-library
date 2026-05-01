@@ -58,6 +58,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
     """Base OpenSearch Dashboards Charm, this will include base structure for both machine and k8s charms."""
 
     config_type = CharmConfig
+
     def __init__(self, *args):
         super().__init__(*args)
 

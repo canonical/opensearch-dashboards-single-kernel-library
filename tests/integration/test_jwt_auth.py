@@ -110,13 +110,13 @@ class TestJWTAuth:
             await ops_test_microk8s.model.deploy(TLS_CERTIFICATES_APP_NAME, channel="1/stable")
 
             # if tls:
-                # await ops_test.model.create_offer(
-                #     endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
-                #     offer_name="self-signed-certificates",
-                # )
-                # await ops_test_microk8s.model.consume(
-                #     f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
-                # )
+            # await ops_test.model.create_offer(
+            #     endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
+            #     offer_name="self-signed-certificates",
+            # )
+            # await ops_test_microk8s.model.consume(
+            #     f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
+            # )
 
         logger.info(f"Integrating {app_name} with {OPENSEARCH_APP_NAME}")
         await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)

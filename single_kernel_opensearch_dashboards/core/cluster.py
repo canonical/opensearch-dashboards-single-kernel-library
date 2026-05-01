@@ -56,6 +56,7 @@ logger = logging.getLogger(__name__)
 
 class ClusterState(Object, StatusesStateProtocol):
     """Collection of global cluster state for Framework/Object."""
+
     _stored_state = StoredState()
 
     def __init__(
@@ -143,7 +144,7 @@ class ClusterState(Object, StatusesStateProtocol):
             data_interface=self.peer_unit_data,
             component=self.model.unit,
             substrate=self.substrate,
-            _stored_state= self._stored_state,
+            _stored_state=self._stored_state,
             bind_address=self.bind_address,
         )
 
