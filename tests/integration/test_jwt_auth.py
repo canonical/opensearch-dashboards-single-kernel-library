@@ -107,15 +107,16 @@ class TestJWTAuth:
                 f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}"
             )
             await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{JWT_APP_NAME}")
+            await ops_test_microk8s.model.deploy(TLS_CERTIFICATES_APP_NAME, channel="1/stable")
 
-            if tls:
-                await ops_test.model.create_offer(
-                    endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
-                    offer_name="self-signed-certificates",
-                )
-                await ops_test_microk8s.model.consume(
-                    f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
-                )
+            # if tls:
+                # await ops_test.model.create_offer(
+                #     endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
+                #     offer_name="self-signed-certificates",
+                # )
+                # await ops_test_microk8s.model.consume(
+                #     f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
+                # )
 
         logger.info(f"Integrating {app_name} with {OPENSEARCH_APP_NAME}")
         await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
@@ -234,12 +235,18 @@ class TestJWTAuth:
             status="active",
             idle_period=60,
         )
-
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name],
-            status="active",
-            idle_period=60,
-        )
+        if traefik or not is_cross_model:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="active",
+                idle_period=60,
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="blocked",
+                idle_period=60,
+            )
 
         logger.info("Test access with JWT after disabling")
         jwt_result = requests.get(

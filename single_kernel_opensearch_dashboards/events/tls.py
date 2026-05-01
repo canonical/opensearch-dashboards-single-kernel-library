@@ -21,8 +21,7 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
 )
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
-    SERVER_PORT,
-    Substrates,
+    Substrates, SERVER_PORT,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import TLSStatuses
@@ -132,7 +131,7 @@ class TLSEvents(Object):
 
         self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
         if self.state.substrate == Substrates.K8S and self.state.ingress:
-            self.state.ingress.provide_ingress_requirements(scheme="https", port=SERVER_PORT)
+            self.ingress_manager.ingress.provide_ingress_requirements(scheme="https", port=SERVER_PORT)
             logger.info("Updated ingress relation to use HTTPS scheme.")
         try:
             self.tls_manager.set_private_key()
@@ -188,7 +187,7 @@ class TLSEvents(Object):
             return
 
         if self.state.substrate == Substrates.K8S and self.state.ingress:
-            self.state.ingress.provide_ingress_requirements(scheme="http", port=SERVER_PORT)
+            self.ingress_manager.ingress.provide_ingress_requirements(scheme="http", port=SERVER_PORT)
             logger.info("Updated ingress relation to use HTTP scheme.")
         self._remove_certificates(event)
 

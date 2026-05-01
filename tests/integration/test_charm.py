@@ -111,7 +111,7 @@ class TestOpenSearchDashboards:
         await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
 
         if not is_cross_model:
-            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL)
+            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, base=charm_base)
         else:
             await ops_test_microk8s.model.deploy(
                 PROMETHEUS_APP,

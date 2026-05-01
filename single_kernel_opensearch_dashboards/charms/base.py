@@ -7,7 +7,7 @@ import logging
 from abc import abstractmethod
 
 from data_platform_helpers.advanced_statuses import StatusHandler
-from ops import EventBase
+from ops import EventBase, StoredState
 
 from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
@@ -58,22 +58,14 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
     """Base OpenSearch Dashboards Charm, this will include base structure for both machine and k8s charms."""
 
     config_type = CharmConfig
-
     def __init__(self, *args):
         super().__init__(*args)
 
         self.name = DASHBOARDS_NAME
-        if self.substrate == Substrates.K8S:
-            ingress = IngressPerAppRequirer(
-                self,
-                port=SERVER_PORT,
-                scheme="https" if self.model.get_relation(CERTS_REL_NAME) else "http",
-                strip_prefix=False,  # for the time being, while we support full load balancing
-            )
-            # --- State ---
-            self.state = ClusterState(self, self.substrate, ingress)
-        else:
-            self.state = ClusterState(self, self.substrate)
+
+        # --- State ---
+        self.state = ClusterState(self, self.substrate)
+
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
         self.health_manager = HealthManager(self.state, self.workload)

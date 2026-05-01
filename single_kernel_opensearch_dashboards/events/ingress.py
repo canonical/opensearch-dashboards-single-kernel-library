@@ -35,8 +35,12 @@ class IngressEvents(Object):
         self.charm = charm
         self.state = state
         if self.state.substrate == Substrates.K8S:
-            self.framework.observe(self.state.ingress.on.ready, self._on_ingress_ready)
-            self.framework.observe(self.state.ingress.on.revoked, self._on_ingress_revoked)
+            self.framework.observe(
+                getattr(self.charm, "ingress_manager").ingress.on.ready, self._on_ingress_ready
+            )
+            self.framework.observe(
+                getattr(self.charm, "ingress_manager").ingress.on.revoked, self._on_ingress_revoked
+            )
             self.framework.observe(
                 self.charm.on[INGRESS_REL_NAME].relation_departed, self._on_ingress_departed
             )

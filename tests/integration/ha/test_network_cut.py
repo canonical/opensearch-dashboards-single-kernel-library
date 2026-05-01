@@ -242,7 +242,7 @@ async def network_cut_leader(ops_test: OpsTest, ops_test_microk8s: OpsTest, http
         # Check all nodes but the old leader
         logger.info("Checking Dashboard access for the rest of the nodes...")
         assert await access_all_dashboards(
-            ops_test, ops_test_microk8s, skip=[old_leader_name], https=https
+            ops_test, ops_test_microk8s, skip=[old_leader_name], https=https, verify=https
         )
 
         logger.info(f"Restoring network for {old_leader_name}...")
@@ -271,7 +271,7 @@ async def network_cut_leader(ops_test: OpsTest, ops_test_microk8s: OpsTest, http
     )
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=https)
 
 
 async def network_throttle_leader(
@@ -325,7 +325,7 @@ async def network_throttle_leader(
 
     logger.info("Checking Dashboard access for the rest of the nodes...")
     assert await access_all_dashboards(
-        ops_test, ops_test_microk8s, skip=[old_leader_name], https=https
+        ops_test, ops_test_microk8s, skip=[old_leader_name], https=https, verify=https
     )
 
     logger.info("Restoring network...")
@@ -360,7 +360,7 @@ async def network_throttle_leader(
     )
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=https)
 
 
 async def network_cut_application(
@@ -460,7 +460,7 @@ async def network_cut_application(
     )
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=https)
 
 
 async def network_throttle_application(
@@ -560,7 +560,7 @@ async def network_throttle_application(
     )
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=https)
 
 
 ##############################################################################
@@ -628,7 +628,7 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest, request):
     )
 
     logger.info("Checking Dashboard access after TLS is configured")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True)
+    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True, verify=True)
 
 
 ##############################################################################

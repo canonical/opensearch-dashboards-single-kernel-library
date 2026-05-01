@@ -195,6 +195,9 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         """Handle the `secret-changed` event."""
+        if self.state.unit_server.unit_dying:
+            return
+
         if not self.pre_restart_check():
             event.defer()
             return

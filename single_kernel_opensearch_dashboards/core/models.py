@@ -3,12 +3,13 @@
 # See LICENSE file for licensing details.
 
 """Collection of state objects for relations, apps and units."""
+import json
 import logging
 import socket
 from typing import MutableMapping
 
-import ops
 import requests
+from ops import StoredState, BoundStoredState
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 
@@ -144,19 +145,19 @@ class OSDCluster(StateBase):
 
 class OSDServer(StateBase):
     """State collection metadata for a charm unit."""
-
     def __init__(
         self,
         relation: Relation | None,
         data_interface: Data,
         component: Unit,
         substrate: Substrates,
+        _stored_state: StoredState,
         bind_address: str | None = None,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
         self.bind_address = bind_address
-        self._stored_state = ops.StoredState
+        self._stored_state = _stored_state
 
     @property
     def unit_id(self) -> int:
@@ -380,3 +381,34 @@ class JWT(RequirerData):
             return ""
         relation_data = self.fetch_relation_data([self.jwt_relation.id])
         return relation_data[self.jwt_relation.id].get("jwt-url-parameter") or ""
+
+
+class Ingress:
+    """State collection of the Ingress relation metadata for requirer."""
+
+    def __init__(self, relation: Relation | None):
+        self.relation = relation
+
+    @property
+    def relation_data(self) -> MutableMapping[str, str]:
+        """Ingress relation data object."""
+        if not self.relation or not self.relation.app:
+            return {}
+
+        return self.relation.data[self.relation.app]
+
+    @property
+    def url(self) -> str | None:
+        """The ingress url returned by the provider."""
+        if not self.relation_data:
+            return None
+
+        return json.loads(self.relation_data.get("ingress", "{}")).get("url")
+
+    @property
+    def base_path(self) -> str | None:
+        """Return the ingress base path."""
+        if not self.url:
+            return None
+
+        return self.url.split("/")[-1]

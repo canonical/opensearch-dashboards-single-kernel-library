@@ -124,7 +124,7 @@ class ConfigManager(BaseManager):
         ):
             properties |= {
                 "server.rewriteBasePath": True,
-                "server.basePath": f"/{self.state.ingress.url.split('/')[-1]}",
+                "server.basePath": f"/{self.state.ingress.base_path}",
             }
 
         if self.state.oauth_relation:
@@ -135,7 +135,7 @@ class ConfigManager(BaseManager):
                 "opensearch_security.openid.client_id": self.state.oauth.client_id,
                 "opensearch_security.openid.client_secret": self.state.oauth.client_secret,
                 "opensearch_security.openid.verify_hostnames": False,
-                "opensearch_security.openid.base_redirect_url": self.state.url,
+                "opensearch_security.openid.base_redirect_url": self.state.oauth_url,
             }
             if opensearch_ca:
                 properties |= {"opensearch_security.openid.root_ca": opensearch_ca.as_posix()}

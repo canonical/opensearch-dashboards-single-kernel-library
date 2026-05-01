@@ -108,7 +108,7 @@ class TestScaling:
 
         await ops_test_microk8s.model.deploy(charm, **deploy_kwargs)
 
-        if is_cross_model:
+        if traefik:
             await ops_test_microk8s.model.deploy(
                 TRAEFIK_APP_NAME, channel="latest/stable", trust=True
             )

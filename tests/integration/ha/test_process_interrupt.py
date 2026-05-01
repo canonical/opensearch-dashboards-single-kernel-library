@@ -211,7 +211,7 @@ async def _recover_from_signal(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
     await ops_test_microk8s.model.wait_for_idle(
-        apps=[APP_NAME], wait_for_active=True, timeout=1000
+        apps=[app_name], wait_for_active=True, timeout=1000
     )
 
     logger.info("Checking OSD access...")
@@ -255,7 +255,7 @@ async def test_signal_dashboard_process_leader(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     leader_name = await get_leader_name(ops_test, app_name)
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name], True)
+    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name])
 
 
 @pytest.mark.abort_on_fail
@@ -290,7 +290,7 @@ async def test_signal_dashboard_process_cluster(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     units = [unit.name for unit in ops_test.model.applications[app_name].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units, True)
+    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units)
 
 
 ##############################################################################
