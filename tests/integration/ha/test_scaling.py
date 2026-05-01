@@ -170,8 +170,12 @@ class TestScaling:
         expected = init_units_count + amount
 
         # scale up
-        logger.info(f"Adding {amount} units")
-        await ops_test_microk8s.model.applications[app_name].add_unit(count=amount)
+        if is_cross_model:
+            logger.info(f"Adding units to {expected}")
+            await ops_test_microk8s.model.applications[app_name].scale(expected)
+        else:
+            logger.info(f"Adding {amount} units")
+            await ops_test_microk8s.model.applications[app_name].add_unit(count=amount)
 
         logger.info(f"Waiting for {amount} units to be added and stable")
         await ops_test_microk8s.model.wait_for_idle(
@@ -205,10 +209,14 @@ class TestScaling:
         expected = init_units_count - amount
 
         # scale down
-        logger.info(f"Removing units {unit_ids}")
-        await ops_test_microk8s.model.applications[app_name].destroy_unit(
-            *[f"{app_name}/{cnt}" for cnt in unit_ids]
-        )
+        if is_cross_model:
+            logger.info(f"Removing units to {expected}")
+            await ops_test_microk8s.model.applications[app_name].scale(expected)
+        else:
+            logger.info(f"Removing units {unit_ids}")
+            await ops_test_microk8s.model.applications[app_name].destroy_unit(
+                *[f"{app_name}/{cnt}" for cnt in unit_ids]
+            )
 
         logger.info(f"Waiting for units {unit_ids} to be removed safely")
         await ops_test_microk8s.model.wait_for_idle(

@@ -147,11 +147,7 @@ class TestJWTAuth:
         logger.info(f"Integrating {app_name} with {JWT_APP_NAME}")
         await ops_test_microk8s.model.integrate(JWT_APP_NAME, app_name)
 
-        # Traefik deployment/integration logic
         if is_cross_model:
-            await ops_test_microk8s.model.deploy(
-                TRAEFIK_APP_NAME, channel="latest/stable", trust=True
-            )
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name], status="blocked", timeout=1000
             )
@@ -161,6 +157,12 @@ class TestJWTAuth:
             )
 
         if traefik:
+            await ops_test_microk8s.model.deploy(
+                TRAEFIK_APP_NAME, channel="latest/stable", trust=True
+            )
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
+            )
             await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000

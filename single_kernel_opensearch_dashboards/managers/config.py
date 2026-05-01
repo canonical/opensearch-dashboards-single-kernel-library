@@ -124,7 +124,7 @@ class ConfigManager(BaseManager):
         ):
             properties |= {
                 "server.rewriteBasePath": True,
-                "server.basePath": f"/{self.state.ingress.base_path}",
+                "server.basePath": f"/{self.state.ingress.url.split("/")[-1]}",
             }
 
         if self.state.oauth_relation:

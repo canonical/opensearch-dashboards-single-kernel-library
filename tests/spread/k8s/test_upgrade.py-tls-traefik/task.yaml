@@ -1,6 +1,6 @@
 summary: test_upgrade.py
 environment:
-  TEST_MODULE: ha/test_upgrade.py
+  TEST_MODULE: test_upgrade.py
   TEST_TLS: true
   TEST_TRAEFIK: true
 

@@ -615,6 +615,11 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest, request):
 
     await ops_test_microk8s.model.integrate(app_name, TLS_CERT_APP_NAME)
 
+    if is_cross_model:
+        await ops_test_microk8s.model.integrate(
+            TRAEFIK_APP_NAME, f"{TLS_CERT_APP_NAME}:certificates"
+        )
+
     await ops_test.model.wait_for_idle(
         apps=[TLS_CERT_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
     )

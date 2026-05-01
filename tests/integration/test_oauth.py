@@ -132,22 +132,23 @@ class TestOAuth:
             await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
 
-        if tls:
-            await ops_test_oauth.model.create_offer(
-                "certificates", "certificates", "self-signed-certificates"
-            )
-            await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.certificates")
-            await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
+        await ops_test_oauth.model.create_offer(
+            "certificates", "certificates", "self-signed-certificates"
+        )
+        await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.certificates")
+        await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
 
+        if tls:
             if is_cross_model:
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
 
             await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
-            await ops_test_microk8s.model.integrate(
-                f"{TRAEFIK_APP_NAME}:certificates", "certificates"
-            )
+            if traefik:
+                await ops_test_microk8s.model.integrate(
+                    f"{TRAEFIK_APP_NAME}:certificates", "certificates"
+                )
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
         if is_cross_model:
             await ops_test.model.create_offer(

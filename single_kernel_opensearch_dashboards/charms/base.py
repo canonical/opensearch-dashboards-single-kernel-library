@@ -13,6 +13,7 @@ from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    CERTS_REL_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
@@ -38,6 +39,9 @@ from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
     RollingOpsManager,
 )
+from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
+    IngressPerAppRequirer,
+)
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
@@ -59,9 +63,17 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         super().__init__(*args)
 
         self.name = DASHBOARDS_NAME
-        # --- State ---
-        self.state = ClusterState(self, self.substrate)
-
+        if self.substrate == Substrates.K8S:
+            ingress = IngressPerAppRequirer(
+                self,
+                port=SERVER_PORT,
+                scheme="https" if self.model.get_relation(CERTS_REL_NAME) else "http",
+                strip_prefix=False,  # for the time being, while we support full load balancing
+            )
+            # --- State ---
+            self.state = ClusterState(self, self.substrate, ingress)
+        else:
+            self.state = ClusterState(self, self.substrate)
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
         self.health_manager = HealthManager(self.state, self.workload)

@@ -30,7 +30,6 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.models import (
     JWT,
-    Ingress,
     OAuth,
     OpensearchServer,
     OSDCluster,
@@ -49,6 +48,9 @@ from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
     ClientConfig,
     OAuthRequirer,
 )
+from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
+    IngressPerAppRequirer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +62,12 @@ class ClusterState(Object, StatusesStateProtocol):
         self,
         charm: TypedCharmBase[CharmConfig],
         substrate: Substrates,
+        ingress: IngressPerAppRequirer = None,
     ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
         self.charm = charm
+        self.ingress = ingress
         self._servers_data = {}
 
         self.peer_app_data = DataPeerData(
@@ -213,11 +217,6 @@ class ClusterState(Object, StatusesStateProtocol):
         return JWT(model=self.model, relation_name=JWT_REL_NAME)
 
     @property
-    def ingress(self) -> Ingress:
-        """The ingress relation state."""
-        return Ingress(relation=self.ingress_relation)
-
-    @property
     def bind_address(self) -> str | None:
         """The network binding address from the peer relation."""
         if not self.peer_relation:
@@ -245,7 +244,13 @@ class ClusterState(Object, StatusesStateProtocol):
     def oauth_client_config(self) -> ClientConfig:
         """Generates actual client config for the OAuth."""
         scheme = "https" if self.unit_server.tls_enabled else "http"
-        url = self.url if self.substrate == Substrates.VM else f"{scheme}://0.0.0.0:{SERVER_PORT}"
+        if self.ingress and self.ingress.url:
+            url = self.ingress.url
+        elif self.substrate == Substrates.VM:
+            url = self.url
+        else:
+            url = f"{scheme}://127.0.0.1:{SERVER_PORT}"
+
         return ClientConfig(
             audience=["opensearch"],
             redirect_uri=f"{url}/auth/openid/login",
@@ -283,7 +288,7 @@ class ClusterState(Object, StatusesStateProtocol):
         if self.substrate != Substrates.K8S or not self.ingress_relation or not self.ingress.url:
             return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
         elif self.ingress_relation and self.ingress.url:
-            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}/{self.ingress.base_path}"
+            return self.ingress.url
         else:
             return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
 

@@ -424,7 +424,6 @@ async def get_service_pid(ops_test: OpsTest, unit_name: str) -> str:
     cmd = f"ssh --container opensearch_dashboards {unit_name} -- pgrep -x node"
     return_code, stdout, stderr = await ops_test.juju(*cmd.split())
 
-    # pgrep returns 1 if no processes are matched
     if return_code != 0:
         return ""
     return stdout.strip()

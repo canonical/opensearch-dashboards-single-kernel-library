@@ -162,6 +162,7 @@ async def _recover_from_signal(
     ops_test_microk8s: OpsTest,
     signal: str,
     units: list[str],
+    pid: bool = False,
     app_name: str = APP_NAME,
     https: bool = False,
     verify: bool = False,
@@ -173,14 +174,14 @@ async def _recover_from_signal(
         if is_cross_model:
             container = "opensearch-dashboards"
             app_name = APP_NAME_K8S
-    pid = {}
+    pid_list = {}
     # In attempt to prevent flaky behavior
     # The process is restarted so fast, slow pipelines may not "catch" it in time
     for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5), reraise=True):
         with attempt:
-            if is_cross_model and signal != "SIGSTOP":
+            if is_cross_model and signal != "SIGSTOP" and pid:
                 for unit in units:
-                    pid[unit] = await get_service_pid(ops_test_microk8s, unit)
+                    pid_list[unit] = await get_service_pid(ops_test_microk8s, unit)
 
             logger.info(f"Sending {signal} {app_name}:{units}...")
             await asyncio.gather(
@@ -192,10 +193,10 @@ async def _recover_from_signal(
                 ]
             )
 
-            if is_cross_model and signal != "SIGSTOP":
+            if is_cross_model and signal != "SIGSTOP" and pid:
                 logger.info(f"Asserting {app_name}:{units} service pid is changed")
                 for unit in units:
-                    assert await get_service_pid(ops_test_microk8s, unit) != pid[unit]
+                    assert await get_service_pid(ops_test_microk8s, unit) != pid_list[unit]
             else:
                 # Check that process is down
                 logger.info(f"Waiting for {app_name}:{units} to be down...")
@@ -254,7 +255,7 @@ async def test_signal_dashboard_process_leader(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     leader_name = await get_leader_name(ops_test, app_name)
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name])
+    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name], True)
 
 
 @pytest.mark.abort_on_fail
@@ -289,7 +290,7 @@ async def test_signal_dashboard_process_cluster(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     units = [unit.name for unit in ops_test.model.applications[app_name].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units)
+    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units, True)
 
 
 ##############################################################################
@@ -373,7 +374,7 @@ async def test_signal_dashboard_process_leader_https(
         app_name = APP_NAME_K8S
     leader_name = await get_leader_name(ops_test, app_name)
     await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, [leader_name], https=True, verify=True
+        ops_test, ops_test_microk8s, signal, [leader_name], True, https=True, verify=True
     )
 
 
@@ -417,4 +418,6 @@ async def test_signal_dashboard_process_cluster_https(
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
     units = [unit.name for unit in ops_test.model.applications[app_name].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units, https=True, verify=True)
+    await _recover_from_signal(
+        ops_test, ops_test_microk8s, signal, units, True, https=True, verify=True
+    )
