@@ -54,6 +54,7 @@ class OAuthEvents(Object):
         """Handler for `_on_oauth_relation_changed` event."""
         if self.state.unit_server.unit_dying:
             return
+
         if not self.state.servers:
             self.state.statuses.add(
                 status=ServerStatuses.SERVERS_IS_DOWN.value,

@@ -67,7 +67,9 @@ class ConfigManager(BaseManager):
 
     def load_dashboard_properties(self) -> dict[str, Any]:
         """Reads built config file."""
-        return yaml.load(self.workload.paths.properties.read_text(), yaml.UnsafeLoader)
+        return yaml.load(
+            self.workload.read_text(self.workload.paths.properties), yaml.UnsafeLoader
+        )
 
     def dashboard_properties(self) -> dict[str, Any]:
         """Build the opensearch_dashboards.yml content.

@@ -111,7 +111,7 @@ class TestOpenSearchDashboards:
         await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
 
         if not is_cross_model:
-            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, base=charm_base)
+            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL)
         else:
             await ops_test_microk8s.model.deploy(
                 PROMETHEUS_APP,
@@ -369,6 +369,7 @@ class TestOpenSearchDashboards:
         self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_charm: dict
     ):
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
+        traefik = config_matrix_charm["traefik"]
         if is_cross_model:
             await ops_test_microk8s.model.integrate(
                 f"{APP_NAME_K8S}:metrics-endpoint", PROMETHEUS_APP
@@ -379,11 +380,26 @@ class TestOpenSearchDashboards:
             )
 
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME_K8S, PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
+                apps=[PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
                 status="active",
                 timeout=1000,
                 idle_period=30,
             )
+
+            if traefik:
+                await ops_test_microk8s.model.wait_for_idle(
+                    apps=[PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
+                    status="active",
+                    timeout=1000,
+                    idle_period=30,
+                )
+            else:
+                await ops_test_microk8s.model.wait_for_idle(
+                    apps=[APP_NAME_K8S],
+                    status="blocked",
+                    timeout=1000,
+                    idle_period=30,
+                )
 
             expected_results = {
                 "metrics_path": "/metrics",

@@ -187,6 +187,9 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_relation_changed(self, event: EventBase) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
+        if self.state.unit_server.unit_dying:
+            return
+
         if not self.pre_restart_check():
             event.defer()
             return

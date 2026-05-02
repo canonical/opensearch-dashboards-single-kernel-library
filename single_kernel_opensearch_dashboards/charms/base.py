@@ -12,6 +12,7 @@ from ops import EventBase, StoredState
 from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
 )
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     DASHBOARDS_NAME,
@@ -198,10 +199,17 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
 
     def emit_restart(self, event: EventBase) -> None:
         """Evaluate conditions and emit a restart lock request if necessary."""
-        if not self.config_manager.config_changed():
-            if self.health_manager.check_unit_health():
-                logger.debug("OpenSearch Dashboards is healthy and config is same, not restarting")
-                return
+        try:
+            if not self.config_manager.config_changed():
+                if self.health_manager.check_unit_health():
+                    logger.debug(
+                        "OpenSearch Dashboards is healthy and config is same, not restarting"
+                    )
+                    return
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            event.defer()
+            return
 
         self.state.statuses.add(
             status=ServerStatuses.WAITING_ON_RESTART.value,

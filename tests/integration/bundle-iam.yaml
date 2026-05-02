@@ -53,7 +53,7 @@ applications:
       plugin_btree_gin_enable: true
   self-signed-certificates:
     charm: self-signed-certificates
-    revision: 155
+    revision: 586
     channel: 1/stable
     scale: 1
   traefik-admin:

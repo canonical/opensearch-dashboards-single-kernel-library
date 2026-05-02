@@ -9,7 +9,7 @@ import socket
 from typing import MutableMapping
 
 import requests
-from ops import BoundStoredState, StoredState
+from ops import StoredState
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 

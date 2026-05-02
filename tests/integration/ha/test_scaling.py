@@ -150,6 +150,10 @@ class TestScaling:
                 await ops_test_microk8s.model.wait_for_idle(
                     apps=[app_name], status="blocked", timeout=1000
                 )
+        elif is_cross_model and not traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000
+            )
         else:
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name], wait_for_active=True, timeout=1000
@@ -160,7 +164,12 @@ class TestScaling:
     ##############################################################################
 
     async def scale_up(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, amount: int, https: bool = False
+        self,
+        ops_test: OpsTest,
+        ops_test_microk8s: OpsTest,
+        amount: int,
+        config_matrix_rest: dict,
+        https: bool = False,
     ) -> None:
         """Testing that newly added units are functional."""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
@@ -168,6 +177,7 @@ class TestScaling:
 
         init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
         expected = init_units_count + amount
+        traefik = config_matrix_rest["traefik"]
 
         # scale up
         if is_cross_model:
@@ -178,13 +188,22 @@ class TestScaling:
             await ops_test_microk8s.model.applications[app_name].add_unit(count=amount)
 
         logger.info(f"Waiting for {amount} units to be added and stable")
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name],
-            status="active",
-            wait_for_exact_units=expected,
-            timeout=1000,
-            idle_period=30,
-        )
+        if is_cross_model and not traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="blocked",
+                wait_for_exact_units=expected,
+                timeout=1000,
+                idle_period=30,
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="active",
+                wait_for_exact_units=expected,
+                timeout=1000,
+                idle_period=30,
+            )
 
         num_units = len(ops_test_microk8s.model.applications[app_name].units)
         assert num_units == expected
@@ -198,6 +217,7 @@ class TestScaling:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         unit_ids: list[int],
+        config_matrix_rest: dict,
         https: bool = False,
     ) -> None:
         """Testing that decreasing units keeps functionality."""
@@ -207,6 +227,7 @@ class TestScaling:
         init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
         amount = len(unit_ids)
         expected = init_units_count - amount
+        traefik = config_matrix_rest["traefik"]
 
         # scale down
         if is_cross_model:
@@ -219,13 +240,22 @@ class TestScaling:
             )
 
         logger.info(f"Waiting for units {unit_ids} to be removed safely")
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name],
-            status="active",
-            wait_for_exact_units=expected,
-            timeout=1000,
-            idle_period=30,
-        )
+        if is_cross_model and not traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="blocked",
+                wait_for_exact_units=expected,
+                timeout=1000,
+                idle_period=30,
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name],
+                status="active",
+                wait_for_exact_units=expected,
+                timeout=1000,
+                idle_period=30,
+            )
 
         num_units = len(ops_test_microk8s.model.applications[app_name].units)
         assert num_units == expected

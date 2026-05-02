@@ -17,7 +17,13 @@ from oauth_tools import (
 from playwright.async_api._generated import Page
 from pytest_operator.plugin import OpsTest
 
-from .helpers import CONFIG_OPTS, get_address, get_dashboard_routing
+from .helpers import (
+    CONFIG_OPTS,
+    TLS_CERTIFICATES_APP_NAME,
+    TLS_STABLE_CHANNEL,
+    get_address,
+    get_dashboard_routing,
+)
 
 pytest_plugins = ["oauth_tools.fixtures"]
 
@@ -143,7 +149,6 @@ class TestOAuth:
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
-
             await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
             if traefik:
                 await ops_test_microk8s.model.integrate(
@@ -199,7 +204,6 @@ class TestOAuth:
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
-        # Calculate protocol depending on tls/traefik state
         https = False
         if (
             (traefik and tls)
@@ -214,8 +218,10 @@ class TestOAuth:
             ops_test_microk8s,
             unit.name,
         )
-        url = f"{protocol}://{host}:{port}{path}"
-
+        if not traefik:
+            url = f"{protocol}://{host}:{port}{path}"
+        else:
+            url = f"{protocol}://{host}{path}"
         await access_application_login_page(
             page=page,
             url=url,

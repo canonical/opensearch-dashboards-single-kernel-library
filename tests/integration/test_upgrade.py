@@ -210,9 +210,14 @@ class TestUpgrade:
         else:
             await ops_test_microk8s.model.applications[app_name].refresh(path=charm)
 
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="active", timeout=1000, idle_period=120
-        )
+        if traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000, idle_period=120
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="active", timeout=1000, idle_period=120
+            )
 
         # Validate access
         https = False

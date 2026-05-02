@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 CLIENT_TIMEOUT = 10
 RESTART_DELAY = 60
 UPDATE_STATUS_INTERVAL = 60
+HANGING_TIMEOUT = 90
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
@@ -206,13 +207,15 @@ async def _recover_from_signal(
 
     logger.info("Waiting a bit, so the process could safely restart...")
     await asyncio.sleep(UPDATE_STATUS_INTERVAL + 2)
-
+    if signal == "SIGSTOP":
+        await asyncio.sleep(HANGING_TIMEOUT + 2)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
-    await ops_test_microk8s.model.wait_for_idle(
-        apps=[app_name], wait_for_active=True, timeout=1000
-    )
+    if app_name == APP_NAME or app_name == APP_NAME_K8S:
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], wait_for_active=True, timeout=1000
+        )
 
     logger.info("Checking OSD access...")
     assert await access_all_dashboards(ops_test, ops_test_microk8s, https, verify=verify)
