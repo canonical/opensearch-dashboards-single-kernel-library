@@ -263,7 +263,7 @@ class TestOpenSearchDashboards:
 
         # If traefik enabled it's related to TLS. Breaking TLS relation breaks the traefik charm, so we do not do that
         https = True if not traefik_trust and traefik and tls else False
-        assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=False)
+        assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=tls)
 
         # Restore relation for further tests
         await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)

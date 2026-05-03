@@ -210,7 +210,7 @@ class TestUpgrade:
         else:
             await ops_test_microk8s.model.applications[app_name].refresh(path=charm)
 
-        if traefik:
+        if not traefik:
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name], status="blocked", timeout=1000, idle_period=120
             )

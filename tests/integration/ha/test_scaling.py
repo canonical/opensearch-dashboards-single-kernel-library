@@ -286,7 +286,13 @@ class TestScaling:
             or (is_cross_model and tls and not traefik)
         ):
             https = True
-        await self.scale_up(ops_test, ops_test_microk8s, amount=2, https=https)
+        await self.scale_up(
+            ops_test,
+            ops_test_microk8s,
+            amount=2,
+            https=https,
+            config_matrix_rest=config_matrix_rest,
+        )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_down(
@@ -303,7 +309,13 @@ class TestScaling:
             or (is_cross_model and tls and not traefik)
         ):
             https = True
-        await self.scale_down(ops_test, ops_test_microk8s, unit_ids=[1, 2], https=https)
+        await self.scale_down(
+            ops_test,
+            ops_test_microk8s,
+            unit_ids=[1, 2],
+            https=https,
+            config_matrix_rest=config_matrix_rest,
+        )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_down_to_zero(
@@ -320,7 +332,13 @@ class TestScaling:
             or (is_cross_model and tls and not traefik)
         ):
             https = True
-        await self.scale_down(ops_test, ops_test_microk8s, unit_ids=[0], https=https)
+        await self.scale_down(
+            ops_test,
+            ops_test_microk8s,
+            unit_ids=[0],
+            https=https,
+            config_matrix_rest=config_matrix_rest,
+        )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_up_from_zero(
@@ -337,4 +355,10 @@ class TestScaling:
             or (is_cross_model and tls and not traefik)
         ):
             https = True
-        await self.scale_up(ops_test, ops_test_microk8s, amount=3, https=https)
+        await self.scale_up(
+            ops_test,
+            ops_test_microk8s,
+            amount=3,
+            https=https,
+            config_matrix_rest=config_matrix_rest,
+        )

@@ -257,7 +257,7 @@ async def test_signal_dashboard_process_leader(
     app_name = APP_NAME
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
-    leader_name = await get_leader_name(ops_test, app_name)
+    leader_name = await get_leader_name(ops_test_microk8s, app_name)
     await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name])
 
 
@@ -375,7 +375,7 @@ async def test_signal_dashboard_process_leader_https(
     app_name = APP_NAME
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
-    leader_name = await get_leader_name(ops_test, app_name)
+    leader_name = await get_leader_name(ops_test_microk8s, app_name)
     await _recover_from_signal(
         ops_test, ops_test_microk8s, signal, [leader_name], True, https=True, verify=True
     )
