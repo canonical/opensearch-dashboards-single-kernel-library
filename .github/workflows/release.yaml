@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # Change environment name if we are on test feature
-    environment: ${{ github.ref_name == 'feature/single-kernel' && 'testpypi' || 'production' }}
+    environment: production
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v4
@@ -41,9 +41,6 @@ jobs:
           path: dist/
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # Configure repository url, by default it is pypi.
-          repository-url: ${{ github.ref_name == 'feature/single-kernel' && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
     permissions:
       id-token: write  # Needed for PyPI trusted publishing
 
