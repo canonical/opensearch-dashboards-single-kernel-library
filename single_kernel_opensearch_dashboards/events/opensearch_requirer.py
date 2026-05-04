@@ -13,9 +13,11 @@ from single_kernel_opensearch_dashboards.charms.base import (
 )
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
+    CLUSTER_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
@@ -74,6 +76,11 @@ class RequirerEvents(Object):
         """
         if self.state.unit_server.unit_dying:
             return
+
+        self.state.add_status_to_both(
+            status=ServerStatuses.DB_CONNECTION_MISSING.value,
+            component=CLUSTER_MANAGER_NAME,
+        )
 
         # Don't remove anything if the service is going down
         if self.charm.app.planned_units == 0 or not self.charm.unit.is_leader():

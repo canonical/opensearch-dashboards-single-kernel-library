@@ -99,13 +99,6 @@ class OpenSearchDashboardsEvents(Object):
             scope="unit",
             component=self.cluster_manager.name,
         )
-        try:
-            # Set ca if pod was re-created
-            self.tls_manager.write_tls_files()
-        except OSDFileOperationError as e:
-            logger.error(f"Operation with files is failed: {e}. Deferring event.")
-            event.defer()
-            return
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -116,13 +109,6 @@ class OpenSearchDashboardsEvents(Object):
         )
 
         self.cluster_manager.install_osd_server()
-        # Set ca if unit was added after opensearch relation creation
-        try:
-            self.tls_manager.write_tls_files()
-        except OSDFileOperationError as e:
-            logger.error(f"Operation with files is failed: {e}. Deferring event.")
-            event.defer()
-            return
 
     def _on_start(self, event: EventBase) -> None:
         """Handle the `start` event."""

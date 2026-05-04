@@ -216,13 +216,17 @@ class TestUpgrade:
         else:
             await ops_test_microk8s.model.applications[app_name].refresh(path=charm)
 
-        if not traefik:
+        if not is_cross_model:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000, idle_period=120
+                apps=[app_name], status="active", timeout=1000, idle_period=120
+            )
+        elif traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000, idle_period=120
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="active", timeout=1000, idle_period=120
+                apps=[app_name], status="blocked", timeout=1000, idle_period=120
             )
 
         # Validate access

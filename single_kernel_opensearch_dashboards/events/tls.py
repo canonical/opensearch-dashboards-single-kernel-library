@@ -179,8 +179,6 @@ class TLSEvents(Object):
 
     def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
-        # Restore certs from databag if restarted pod
-        self.tls_manager.write_tls_files()
         if self.state.unit_server.tls_enabled and not self.tls_manager.certificate_valid():
             self._remove_certificates(event)
             self._request_certificates(event)

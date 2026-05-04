@@ -265,13 +265,17 @@ class TestOpenSearchDashboards:
             apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
         )
 
-        if not is_cross_model or traefik:
+        if not is_cross_model:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[app_name], status="active", timeout=1000, idle_period=30
+            )
+        elif traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000, idle_period=30
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000
+                apps=[app_name], status="blocked", timeout=1000, idle_period=30
             )
         # TLS Broken on relation removal; we check the connection on HTTP (https=False)
 
@@ -284,13 +288,17 @@ class TestOpenSearchDashboards:
         await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000, idle_period=20
         )
-        if not is_cross_model or traefik:
+        if not is_cross_model:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[app_name], status="active", timeout=1000, idle_period=30
+            )
+        elif traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000, idle_period=30
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000
+                apps=[app_name], status="blocked", timeout=1000, idle_period=30
             )
         new_host_cert = get_file_contents(
             ops_test_microk8s.model.name, unit.name, server_cert, is_cross_model
@@ -514,9 +522,18 @@ class TestOpenSearchDashboards:
             )
 
         await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "INFO"})
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="active", timeout=1000, idle_period=30
-        )
+        if not is_cross_model:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="active", timeout=1000, idle_period=30
+            )
+        elif traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000, idle_period=30
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000, idle_period=30
+            )
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_status_changes(

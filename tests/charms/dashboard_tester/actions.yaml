@@ -3,7 +3,6 @@ request:
   params:
     url:
       type: string
-      description: The URL to request.
     method:
       type: string
       default: GET
@@ -13,4 +12,5 @@ request:
       type: string
     ca_cert:
       type: string
-      description: The CA certificate contents to verify the HTTPS connection.
+    payload:
+      type: string

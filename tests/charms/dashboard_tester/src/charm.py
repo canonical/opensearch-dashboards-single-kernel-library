@@ -19,6 +19,7 @@ class DashboardTesterCharm(CharmBase):
         username = event.params.get("username")
         password = event.params.get("password")
         ca_cert = event.params.get("ca_cert")
+        payload = event.params.get("payload")
 
         headers = {
             "Accept": "application/json",
@@ -26,7 +27,6 @@ class DashboardTesterCharm(CharmBase):
             "osd-xsrf": "true",
         }
 
-        # Handle CA Certificate
         verify_arg = False
         if ca_cert:
             cert_path = "/tmp/ca.pem"
@@ -35,15 +35,27 @@ class DashboardTesterCharm(CharmBase):
             verify_arg = cert_path
 
         try:
-            if method.upper() == "POST" and username and password:
+            auth = (username, password) if username and password else None
+
+            if method.upper() == "POST" and url.endswith("/auth/login") and not payload:
                 data = {"username": username, "password": password}
                 resp = requests.post(
                     url, json=data, headers=headers, verify=verify_arg, timeout=10
                 )
             else:
-                resp = requests.request(
-                    method, url, headers=headers, verify=verify_arg, timeout=10
-                )
+                kwargs = {
+                    "method": method,
+                    "url": url,
+                    "headers": headers,
+                    "verify": verify_arg,
+                    "timeout": 10,
+                }
+                if auth:
+                    kwargs["auth"] = auth
+                if payload:
+                    kwargs["data"] = payload
+
+                resp = requests.request(**kwargs)
 
             event.set_results({"status": resp.status_code, "text": resp.text})
         except Exception as e:

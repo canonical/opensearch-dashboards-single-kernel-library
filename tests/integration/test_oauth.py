@@ -127,7 +127,6 @@ class TestOAuth:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         ops_test_oauth: OpsTest,
-        dashboard_tester_charm: str,
         config_matrix_rest: dict,
     ):
         """Establish all the required relations."""
@@ -156,10 +155,6 @@ class TestOAuth:
             if traefik:
                 await ops_test_microk8s.model.integrate(
                     f"{TRAEFIK_APP_NAME}:certificates", "certificates"
-                )
-            else:
-                await ops_test_microk8s.model.deploy(
-                    dashboard_tester_charm, application_name=DUMMY_CHARM
                 )
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
         if is_cross_model:

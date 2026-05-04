@@ -156,7 +156,6 @@ class BaseManager(ManagerStatusProtocol):
             raise OSDAPIError(
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."
             )
-        path = None
         request_kwargs = {
             "url": uri,
             "method": method.upper(),

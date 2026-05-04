@@ -54,15 +54,6 @@ class K8sWorkload(WorkloadBase):
         )
 
     @override
-    def start(self) -> None:
-        """Starts the OpenSearch Dashboards and exporter daemon services via Pebble."""
-        if self.container.can_connect():
-            self.paths.certificate_dir.mkdir(exist_ok=True)
-            self.container.start(OSD_SERVICE, EXPORTER_SERVICE)
-        else:
-            logger.warning("Cannot connect to Pebble to start services.")
-
-    @override
     def stop(self) -> None:
         """Stops the OpenSearch Dashboards and exporter daemon services via Pebble."""
         try:

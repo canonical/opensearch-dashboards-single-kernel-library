@@ -47,15 +47,6 @@ class VMWorkload(WorkloadBase):
         return Paths(pathops.LocalPath("/"), substrate=Substrates.VM)
 
     @override
-    def start(self) -> None:
-        """Starts the OpenSearch Dashboards and exporter daemon services."""
-        try:
-            self.dashboards.start(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
-        except snap.SnapError as e:
-            logger.exception(str(e))
-            raise
-
-    @override
     def stop(self) -> None:
         """Stops the OpenSearch Dashboards and exporter daemon services."""
         try:

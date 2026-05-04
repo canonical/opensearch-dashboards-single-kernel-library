@@ -123,11 +123,6 @@ class WorkloadBase(ABC):
         ...
 
     @abstractmethod
-    def start(self) -> None:
-        """Starts the workload service."""
-        ...
-
-    @abstractmethod
     def stop(self) -> None:
         """Stops the workload service."""
         ...

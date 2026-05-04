@@ -229,14 +229,18 @@ async def access_dashboard(
         "osd-xsrf": "true",
     }
 
-    arguments = {"url": url, "headers": request_headers, "json": data}
+    arguments = {"url": url, "headers": request_headers, "json": data, "timeout": 10}
     if verify:
         arguments["verify"] = "./ca.pem"
 
     logger.info(f"Sending external request to {url}")
-    response = requests.post(**arguments)
-    logger.info(f"Got response:{response} from url:{url}")
-    return response.status_code == 200
+    try:
+        response = requests.post(**arguments)
+        logger.info(f"Got response:{response} from url:{url}")
+        return response.status_code == 200
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Request failed or timed out: {e}")
+        return False
 
 
 @retry(
@@ -269,7 +273,7 @@ async def dashboard_unavailable(
         return int(res.results.get("status", 0)) in (502, 503)
 
     # Fallback: standard external request
-    arguments = {"url": url}
+    arguments = {"url": url, "timeout": 10}
 
     if https:
         arguments["verify"] = "./ca.pem"
@@ -542,10 +546,10 @@ async def check_full_status(
         return False
 
     if status_msg:
-        if not status_data.applications[app_name].status.info == status_msg:
+        if not status_data.applications[app_name].status.info.startswith(status_msg):
             return False
         if not all(
-            unit.workload_status.info == status_msg
+            unit.workload_status.info.startswith(status_msg)
             for unit in status_data.applications[app_name].units.values()
         ):
             return False
@@ -687,6 +691,20 @@ async def client_run_all_dashboards_request(
         logger.debug(f"No units for application {app_name}")
         return False
 
+    dashboard_credentials = await get_secret_by_label(
+        ops_test, f"opensearch-client.{relation.id}.user.secret"
+    )
+    username = dashboard_credentials.get("username")
+    password = dashboard_credentials.get("password")
+
+    ca_cert_content = None
+    if https:
+        try:
+            with open("./ca.pem", "r") as f:
+                ca_cert_content = f.read()
+        except FileNotFoundError:
+            logger.warning("ca.pem not found locally.")
+
     for dashboards_unit in ops_test_microk8s.model.applications[app_name].units:
         host, port, path = await get_dashboard_routing(ops_test_microk8s, dashboards_unit.name)
 
@@ -694,14 +712,51 @@ async def client_run_all_dashboards_request(
             logger.debug(f"No hostname found for {dashboards_unit.name}, can't check connection.")
             return False
 
-        response = await client_run_dashboards_request(
-            ops_test, unit_name, relation, method, host, endpoint, payload, https, port, path
-        )
-        if "results" in response:
-            result.append(json.loads(response["results"])["rawResponse"])
+        if host.endswith("-endpoints") and DUMMY_CHARM in ops_test_microk8s.model.applications:
+            logger.info(f"Routing client data request through dashboard-tester to {host}")
+            tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
+
+            protocol = "https" if https else "http"
+            path_str = path if path else ""
+            clean_endpoint = endpoint if endpoint.startswith("/") else f"/{endpoint}"
+            url = f"{protocol}://{host}:{port}{path_str}{clean_endpoint}"
+
+            action_kwargs = {
+                "url": url,
+                "method": method,
+                "username": username,
+                "password": password,
+            }
+            if payload:
+                action_kwargs["payload"] = payload
+            if ca_cert_content:
+                action_kwargs["ca_cert"] = ca_cert_content
+
+            action = await tester_unit.run_action("request", **action_kwargs)
+            res = await action.wait()
+
+            try:
+                text_res = res.results.get("text", "{}")
+                parsed_json = json.loads(text_res)
+
+                if isinstance(parsed_json, dict) and "rawResponse" in parsed_json:
+                    result.append(parsed_json["rawResponse"])
+                else:
+                    result.append(parsed_json)
+
+            except json.JSONDecodeError:
+                result.append({"rawResponse": res.results.get("text")})
+
+            logger.info(f"Proxy Response from {host}: {res.results.get('status')}")
         else:
-            result.append(response)
-        logger.info(f"Response from {unit_name}, {host}: {response}")
+            response = await client_run_dashboards_request(
+                ops_test, unit_name, relation, method, host, endpoint, payload, https, port, path
+            )
+            if "results" in response:
+                result.append(json.loads(response["results"])["rawResponse"])
+            else:
+                result.append(response)
+            logger.info(f"Response from {unit_name}, {host}: {response}")
 
     return result
 

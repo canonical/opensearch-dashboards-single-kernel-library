@@ -33,13 +33,6 @@ class ClusterManager(BaseManager):
         super().__init__(state, workload)
         self.name = CLUSTER_MANAGER_NAME
 
-    def init_server(self) -> None:
-        """Calls startup functions for server start."""
-
-        logger.info("starting Opensearch Dashboards service")
-        self.workload.start()
-        logger.info("Opensearch Dashboards service started")
-
     def restart_server(self) -> None:
         """Calls restart functions for server restart."""
 

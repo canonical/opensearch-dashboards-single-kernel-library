@@ -198,8 +198,8 @@ def test_restart_initializes_unstarted_server(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as mock_set_props,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as mock_init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as mock_restart_server,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
         patch(
             "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm._check_osd_status"
@@ -208,7 +208,7 @@ def test_restart_initializes_unstarted_server(harness):
         handler.restart(mock_event)
 
         mock_set_props.assert_called_once()
-        mock_init_server.assert_called_once()
+        mock_restart_server.assert_called_once()
         mock_check_status.assert_called_once()
 
         assert handler.state.unit_server.started is True
@@ -234,7 +234,7 @@ def test_relation_changed_does_not_start_units_again(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
         ) as patched,
         patch("single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"),
         patch(
@@ -280,31 +280,6 @@ def test_relation_changed_restarts(harness):
     ):
         harness.charm.on.config_changed.emit()
         patched_restart.assert_called_once()
-
-
-def test_restart_fails_not_started(harness):
-    with harness.hooks_disabled():
-        harness.set_planned_units(1)
-
-    mock_event = MagicMock()
-    mock_event.framework.model.unit.name = "unit/0"
-
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
-        ) as patched_restart,
-        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start") as patched_start,
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.load_dashboard_properties"
-        ),
-        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
-    ):
-        harness.charm.restart(mock_event)
-        patched_restart.assert_not_called()
-        patched_start.assert_called_once()
 
 
 @pytest.mark.parametrize("harness", [{"add_opensearch": True}], indirect=True)
@@ -476,8 +451,8 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as restart_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
@@ -497,7 +472,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         )
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
-        init_server.assert_called_once()
+        restart_server.assert_called_once()
 
         assert harness.charm.state.unit_server.started
 
@@ -520,8 +495,8 @@ def test_init_server_calls_necessary_methods_leader(harness):
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as restart_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
@@ -532,7 +507,7 @@ def test_init_server_calls_necessary_methods_leader(harness):
 
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
-        init_server.assert_called_once()
+        restart_server.assert_called_once()
         expected_calls = [
             call(
                 status=ServerStatuses.DB_CONNECTION_MISSING.value,
@@ -579,7 +554,7 @@ def test_config_changed_applies_relation_data(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start"),
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"),
         patch(
             "single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock"
         ),
@@ -602,11 +577,8 @@ def test_workload_down_blocked_status(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
-        ),
-        patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart",
-            return_value=False,
+            return_value=True,
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -660,7 +632,7 @@ def test_service_unavailable_blocked_status(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -729,7 +701,7 @@ def test_service_unhealthy(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -816,7 +788,7 @@ def test_service_error(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -908,7 +880,7 @@ def test_service_available(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -991,7 +963,7 @@ def test_wrong_opensearch_version(harness):
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",

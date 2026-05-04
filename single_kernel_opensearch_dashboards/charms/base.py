@@ -37,6 +37,7 @@ from single_kernel_opensearch_dashboards.events.opensearch_requirer import (
 from single_kernel_opensearch_dashboards.events.tls import TLSEvents
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
+    Lock,
     RollingOpsManager,
 )
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
@@ -139,8 +140,6 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
                 component_name=self.cluster_manager.name,
                 scope="unit",
             )
-            self.cluster_manager.init_server()
-            self.state.unit_server.update({"state": "started"})
 
         else:
             self.status_handler.set_running_status(
@@ -148,7 +147,9 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
                 component_name=self.cluster_manager.name,
                 scope="unit",
             )
-            self.cluster_manager.restart_server()
+
+        self.cluster_manager.restart_server()
+        self.state.unit_server.update({"state": "started"})
 
         # open the port
         self.unit.open_port(protocol="tcp", port=SERVER_PORT)
@@ -195,9 +196,22 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
 
     def emit_restart(self, event: EventBase) -> None:
         """Evaluate conditions and emit a restart lock request if necessary."""
+        lock = Lock(self.restart_manager)
+
+        # Restore certs from databag if restarted pod / added new unit
+        # Ideally we want to do that before every request, but we can't use tls_manager in
+        # base_manager, otherwise it will create circular dependency, so we do that here.
+        try:
+            self.tls_manager.write_tls_files()
+        except OSDFileOperationError as e:
+            logger.error(f"{e}")
+            event.defer()
         try:
             if not self.config_manager.config_changed():
-                if self.health_manager.check_unit_health():
+                if lock.is_pending() or lock.is_held():
+                    logger.debug("Waiting for lock")
+                    return
+                elif self.health_manager.check_unit_health():
                     logger.debug(
                         "OpenSearch Dashboards is healthy and config is same, not restarting"
                     )

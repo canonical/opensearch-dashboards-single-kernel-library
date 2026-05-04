@@ -11,7 +11,10 @@ import ops.pebble
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDFileOperationError,
+    OSDTLSMissingDataError,
+)
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
@@ -140,18 +143,26 @@ class TLSManager(BaseManager):
         Used for when k8s pod is recreated
         Or a unit added after relation with OpenSearch was created
         """
-
-        if self.state.opensearch_server and self.state.opensearch_server.password:
+        if (
+            self.state.opensearch_server
+            and self.state.opensearch_server.password
+            and not self.workload.exists(self.workload.paths.opensearch_ca)
+        ):
             self.set_ca_opensearch()
 
-        if self.state.unit_server.private_key:
+        if self.state.unit_server.private_key and not self.workload.exists(
+            self.workload.paths.server_key
+        ):
             self.set_private_key()
 
-        if self.state.unit_server.ca:
+        if self.state.unit_server.ca and not self.workload.exists(self.workload.paths.ca):
             self.set_ca()
 
-        if self.state.unit_server.certificate:
+        if self.state.unit_server.certificate and not self.workload.exists(
+            self.workload.paths.certificate
+        ):
             self.set_certificate()
+        logger.debug("Updated all TLS resources")
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the tls manager's statuses."""
