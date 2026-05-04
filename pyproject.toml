@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 [project]
-name = "opensearch-dashboards-single-kernel-library"
+name = "opensearch-dashboards-charms-single-kernel"
 dynamic = ["version"]
 description = "Shared and reusable code for OpenSearch Dashboards charms"
 readme = "README.md"
