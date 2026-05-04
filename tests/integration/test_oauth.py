@@ -19,6 +19,7 @@ from pytest_operator.plugin import OpsTest
 
 from .helpers import (
     CONFIG_OPTS,
+    DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
     get_address,
@@ -126,6 +127,7 @@ class TestOAuth:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         ops_test_oauth: OpsTest,
+        dashboard_tester_charm: str,
         config_matrix_rest: dict,
     ):
         """Establish all the required relations."""
@@ -146,6 +148,7 @@ class TestOAuth:
 
         if tls:
             if is_cross_model:
+
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
@@ -153,6 +156,10 @@ class TestOAuth:
             if traefik:
                 await ops_test_microk8s.model.integrate(
                     f"{TRAEFIK_APP_NAME}:certificates", "certificates"
+                )
+            else:
+                await ops_test_microk8s.model.deploy(
+                    dashboard_tester_charm, application_name=DUMMY_CHARM
                 )
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
         if is_cross_model:

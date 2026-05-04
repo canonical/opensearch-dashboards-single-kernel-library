@@ -7,14 +7,13 @@ import logging
 from abc import abstractmethod
 
 from data_platform_helpers.advanced_statuses import StatusHandler
-from ops import EventBase, StoredState
+from ops import EventBase
 
 from single_kernel_opensearch_dashboards.charms.charm_status import (
     OpenSearchDashboardsStatusHandler,
 )
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
-    CERTS_REL_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
@@ -39,9 +38,6 @@ from single_kernel_opensearch_dashboards.events.tls import TLSEvents
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
     RollingOpsManager,
-)
-from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
-    IngressPerAppRequirer,
 )
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager

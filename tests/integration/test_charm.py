@@ -41,6 +41,7 @@ COS_PORT = "9684"
 APP_NAME = METADATA_VM["name"]
 APP_NAME_K8S = METADATA_K8S["name"]
 OPENSEARCH_APP_NAME = "opensearch"
+DUMMY_CHARM = "dummy-charm"
 TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 OPENSEARCH_CONFIG = {
@@ -78,6 +79,7 @@ class TestOpenSearchDashboards:
         charmvm: str,
         charmk8s: str,
         application_charm: str,
+        dashboard_tester_charm: str,
         charm_base: str,
         config_matrix_charm: dict,
     ):
@@ -111,7 +113,12 @@ class TestOpenSearchDashboards:
         await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
 
         if not is_cross_model:
-            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL)
+            if charm_base == "ubuntu@22.04":
+                series = "jammy"
+            else:
+                series = "noble"
+            # Base does not work with grafana-agent charm so continuing using series
+            await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
         else:
             await ops_test_microk8s.model.deploy(
                 PROMETHEUS_APP,
@@ -199,6 +206,9 @@ class TestOpenSearchDashboards:
                     apps=[app_name], status="active", timeout=1000
                 )
             else:
+                await ops_test_microk8s.model.deploy(
+                    dashboard_tester_charm, application_name=DUMMY_CHARM
+                )
                 await ops_test_microk8s.model.wait_for_idle(
                     apps=[app_name], status="blocked", timeout=1000
                 )
@@ -254,10 +264,14 @@ class TestOpenSearchDashboards:
         await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
         )
-        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
-        if traefik or traefik_trust:
+
+        if not is_cross_model or traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000
             )
         # TLS Broken on relation removal; we check the connection on HTTP (https=False)
 
@@ -270,14 +284,14 @@ class TestOpenSearchDashboards:
         await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000, idle_period=20
         )
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="active", timeout=1000, idle_period=20
-        )
-        if traefik or traefik_trust:
+        if not is_cross_model or traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
             )
-
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000
+            )
         new_host_cert = get_file_contents(
             ops_test_microk8s.model.name, unit.name, server_cert, is_cross_model
         )
@@ -462,11 +476,12 @@ class TestOpenSearchDashboards:
                     assert unit_cos_config["metrics_scrape_jobs"][0][key] == value
 
     @pytest.mark.abort_on_fail
-    async def test_log_level_change(self, ops_test, ops_test_microk8s):
+    async def test_log_level_change(self, ops_test, ops_test_microk8s, config_matrix_charm: dict):
         log_path = "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log"
         container = ""
         is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
         app_name = APP_NAME_K8S if is_cross_model else APP_NAME
+        traefik = config_matrix_charm["traefik"]
         if is_cross_model:
             log_path = "/var/log/opensearch-dashboards/opensearch_dashboards.log"
             container = "opensearch-dashboards"
@@ -477,9 +492,15 @@ class TestOpenSearchDashboards:
             )
 
             await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "ERROR"})
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="active", timeout=1000, idle_period=30
-            )
+
+            if not is_cross_model or traefik:
+                await ops_test_microk8s.model.wait_for_idle(
+                    apps=[app_name], status="active", timeout=1000
+                )
+            else:
+                await ops_test_microk8s.model.wait_for_idle(
+                    apps=[app_name], status="blocked", timeout=1000
+                )
 
             debug_lines = count_lines_with(
                 ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
@@ -539,8 +560,14 @@ class TestOpenSearchDashboards:
         await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
         )
-        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
-
+        if not is_cross_model or traefik:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="active", timeout=1000
+            )
+        else:
+            await ops_test_microk8s.model.wait_for_idle(
+                apps=[app_name], status="blocked", timeout=1000
+            )
         assert ops_test_microk8s.model.applications[app_name].status == "active"
         assert all(
             unit.workload_status == "active"

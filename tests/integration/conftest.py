@@ -25,7 +25,6 @@ def opensearch_sysctl_settings():
 @pytest.fixture
 def charm_base():
     """Returns the base in the modern format, e.g., 'ubuntu@22.04'."""
-    # Default to 22.04 if the env var isn't set
     base_version = os.environ.get("CHARM_UBUNTU_BASE", "22.04")
     return f"ubuntu@{base_version}"
 
@@ -52,6 +51,12 @@ def charmk8s(charm_base):
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
     return "./tests/integration/application_charm/application_ubuntu@22.04-amd64.charm"
+
+
+@pytest.fixture
+def dashboard_tester_charm() -> str:
+    """Path to the application charm to use for testing."""
+    return "./tests/charms/dashboard_tester/dashboard-tester_amd64.charm"
 
 
 def pytest_addoption(parser):

@@ -32,6 +32,7 @@ APP_NAME = METADATA_VM["name"]
 APP_NAME_K8S = METADATA_K8S["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 CONFIG_OPTS = {"profile": "testing"}
+DUMMY_CHARM = "dummy-charm"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 OPENSEARCH_CONFIG = {
     "logging-config": "<root>=INFO;unit=DEBUG",
@@ -173,12 +174,18 @@ async def get_dashboard_routing(ops_test_microk8s: OpsTest, unit_name: str):
                 f"Endpoint for {APP_NAME_K8S} not found in Traefik's proxied-endpoints."
             )
 
-    # Fallback when Traefik is not deployed
-    host = get_bind_address(ops_test_microk8s.model.name, unit_name)
+    app_name = unit_name.split("/")[0]
+    if DUMMY_CHARM in ops_test_microk8s.model.applications and app_name == APP_NAME_K8S:
+        unit_id = unit_name.split("/")[1]
+        host = f"{app_name}-{unit_id}.{app_name}-endpoints"
+    else:
+        host = get_bind_address(ops_test_microk8s.model.name, unit_name)
+
     return host, 5601, ""
 
 
-def access_dashboard(
+async def access_dashboard(
+    ops_test_microk8s: OpsTest,
     host: str,
     password: str,
     username: str = "kibanaserver",
@@ -187,24 +194,34 @@ def access_dashboard(
     port: int = 5601,
     path: str = None,
 ) -> bool:
-    try:
-        # Normal IP address
-        socket.inet_aton(host)
-    except OSError:
-        socket.inet_pton(socket.AF_INET6, host)
-        host = f"[{host}]"
-
     protocol = "https" if ssl else "http"
-
-    # Handle NoneType for path safely
     path_str = path if path else ""
+    url = f"{protocol}://{host}:{port}{path_str}/auth/login"
 
-    # URL Construction
-    if path_str != "":
-        url = f"{protocol}://{host}{path_str}/auth/login"
-    else:
-        url = f"{protocol}://{host}:{port}/auth/login"
+    # Only route through dummy charm for internal K8s hostnames
+    if host.endswith("-endpoints"):
+        logger.info(f"Routing request through {DUMMY_CHARM} to {url}")
+        tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
 
+        action_kwargs = {
+            "url": url,
+            "method": "POST",
+            "username": username,
+            "password": password,
+        }
+
+        if verify:
+            try:
+                with open("./ca.pem", "r") as f:
+                    action_kwargs["ca_cert"] = f.read()
+            except FileNotFoundError:
+                logger.error("ca.pem not found locally; internal verification will likely fail.")
+
+        action = await tester_unit.run_action("request", **action_kwargs)
+        res = await action.wait()
+        return int(res.results.get("status", 0)) == 200
+
+    # Fallback: standard external request (for Traefik / VM tests)
     data = {"username": username, "password": password}
     request_headers = {
         "Accept": "application/json",
@@ -215,7 +232,8 @@ def access_dashboard(
     arguments = {"url": url, "headers": request_headers, "json": data}
     if verify:
         arguments["verify"] = "./ca.pem"
-    logger.info(f"Sending request to {url}")
+
+    logger.info(f"Sending external request to {url}")
     response = requests.post(**arguments)
     logger.info(f"Got response:{response} from url:{url}")
     return response.status_code == 200
@@ -227,11 +245,30 @@ def access_dashboard(
     retry_error_callback=lambda _: False,
     retry=lambda x: x is False,
 )
-def dashboard_unavailable(
-    host: str, https: bool = False, port: int = 5601, path: str = None
+async def dashboard_unavailable(
+    ops_test_microk8s: OpsTest, host: str, https: bool = False, port: int = 5601, path: str = None
 ) -> bool:
     protocol = "https" if https else "http"
-    url = f"{protocol}://{host}:{port}{path}/auth/login"
+    path_str = path if path else ""
+    url = f"{protocol}://{host}:{port}{path_str}/auth/login"
+
+    # Only route through dummy charm for internal K8s hostnames
+    if host.endswith("-endpoints"):
+        tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
+        action_kwargs = {"url": url, "method": "GET"}
+
+        if https:
+            try:
+                with open("./ca.pem", "r") as f:
+                    action_kwargs["ca_cert"] = f.read()
+            except FileNotFoundError:
+                pass
+
+        action = await tester_unit.run_action("request", **action_kwargs)
+        res = await action.wait()
+        return int(res.results.get("status", 0)) in (502, 503)
+
+    # Fallback: standard external request
     arguments = {"url": url}
 
     if https:
@@ -302,8 +339,14 @@ async def access_all_dashboards(
         logger.info(
             f"Attempting to login to {host}:{port} with password {dashboard_password} and path: {path}"
         )
-        result &= access_dashboard(
-            host=host, password=dashboard_password, ssl=https, verify=verify, port=port, path=path
+        result &= await access_dashboard(
+            ops_test_microk8s=ops_test_microk8s,
+            host=host,
+            password=dashboard_password,
+            ssl=https,
+            verify=verify,
+            port=port,
+            path=path,
         )
 
     return result
@@ -335,7 +378,9 @@ async def all_dashboards_unavailable(
         if not host:
             continue
 
-        unavail = unavail and dashboard_unavailable(host, https, port, path)
+        unavail = unavail and await dashboard_unavailable(
+            ops_test_microk8s, host, https, port, path
+        )
     return unavail
 
 

@@ -16,8 +16,6 @@ charm-user: non-root
 
 maintainers:
   - Canonical Data Platform Team <data-platform@lists.launchpad.net>
-series:
-  - jammy
 
 peers:
   dashboard_peers:

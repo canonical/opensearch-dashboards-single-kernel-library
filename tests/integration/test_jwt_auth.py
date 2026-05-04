@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 
 from .helpers import (
     CONFIG_OPTS,
+    DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
     get_bind_address,
@@ -58,6 +59,7 @@ class TestJWTAuth:
         charmvm: str,
         charmk8s: str,
         charm_base: str,
+        dashboard_tester_charm: str,
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
@@ -182,6 +184,9 @@ class TestJWTAuth:
                     apps=[app_name], status="active", timeout=1000
                 )
             else:
+                await ops_test_microk8s.model.deploy(
+                    dashboard_tester_charm, application_name=DUMMY_CHARM
+                )
                 await ops_test_microk8s.model.wait_for_idle(
                     apps=[app_name], status="blocked", timeout=1000
                 )

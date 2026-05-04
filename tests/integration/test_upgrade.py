@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 
 from .helpers import (
     CONFIG_OPTS,
+    DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
     access_all_dashboards,
@@ -59,6 +60,7 @@ class TestUpgrade:
         charmvm: str,
         charmk8s: str,
         charm_base: str,
+        dashboard_tester_charm: str,
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for their complete setup to be done."""
@@ -137,6 +139,10 @@ class TestUpgrade:
 
         if tls:
             await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+            if not traefik and is_cross_model:
+                await ops_test_microk8s.model.deploy(
+                    dashboard_tester_charm, application_name=DUMMY_CHARM
+                )
 
         if traefik:
             await ops_test_microk8s.model.deploy(
