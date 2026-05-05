@@ -117,8 +117,8 @@ jobs:
         run: |
           sudo snap install microk8s --channel=1.35-strict/stable
           sudo adduser "$USER" 'snap_microk8s'
-          sg 'microk8s' -c "microk8s status --wait-ready"
-          sg 'microk8s' -c "microk8s enable hostpath-storage dns"
+          sg 'snap_microk8s' -c "microk8s status --wait-ready"
+          sg 'snap_microk8s' -c "microk8s enable hostpath-storage dns"
 
       - name: Juju setup (Machine)
         if: matrix.target == 'vm'
