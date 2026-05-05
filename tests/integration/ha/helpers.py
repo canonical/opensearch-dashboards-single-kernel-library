@@ -421,7 +421,7 @@ async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> boo
 
 async def get_service_pid(ops_test: OpsTest, unit_name: str) -> str:
     """Gets the exact PID of the running pebble service."""
-    cmd = f"ssh --container opensearch_dashboards {unit_name} -- pgrep -x node"
+    cmd = f"ssh --container opensearch_dashboards {unit_name} pgrep -x node"
     return_code, stdout, stderr = await ops_test.juju(*cmd.split())
 
     if return_code != 0:
