@@ -3,9 +3,10 @@
 # See LICENSE file for licensing details.
 
 """Collection of global cluster state."""
+
 import logging
 from ipaddress import IPv4Address, IPv6Address
-from typing import Literal, Optional, Set
+from typing import Literal
 
 from data_platform_helpers.advanced_statuses import StatusesState, StatusObject
 from data_platform_helpers.advanced_statuses.protocol import StatusesStateProtocol
@@ -66,10 +67,14 @@ class ClusterState(Object, StatusesStateProtocol):
         self._servers_data = {}
 
         self.peer_app_data = DataPeerData(
-            self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_APP_SECRETS
+            self.model,
+            relation_name=PEERS_REL_NAME,
+            additional_secret_fields=PEER_APP_SECRETS,
         )
         self.peer_unit_data = DataPeerUnitData(
-            self.model, relation_name=PEERS_REL_NAME, additional_secret_fields=PEER_UNIT_SECRETS
+            self.model,
+            relation_name=PEERS_REL_NAME,
+            additional_secret_fields=PEER_UNIT_SECRETS,
         )
         self.client_requires_data = OpenSearchRequiresData(
             self.model,
@@ -79,8 +84,6 @@ class ClusterState(Object, StatusesStateProtocol):
         )
 
         self.statuses = StatusesState(self, STATUS_PEERS_REL_NAME)
-
-    # --- RAW RELATION ---
 
     @property
     def peer_relation(self) -> Relation | None:
@@ -279,7 +282,7 @@ class ClusterState(Object, StatusesStateProtocol):
         ]
 
     @property
-    def upgrade_idle(self) -> Optional[bool]:
+    def upgrade_idle(self) -> bool | None:
         """Flag for whether the cluster is in an idle upgrade state.
 
         Returns:
@@ -288,7 +291,7 @@ class ClusterState(Object, StatusesStateProtocol):
         return set(self.upgrade_unit_states) == {"idle"}
 
     @property
-    def upgrade_app_units(self) -> Set[Unit]:
+    def upgrade_app_units(self) -> set[Unit]:
         """The peer-related units in the application."""
         if not self.upgrade_relation:
             return set()
