@@ -116,7 +116,7 @@ jobs:
         if: matrix.target == 'k8s'
         run: |
           sudo snap install microk8s --channel=1.35-strict/stable
-          sudo adduser "$USER" 'microk8s'
+          sudo adduser "$USER" 'snap_microk8s'
           sg 'microk8s' -c "microk8s status --wait-ready"
           sg 'microk8s' -c "microk8s enable hostpath-storage dns"
 
