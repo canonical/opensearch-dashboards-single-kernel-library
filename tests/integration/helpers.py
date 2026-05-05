@@ -15,7 +15,7 @@ import requests
 import yaml
 from juju.relation import Relation
 from pytest_operator.plugin import OpsTest
-from requests.exceptions import ConnectionError, SSLError
+from requests.exceptions import ConnectionError, SSLError, Timeout
 from tenacity import (
     Retrying,
     before_sleep_log,
@@ -280,7 +280,7 @@ async def dashboard_unavailable(
 
     try:
         response = requests.get(**arguments)
-    except ConnectionError:
+    except (ConnectionError, Timeout) as e:
         return True
     return response.status_code == 503
 
