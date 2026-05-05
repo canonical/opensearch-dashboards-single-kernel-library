@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """OpenSearch Dashboards Kubernetes Charm."""
+
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsBaseCharm,
 )
@@ -14,7 +15,7 @@ from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
 
-class OpenSearchK8sCharm(OpenSearchDashboardsBaseCharm):
+class OpenSearchDashboardsK8sCharm(OpenSearchDashboardsBaseCharm):
     """OpenSearch Dashboards kubernetes Charm"""
 
     @property
