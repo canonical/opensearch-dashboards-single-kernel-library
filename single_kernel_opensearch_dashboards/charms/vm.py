@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """OpenSearch Dashboards Machine Charm."""
+
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsBaseCharm,
 )
@@ -11,7 +12,7 @@ from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 
 
-class OpenSearchVMCharm(OpenSearchDashboardsBaseCharm):
+class OpenSearchDashboardsVMCharm(OpenSearchDashboardsBaseCharm):
     """OpenSearch Dashboards Machine Charm"""
 
     @property
