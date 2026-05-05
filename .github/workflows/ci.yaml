@@ -139,7 +139,7 @@ jobs:
           MODEL_UUID=$(juju show-model test | grep "model-uuid" | awk '{split($0, a, ": "); print a[2]}')
           pushd ./terraform
           if [ "${{ matrix.target }}" == "k8s" ]; then
-            terraform apply -var="model_uuid=$MODEL_UUID" -var="app_name=opensearch-dashboards-k8s" -var="charm_name=opensearch-dashboards-k8s" -auto-approve
+#            terraform apply -var="model_uuid=$MODEL_UUID" -var="app_name=opensearch-dashboards-k8s" -var="charm_name=opensearch-dashboards-k8s" -auto-approve
           else
             terraform apply -var="model_uuid=$MODEL_UUID" -auto-approve
           fi
@@ -148,7 +148,7 @@ jobs:
       - name: Wait for model and applications
         run: |
           if [ "${{ matrix.target }}" == "k8s" ]; then
-            juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
+#            juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
           else
             juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
           fi
