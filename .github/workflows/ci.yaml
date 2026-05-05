@@ -150,9 +150,9 @@ jobs:
           if [ "${{ matrix.target }}" != "k8s" ]; then
             juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
             juju wait-for model test --query='life=="alive" && status=="available"'
-          else
-            # juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
-            # juju wait-for model test --query='life=="alive" && status=="available"'
+          # else
+          # juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
+          # juju wait-for model test --query='life=="alive" && status=="available"'
           fi
 
   build:
