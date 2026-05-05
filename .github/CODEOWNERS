@@ -1,0 +1,3 @@
+# Bump OpenSearch Dashboards Single Kernel in charms CI ownership
+.github/workflows/bump_dependent_charms.yaml  @Mehdi-Bendriss @akram09
+
