@@ -61,8 +61,8 @@ class RequirerEvents(Object):
             event.defer()
             return
         try:
-            if self.tls_manager.set_ca_opensearch():
-                self.charm.emit_restart(event)
+            self.tls_manager.set_ca_opensearch()
+            self.charm.emit_restart(event)
         except OSDFileOperationError as e:
             logger.error(f"Operation with files is failed: {e}. Deferring event.")
             event.defer()
@@ -81,10 +81,6 @@ class RequirerEvents(Object):
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
             component=CLUSTER_MANAGER_NAME,
         )
-
-        # Don't remove anything if the service is going down
-        if self.charm.app.planned_units == 0 or not self.charm.unit.is_leader():
-            return
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)

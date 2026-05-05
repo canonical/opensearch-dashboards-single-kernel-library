@@ -363,7 +363,7 @@ async def send_control_signal(
         k8s: if substrate is k8s
     """
     if k8s:
-        kill_cmd = f"ssh --container opensearch-dashboards {unit_name} pebble signal {signal} opensearch_dashboards"
+        kill_cmd = f"ssh --container opensearch-dashboards {unit_name} pebble signal {signal} opensearch-dashboards"
     else:
         process = PROCESS if app_name == APP_NAME else DB_PROCESS
         kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"

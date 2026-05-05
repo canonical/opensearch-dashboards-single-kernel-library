@@ -48,6 +48,12 @@ OPENSEARCH_CONFIG = {
         - [ 'sysctl', '-w', 'net.ipv4.tcp_retries2=5' ]
     """,
 }
+
+K8s_CONFIG = {
+    "logging-config": "<root>=INFO;unit=DEBUG",
+    "update-status-hook-interval": f"{UPDATE_STATUS_INTERVAL}s",
+}
+
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 TLS_CERT_APP_NAME = "self-signed-certificates"
 APP_AND_TLS = [APP_NAME, TLS_CERT_APP_NAME]
@@ -93,6 +99,7 @@ async def test_build_and_deploy(
         app_name = APP_NAME_K8S
 
     if is_cross_model:
+        await ops_test_microk8s.model.set_config(K8s_CONFIG)
         await ops_test_microk8s.model.deploy(
             charm,
             application_name=app_name,
@@ -292,7 +299,7 @@ async def test_signal_dashboard_process_cluster(
     app_name = APP_NAME
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
-    units = [unit.name for unit in ops_test.model.applications[app_name].units]
+    units = [unit.name for unit in ops_test_microk8s.model.applications[app_name].units]
     await _recover_from_signal(ops_test, ops_test_microk8s, signal, units)
 
 
@@ -420,7 +427,7 @@ async def test_signal_dashboard_process_cluster_https(
     app_name = APP_NAME
     if ops_test.model.name != ops_test_microk8s.model.name:
         app_name = APP_NAME_K8S
-    units = [unit.name for unit in ops_test.model.applications[app_name].units]
+    units = [unit.name for unit in ops_test_microk8s.model.applications[app_name].units]
     await _recover_from_signal(
         ops_test, ops_test_microk8s, signal, units, True, https=True, verify=True
     )

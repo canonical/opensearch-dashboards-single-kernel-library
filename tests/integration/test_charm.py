@@ -581,11 +581,12 @@ class TestOpenSearchDashboards:
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name], status="active", timeout=1000
             )
+            assert ops_test_microk8s.model.applications[app_name].status == "active"
         else:
             await ops_test_microk8s.model.wait_for_idle(
                 apps=[app_name], status="blocked", timeout=1000
             )
-        assert ops_test_microk8s.model.applications[app_name].status == "active"
+            assert ops_test_microk8s.model.applications[app_name].status == "blocked"
         assert all(
             unit.workload_status == "active"
             for unit in ops_test_microk8s.model.applications[app_name].units
