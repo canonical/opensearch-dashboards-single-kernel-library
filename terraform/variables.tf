@@ -1,6 +1,12 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+variable "charm_name" {
+  description = "Name of the charm to deploy"
+  type        = string
+  default     = "opensearch-dashboards"
+}
+
 variable "app_name" {
   description = "Application name"
   type        = string

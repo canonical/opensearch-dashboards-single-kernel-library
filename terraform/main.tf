@@ -4,7 +4,7 @@
 resource "juju_application" "opensearch-dashboards" {
 
   charm {
-    name     = "opensearch-dashboards"
+    name     = var.charm_name
     channel  = var.channel
     revision = var.revision
     base     = var.base

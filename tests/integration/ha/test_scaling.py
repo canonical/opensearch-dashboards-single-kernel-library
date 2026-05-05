@@ -114,16 +114,9 @@ class TestScaling:
             await ops_test_microk8s.model.deploy(
                 TRAEFIK_APP_NAME, channel="latest/stable", trust=True
             )
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000
-            )
-        else:
-            async with ops_test_microk8s.fast_forward():
-                await ops_test_microk8s.model.wait_for_idle(
-                    apps=[app_name], wait_for_exact_units=1, timeout=1000, idle_period=30
-                )
-            assert ops_test_microk8s.model.applications[app_name].status == "blocked"
-
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], status="blocked", timeout=1000, idle_period=30
+        )
         pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
         await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000

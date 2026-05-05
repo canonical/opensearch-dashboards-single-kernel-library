@@ -80,24 +80,29 @@ jobs:
           promtool test rules tests/unit/test_alert_rules/*.yaml
 
   terraform-test:
-    name: Terraform - Lint and Simple Deployment
+    name: Terraform Lint & Deploy (${{ matrix.target }})
     runs-on: ubuntu-22.04
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [vm, k8s]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: lint charm module
+      - name: Lint charm module
         run: |
           pushd ./terraform
           terraform init && terraform fmt && terraform validate
           popd
-      - name: run checks - prepare
+      - name: Run checks - prepare
         run: |
           sudo snap install juju --channel=3.6 --classic
-      - name: LXD setup
+      - name: LXD setup (VM)
+        if: matrix.target == 'vm'
         run: |
           sudo snap refresh lxd --channel=latest/stable
           sudo adduser "$USER" 'lxd'
@@ -107,20 +112,46 @@ jobs:
           sg 'lxd' -c "lxc network set lxdbr0 ipv6.address none"
           sudo iptables -F FORWARD
           sudo iptables -P FORWARD ACCEPT
-      - name: Juju setup
+      - name: MicroK8s setup (K8s)
+        if: matrix.target == 'k8s'
+        run: |
+          sudo snap install microk8s --classic
+          sudo adduser "$USER" 'microk8s'
+          sg 'microk8s' -c "microk8s status --wait-ready"
+          sg 'microk8s' -c "microk8s enable hostpath-storage dns"
+
+      - name: Juju setup (Machine)
+        if: matrix.target == 'vm'
         run: |
           sg 'lxd' -c "juju bootstrap 'localhost' --config model-logs-size=10G"
           juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
           juju add-model test
+
+      - name: Juju setup (K8s)
+        if: matrix.target == 'k8s'
+        run: |
+          sg 'microk8s' -c "juju bootstrap microk8s"
+          juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
+          juju add-model test
+
       - name: Terraform deploy
         run: |
           MODEL_UUID=$(juju show-model test | grep "model-uuid" | awk '{split($0, a, ": "); print a[2]}')
           pushd ./terraform
-          terraform apply -var="model_uuid=$MODEL_UUID" -auto-approve
+          if [ "${{ matrix.target }}" == "k8s" ]; then
+            terraform apply -var="model_uuid=$MODEL_UUID" -var="app_name=opensearch-dashboards-k8s" -var="charm_name=opensearch-dashboards-k8s" -auto-approve
+          else
+            terraform apply -var="model_uuid=$MODEL_UUID" -auto-approve
+          fi
           popd
+
       - name: Wait for model and applications
         run: |
-          juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
+          if [ "${{ matrix.target }}" == "k8s" ]; then
+            juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
+          else
+            juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
+          fi
           juju wait-for model test --query='life=="alive" && status=="available"'
 
   build:

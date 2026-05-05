@@ -535,7 +535,6 @@ async def check_full_status(
 ) -> bool:
     """Compare app and unit status against those requested in the parameters."""
     status_data = await ops_test.model.get_status()  # noqa: F821
-
     if not status_data.applications[app_name].status.status == status:
         return False
 
@@ -546,13 +545,36 @@ async def check_full_status(
         return False
 
     if status_msg:
-        if not status_data.applications[app_name].status.info.startswith(status_msg):
-            return False
-        if not all(
-            unit.workload_status.info.startswith(status_msg)
-            for unit in status_data.applications[app_name].units.values()
-        ):
-            return False
+        for dashboards_unit in ops_test.model.applications[app_name].units:
+            action = await dashboards_unit.run_action("status-detail")
+            res = await action.wait()
+
+            json_output = res.results.get("json-output", {})
+
+            try:
+                app_status_list = json.loads(json_output.get("app", "[]"))
+                app_messages = [comp.get("Message", "") for comp in app_status_list]
+
+                if status_msg not in app_messages:
+                    logger.warning(
+                        f"Expected APP message '{status_msg}' not found. "
+                        f"Current app messages: {app_messages}"
+                    )
+                    return False
+
+                unit_status_list = json.loads(json_output.get("unit", "[]"))
+                unit_messages = [comp.get("Message", "") for comp in unit_status_list]
+
+                if status_msg not in unit_messages:
+                    logger.warning(
+                        f"Expected UNIT message '{status_msg}' not found. "
+                        f"Current unit messages: {unit_messages}"
+                    )
+                    return False
+
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to decode JSON from status-detail action: {e}")
+                return False
     return True
 
 
