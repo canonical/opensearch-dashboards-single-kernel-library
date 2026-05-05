@@ -7,7 +7,7 @@ import logging
 from ops.log import JujuLogHandler
 from ops.main import main
 
-from single_kernel_opensearch_dashboards.charms.k8s import OpenSearchK8sCharm
+from single_kernel_opensearch_dashboards.charms.k8s import OpenSearchDashboardsK8sCharm
 
 # Show logger name (module name) in logs
 root_logger = logging.getLogger()
@@ -18,4 +18,4 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 if __name__ == "__main__":
-    main(OpenSearchK8sCharm)
+    main(OpenSearchDashboardsK8sCharm)
