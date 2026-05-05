@@ -318,7 +318,7 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
         )
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model_name}.{TLS_CERT_APP_NAME}")
         await ops_test_microk8s.model.integrate(
-            f"{TLS_CERT_APP_NAME}:certificates", TLS_CERT_APP_NAME
+            f"{TLS_CERT_APP_NAME}:certificates", TRAEFIK_APP_NAME
         )
 
     await ops_test_microk8s.model.integrate(app_name, TLS_CERT_APP_NAME)
