@@ -5,18 +5,11 @@ import asyncio
 import logging
 import os
 import subprocess
-import tempfile
-import textwrap
 from pathlib import Path
 from subprocess import CalledProcessError
 
 import pytest
 import yaml
-from lightkube import Client
-from lightkube.models.meta_v1 import LabelSelector, ObjectMeta
-from lightkube.models.networking_v1 import NetworkPolicySpec
-from lightkube.resources.core_v1 import Pod
-from lightkube.resources.networking_v1 import NetworkPolicy
 from pytest_operator.plugin import OpsTest
 
 import tests.integration.ha.helpers as ha_helpers
@@ -236,8 +229,11 @@ async def network_cut_leader(ops_test: OpsTest, ops_test_microk8s: OpsTest, http
         await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
         logger.info("Checking new leader was elected")
-        new_leader_name = await get_leader_name(ops_test_microk8s, app_name)
-        assert new_leader_name != old_leader_name
+        await ops_test_microk8s.model.block_until(
+            lambda: old_leader_name != get_leader_name(ops_test_microk8s, app_name),
+            timeout=LONG_TIMEOUT,
+            wait_period=LONG_WAIT,
+        )
 
         # Check all nodes but the old leader
         logger.info("Checking Dashboard access for the rest of the nodes...")
@@ -320,8 +316,11 @@ async def network_throttle_leader(
     )
 
     logger.info("Checking leader re-election...")
-    new_leader_name = await get_leader_name(ops_test_microk8s, app_name)
-    assert new_leader_name != old_leader_name
+    await ops_test_microk8s.model.block_until(
+        lambda: old_leader_name != get_leader_name(ops_test_microk8s, app_name),
+        timeout=LONG_TIMEOUT,
+        wait_period=LONG_WAIT,
+    )
 
     logger.info("Checking Dashboard access for the rest of the nodes...")
     assert await access_all_dashboards(
