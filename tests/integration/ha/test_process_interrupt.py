@@ -183,14 +183,14 @@ async def _recover_from_signal(
             container = "opensearch-dashboards"
             app_name = APP_NAME_K8S
     pid_list = {}
+    if is_cross_model and signal != "SIGSTOP" and pid:
+        for unit in units:
+            pid_list[unit] = await get_service_pid(ops_test_microk8s, unit)
+
     # In attempt to prevent flaky behavior
     # The process is restarted so fast, slow pipelines may not "catch" it in time
     for attempt in Retrying(stop=stop_after_attempt(3), wait=wait_fixed(5), reraise=True):
         with attempt:
-            if is_cross_model and signal != "SIGSTOP" and pid:
-                for unit in units:
-                    pid_list[unit] = await get_service_pid(ops_test_microk8s, unit)
-
             logger.info(f"Sending {signal} {app_name}:{units}...")
             await asyncio.gather(
                 *[
@@ -204,7 +204,8 @@ async def _recover_from_signal(
             if is_cross_model and signal != "SIGSTOP" and pid:
                 logger.info(f"Asserting {app_name}:{units} service pid is changed")
                 for unit in units:
-                    assert await get_service_pid(ops_test_microk8s, unit) != pid_list[unit]
+                    current_pid = await get_service_pid(ops_test_microk8s, unit)
+                    assert current_pid != pid_list[unit]
             else:
                 # Check that process is down
                 logger.info(f"Waiting for {app_name}:{units} to be down...")
