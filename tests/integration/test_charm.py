@@ -435,7 +435,7 @@ class TestOpenSearchDashboards:
 
             await ops_test_microk8s.model.applications[APP_NAME].set_config({"log_level": "ERROR"})
 
-            await self.wait_for_dashboard_idle(ops_test_microk8s, traefik)
+            await wait_for_dashboard_idle(ops_test_microk8s, traefik)
             debug_lines = count_lines_with(
                 ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
             )
@@ -448,7 +448,7 @@ class TestOpenSearchDashboards:
             )
 
         await ops_test_microk8s.model.applications[APP_NAME].set_config({"log_level": "INFO"})
-        await self.wait_for_dashboard_idle(ops_test_microk8s, traefik)
+        await wait_for_dashboard_idle(ops_test_microk8s, traefik)
 
     @pytest.mark.abort_on_fail
     async def test_dashboard_status_changes(
