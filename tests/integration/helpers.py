@@ -4,6 +4,7 @@
 
 import json
 import logging
+import os
 import socket
 import subprocess
 from pathlib import Path
@@ -28,8 +29,10 @@ from tenacity import (
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
-APP_NAME = METADATA_VM["name"]
-APP_NAME_K8S = METADATA_K8S["name"]
+SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
+APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
+K8s_APP_NAME = METADATA_K8S["name"]
+
 OPENSEARCH_APP_NAME = "opensearch"
 CONFIG_OPTS = {"profile": "testing"}
 DUMMY_CHARM = "dummy-charm"
@@ -77,6 +80,29 @@ DASHBOARD_QUERY_PARAMS = {
         "preference": 1717603297253,
     }
 }
+
+
+def is_https_enabled(config_matrix: dict) -> bool:
+    """Centralized logic to determine if HTTPS is expected based on matrix and substrate."""
+    tls = config_matrix.get("tls", False)
+    traefik = config_matrix.get("traefik", False)
+    traefik_trust = config_matrix.get("traefik_trust", False)
+
+    if SUBSTRATE == "k8s":
+        return (traefik and tls and not traefik_trust) or (tls and not traefik)
+    return tls
+
+
+async def wait_for_dashboard_idle(
+    ops_test_microk8s: OpsTest, traefik: bool, idle_period: int = 30
+):
+    """Standardized wait block for Dashboard app based on substrate and routing."""
+    expected_status = "active" if (not SUBSTRATE == "k8s" or traefik) else "blocked"
+    apps = [APP_NAME, TRAEFIK_APP_NAME] if (SUBSTRATE == "k8s" and traefik) else [APP_NAME]
+
+    await ops_test_microk8s.model.wait_for_idle(
+        apps=apps, status=expected_status, timeout=1000, idle_period=idle_period
+    )
 
 
 def get_relations(ops_test: OpsTest, name: str, app_name: str = "remote-") -> list[Relation]:
@@ -128,25 +154,20 @@ def access_prometheus_exporter(host: str) -> bool:
     return response.status_code == 200 and "opensearch_dashboards_status" in response.text
 
 
-async def access_all_prometheus_exporters(ops_test: OpsTest, ops_test_microk8s: OpsTest) -> bool:
+async def access_all_prometheus_exporters(ops_test: OpsTest) -> bool:
     """Check if a given unit has 'dashboard-exporter' service available and publishing."""
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    app_name = APP_NAME
-    if is_cross_model:
-        app_name = APP_NAME_K8S
-
     result = True
-    for unit in ops_test_microk8s.model.applications[app_name].units:
-        unit_ip = await get_address(ops_test_microk8s, unit.name, app_name)
+    for unit in ops_test.model.applications[APP_NAME].units:
+        unit_ip = await get_address(ops_test, unit.name, APP_NAME)
         logger.info(f"Accessing prometheus exporter with {unit_ip} ip")
         result = result and access_prometheus_exporter(unit_ip)
     return result
 
 
-async def get_dashboard_routing(ops_test_microk8s: OpsTest, unit_name: str):
+async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
     """Returns (host, port, path) dynamically based on Traefik endpoints."""
-    if TRAEFIK_APP_NAME in ops_test_microk8s.model.applications:
-        traefik_app = ops_test_microk8s.model.applications[TRAEFIK_APP_NAME]
+    if TRAEFIK_APP_NAME in ops_test.model.applications:
+        traefik_app = ops_test.model.applications[TRAEFIK_APP_NAME]
 
         traefik_unit = traefik_app.units[0]
         for unit in traefik_app.units:
@@ -160,8 +181,8 @@ async def get_dashboard_routing(ops_test_microk8s: OpsTest, unit_name: str):
         endpoints_json = action_result.results.get("proxied-endpoints", "{}")
         endpoints = json.loads(endpoints_json)
 
-        if APP_NAME_K8S in endpoints:
-            url = endpoints[APP_NAME_K8S]["url"]
+        if APP_NAME in endpoints:
+            url = endpoints[APP_NAME]["url"]
             parsed_url = urlparse(url)
 
             host = parsed_url.hostname
@@ -171,15 +192,15 @@ async def get_dashboard_routing(ops_test_microk8s: OpsTest, unit_name: str):
             return host, port, path
         else:
             raise RuntimeError(
-                f"Endpoint for {APP_NAME_K8S} not found in Traefik's proxied-endpoints."
+                f"Endpoint for {APP_NAME} not found in Traefik's proxied-endpoints."
             )
 
     app_name = unit_name.split("/")[0]
-    if DUMMY_CHARM in ops_test_microk8s.model.applications and app_name == APP_NAME_K8S:
+    if DUMMY_CHARM in ops_test.model.applications and app_name == K8s_APP_NAME:
         unit_id = unit_name.split("/")[1]
         host = f"{app_name}-{unit_id}.{app_name}-endpoints"
     else:
-        host = get_bind_address(ops_test_microk8s.model.name, unit_name)
+        host = get_bind_address(ops_test.model.name, unit_name)
 
     return host, 5601, ""
 
@@ -299,16 +320,13 @@ async def access_all_dashboards(
     skip: list[str] = None,
 ):
     skip = skip or []
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    if not is_cross_model:
-        app_name = APP_NAME
-        relation_id = get_relations(ops_test, "opensearch-client", app_name)[0].id
-    else:
-        app_name = APP_NAME_K8S
+    if SUBSTRATE == "k8s":
         relation_id = get_relations(ops_test, "opensearch-client")[0].id
+    else:
+        relation_id = get_relations(ops_test, "opensearch-client", APP_NAME)[0].id
 
-    if not ops_test_microk8s.model.applications[app_name].units:
-        logger.error(f"No units for application {app_name}")
+    if not ops_test_microk8s.model.applications[APP_NAME].units:
+        logger.error(f"No units for application {APP_NAME}")
         return False
 
     dashboard_credentials = await get_secret_by_label(
@@ -319,15 +337,12 @@ async def access_all_dashboards(
     # Copying the Dashboard's CA cert locally to use it for SSL verification
     # We only get it once for pipeline efficiency, as it's the same on all units
     if verify:
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        unit = ops_test_microk8s.model.applications[app_name].units[0].name
-        if unit not in skip and not get_dashboard_ca_cert(
-            ops_test_microk8s.model.name, unit, is_cross_model
-        ):
+        unit = ops_test_microk8s.model.applications[APP_NAME].units[0].name
+        if unit not in skip and not get_dashboard_ca_cert(ops_test_microk8s.model.name, unit):
             logger.error(f"Couldn't retrieve host certificate for unit {unit}")
             return False
 
-    for unit in ops_test_microk8s.model.applications[app_name].units:
+    for unit in ops_test_microk8s.model.applications[APP_NAME].units:
         if unit.name in skip:
             continue
 
@@ -362,29 +377,22 @@ async def access_all_dashboards(
     retry_error_callback=lambda _: False,
     retry=retry_if_result(lambda x: x is False),
 )
-async def all_dashboards_unavailable(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, https: bool = False
-) -> bool:
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-
+async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> bool:
     unavail = True
-    for unit in ops_test_microk8s.model.applications[app_name].units:
+    for unit in ops_test.model.applications[APP_NAME].units:
 
         if https:
-            if not get_dashboard_ca_cert(ops_test_microk8s.model.name, unit, is_cross_model):
+            if not get_dashboard_ca_cert(ops_test.model.name, unit):
                 logger.info(f"Couldn't retrieve host certificate for unit {unit}")
                 continue
 
-        host, port, path = await get_dashboard_routing(ops_test_microk8s, unit.name)
+        host, port, path = await get_dashboard_routing(ops_test, unit.name)
 
         # We should retry until a host could be retrieved
         if not host:
             continue
 
-        unavail = unavail and await dashboard_unavailable(
-            ops_test_microk8s, host, https, port, path
-        )
+        unavail = unavail and await dashboard_unavailable(ops_test, host, https, port, path)
     return unavail
 
 
@@ -395,8 +403,8 @@ async def all_dashboards_unavailable(
     retry=(retry_if_result(lambda x: x is False) | retry_if_exception_type(SSLError)),
     before_sleep=before_sleep_log(logger, logging.DEBUG),
 )
-def get_dashboard_ca_cert(model_full_name: str, unit: str, is_cross_model: bool = False) -> bool:
-    if is_cross_model:
+def get_dashboard_ca_cert(model_full_name: str, unit: str) -> bool:
+    if SUBSTRATE == "k8s":
         cmd = (
             f"JUJU_MODEL={model_full_name} juju scp --container opensearch-dashboards "
             f"{unit}:/etc/opensearch-dashboards/certificates/ca.pem ./ca.pem"
@@ -421,10 +429,8 @@ def get_dashboard_ca_cert(model_full_name: str, unit: str, is_cross_model: bool 
     return output.returncode == 0
 
 
-def get_file_contents(
-    model_name: str, unit_name: str, filename: str, is_cross_model: bool = False
-) -> str:
-    if is_cross_model:
+def get_file_contents(model_name: str, unit_name: str, filename: str) -> str:
+    if SUBSTRATE == "k8s":
         cmd = f"JUJU_MODEL={model_name} juju ssh --container opensearch-dashboards {unit_name} cat {filename}"
     else:
         cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo cat {filename}"
@@ -703,14 +709,9 @@ async def client_run_all_dashboards_request(
     https: bool = False,
 ):
     """Check if all dashboard instances are accessible."""
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    app_name = APP_NAME
-    if is_cross_model:
-        app_name = APP_NAME_K8S
-
     result = []
-    if not ops_test_microk8s.model.applications[app_name].units:
-        logger.debug(f"No units for application {app_name}")
+    if not ops_test_microk8s.model.applications[APP_NAME].units:
+        logger.debug(f"No units for application {APP_NAME}")
         return False
 
     dashboard_credentials = await get_secret_by_label(
@@ -727,7 +728,7 @@ async def client_run_all_dashboards_request(
         except FileNotFoundError:
             logger.warning("ca.pem not found locally.")
 
-    for dashboards_unit in ops_test_microk8s.model.applications[app_name].units:
+    for dashboards_unit in ops_test_microk8s.model.applications[APP_NAME].units:
         host, port, path = await get_dashboard_routing(ops_test_microk8s, dashboards_unit.name)
 
         if not host:

@@ -4,6 +4,7 @@
 
 import asyncio
 import logging
+import os
 from pathlib import Path
 
 import pytest
@@ -34,9 +35,6 @@ HANGING_TIMEOUT = 90
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
-APP_NAME = METADATA_VM["name"]
-APP_NAME_K8S = METADATA_K8S["name"]
-
 OPENSEARCH_APP_NAME = "opensearch"
 OPENSEARCH_CONFIG = {
     "logging-config": "<root>=INFO;unit=DEBUG",
@@ -56,6 +54,10 @@ K8s_CONFIG = {
 
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 TLS_CERT_APP_NAME = "self-signed-certificates"
+
+SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
+APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
+
 APP_AND_TLS = [APP_NAME, TLS_CERT_APP_NAME]
 PEER = "dashboard_peers"
 SERVER_PORT = 5601
@@ -91,18 +93,11 @@ async def test_build_and_deploy(
     ops_test: OpsTest, ops_test_microk8s: OpsTest, charmvm: str, charmk8s: str, charm_base: str
 ):
     """Tests that the charm deploys safely"""
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-    charm = charmvm
-    app_name = APP_NAME
-    if is_cross_model:
-        charm = charmk8s
-        app_name = APP_NAME_K8S
-
-    if is_cross_model:
+    if SUBSTRATE == "k8s":
         await ops_test_microk8s.model.set_config(K8s_CONFIG)
         await ops_test_microk8s.model.deploy(
-            charm,
-            application_name=app_name,
+            charmk8s,
+            application_name=APP_NAME,
             num_units=NUM_UNITS_APP,
             base=charm_base,
             resources=RESOURCE,
@@ -110,7 +105,7 @@ async def test_build_and_deploy(
 
     else:
         await ops_test_microk8s.model.deploy(
-            charm, application_name=app_name, num_units=NUM_UNITS_APP, base=charm_base
+            charmvm, application_name=APP_NAME, num_units=NUM_UNITS_APP, base=charm_base
         )
 
     # Opensearch
@@ -135,26 +130,26 @@ async def test_build_and_deploy(
     # Opensearch Dashboards
     async with ops_test_microk8s.fast_forward():
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name],
+            apps=[APP_NAME],
             wait_for_exact_units=NUM_UNITS_APP,
             timeout=1000,
             idle_period=30,
         )
 
-    assert ops_test_microk8s.model.applications[app_name].status == "blocked"
+    assert ops_test_microk8s.model.applications[APP_NAME].status == "blocked"
 
-    if is_cross_model:
+    if SUBSTRATE == "k8s":
         await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
         await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="blocked", timeout=1000
+            apps=[APP_NAME], status="blocked", timeout=1000
         )
 
-    pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
-    if is_cross_model:
-        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
-    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+    pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
+    if SUBSTRATE == "k8s":
+        await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
+    await ops_test_microk8s.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
@@ -175,15 +170,11 @@ async def _recover_from_signal(
     https: bool = False,
     verify: bool = False,
 ):
-    is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
     container = ""
-    if app_name == APP_NAME or app_name == APP_NAME_K8S:
-        app_name = APP_NAME
-        if is_cross_model:
-            container = "opensearch-dashboards"
-            app_name = APP_NAME_K8S
+    if app_name == APP_NAME and SUBSTRATE == "k8s":
+        container = "opensearch-dashboards"
     pid_list = {}
-    if is_cross_model and signal != "SIGSTOP" and pid:
+    if SUBSTRATE == "k8s" and signal != "SIGSTOP" and pid:
         for unit in units:
             pid_list[unit] = await get_service_pid(ops_test_microk8s, unit)
 
@@ -201,7 +192,7 @@ async def _recover_from_signal(
                 ]
             )
 
-            if is_cross_model and signal != "SIGSTOP" and pid:
+            if SUBSTRATE == "k8s" and signal != "SIGSTOP" and pid:
                 logger.info(f"Asserting {app_name}:{units} service pid is changed")
                 for unit in units:
                     current_pid = await get_service_pid(ops_test_microk8s, unit)
@@ -220,7 +211,7 @@ async def _recover_from_signal(
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
-    if app_name == APP_NAME or app_name == APP_NAME_K8S:
+    if app_name == APP_NAME:
         await ops_test_microk8s.model.wait_for_idle(
             apps=[app_name], wait_for_active=True, timeout=1000
         )
@@ -262,10 +253,7 @@ async def test_signal_dashboard_process_leader(
     ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = APP_NAME
-    if ops_test.model.name != ops_test_microk8s.model.name:
-        app_name = APP_NAME_K8S
-    leader_name = await get_leader_name(ops_test_microk8s, app_name)
+    leader_name = await get_leader_name(ops_test_microk8s, APP_NAME)
     await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name])
 
 
@@ -297,10 +285,7 @@ async def test_signal_dashboard_process_cluster(
     ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = APP_NAME
-    if ops_test.model.name != ops_test_microk8s.model.name:
-        app_name = APP_NAME_K8S
-    units = [unit.name for unit in ops_test_microk8s.model.applications[app_name].units]
+    units = [unit.name for unit in ops_test_microk8s.model.applications[APP_NAME].units]
     await _recover_from_signal(ops_test, ops_test_microk8s, signal, units)
 
 
@@ -311,9 +296,7 @@ async def test_signal_dashboard_process_cluster(
 async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
     """Not a real test but a separate stage to start TLS testing"""
     logger.info("Initializing TLS Charm connections")
-    app_name = APP_NAME
-    if ops_test.model.name != ops_test_microk8s.model.name:
-        app_name = APP_NAME_K8S
+    if SUBSTRATE == "k8s":
         await ops_test.model.create_offer(
             "certificates", TLS_CERT_APP_NAME, "self-signed-certificates"
         )
@@ -322,13 +305,13 @@ async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
             f"{TLS_CERT_APP_NAME}:certificates", TRAEFIK_APP_NAME
         )
 
-    await ops_test_microk8s.model.integrate(app_name, TLS_CERT_APP_NAME)
+    await ops_test_microk8s.model.integrate(APP_NAME, TLS_CERT_APP_NAME)
 
     await ops_test.model.wait_for_idle(
         apps=[TLS_CERT_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
     )
     await ops_test_microk8s.model.wait_for_idle(
-        apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT
+        apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
     )
 
     logger.info("Checking Dashboard access after TLS is configured")
@@ -380,10 +363,7 @@ async def test_signal_dashboard_process_leader_https(
     ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = APP_NAME
-    if ops_test.model.name != ops_test_microk8s.model.name:
-        app_name = APP_NAME_K8S
-    leader_name = await get_leader_name(ops_test_microk8s, app_name)
+    leader_name = await get_leader_name(ops_test_microk8s, APP_NAME)
     await _recover_from_signal(
         ops_test, ops_test_microk8s, signal, [leader_name], True, https=True, verify=True
     )
@@ -425,10 +405,7 @@ async def test_signal_dashboard_process_cluster_https(
     ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = APP_NAME
-    if ops_test.model.name != ops_test_microk8s.model.name:
-        app_name = APP_NAME_K8S
-    units = [unit.name for unit in ops_test_microk8s.model.applications[app_name].units]
+    units = [unit.name for unit in ops_test_microk8s.model.applications[APP_NAME].units]
     await _recover_from_signal(
         ops_test, ops_test_microk8s, signal, units, True, https=True, verify=True
     )

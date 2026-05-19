@@ -1,6 +1,8 @@
 summary: test_wrong_etc_hosts.py
 environment:
   TEST_MODULE: spaces/test_wrong_etc_hosts.py
+  SUBSTRATE: "vm"
+
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
 artifacts:

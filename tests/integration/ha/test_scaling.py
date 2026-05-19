@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 import logging
+import os
 from pathlib import Path
 
 import pytest
@@ -15,14 +16,15 @@ from ..helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TLS_STABLE_CHANNEL,
     access_all_dashboards,
+    is_https_enabled,
 )
 
 logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
-APP_NAME = METADATA_VM["name"]
-APP_NAME_K8S = METADATA_K8S["name"]
+SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
+APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
@@ -60,14 +62,11 @@ class TestScaling:
         config_matrix_rest: dict,
     ):
         """Deploying all charms required for the tests, and wait for complete setup."""
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        charm = charmk8s if is_cross_model else charmvm
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
-        deploy_kwargs = {"application_name": app_name, "num_units": 1, "base": charm_base}
-        if is_cross_model:
+        deploy_kwargs = {"application_name": APP_NAME, "num_units": 1, "base": charm_base}
+        if SUBSTRATE == "k8s":
             deploy_kwargs["resources"] = RESOURCE
         else:
             deploy_kwargs["base"] = charm_base
@@ -93,7 +92,7 @@ class TestScaling:
         )
 
         # 2. Deploy Dashboards Charm
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             await ops_test.model.create_offer(
                 "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
             )
@@ -108,53 +107,55 @@ class TestScaling:
                 f"admin/{ops_test.model_name}.{TLS_CERTIFICATES_APP_NAME}"
             )
 
-        await ops_test_microk8s.model.deploy(charm, **deploy_kwargs)
+            await ops_test_microk8s.model.deploy(charmk8s, **deploy_kwargs)
+        else:
+            await ops_test_microk8s.model.deploy(charmvm, **deploy_kwargs)
 
         if traefik:
             await ops_test_microk8s.model.deploy(
                 TRAEFIK_APP_NAME, channel="latest/stable", trust=True
             )
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="blocked", timeout=1000, idle_period=30
+            apps=[APP_NAME], status="blocked", timeout=1000, idle_period=30
         )
-        pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
+        pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
         await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
         )
 
         if traefik:
-            await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+            await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
             )
 
         if tls:
-            await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+            await ops_test_microk8s.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
             if traefik:
                 await ops_test_microk8s.model.integrate(
                     TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
                 )
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+                    apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
                 )
-            elif not is_cross_model or traefik:
+            elif not SUBSTRATE == "k8s" or traefik:
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[app_name], status="active", timeout=1000
+                    apps=[APP_NAME], status="active", timeout=1000
                 )
             else:
                 await ops_test_microk8s.model.deploy(
                     dashboard_tester_charm, application_name=DUMMY_CHARM
                 )
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[app_name], status="blocked", timeout=1000
+                    apps=[APP_NAME], status="blocked", timeout=1000
                 )
-        elif is_cross_model and not traefik:
+        elif SUBSTRATE == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000
+                apps=[APP_NAME], status="blocked", timeout=1000
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], wait_for_active=True, timeout=1000
+                apps=[APP_NAME], wait_for_active=True, timeout=1000
             )
 
     ##############################################################################
@@ -167,28 +168,25 @@ class TestScaling:
         ops_test_microk8s: OpsTest,
         amount: int,
         config_matrix_rest: dict,
-        https: bool = False,
     ) -> None:
         """Testing that newly added units are functional."""
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-
-        init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
+        init_units_count = len(ops_test_microk8s.model.applications[APP_NAME].units)
         expected = init_units_count + amount
         traefik = config_matrix_rest["traefik"]
+        https = is_https_enabled(config_matrix_rest)
 
         # scale up
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             logger.info(f"Adding units to {expected}")
-            await ops_test_microk8s.model.applications[app_name].scale(expected)
+            await ops_test_microk8s.model.applications[APP_NAME].scale(expected)
         else:
             logger.info(f"Adding {amount} units")
-            await ops_test_microk8s.model.applications[app_name].add_unit(count=amount)
+            await ops_test_microk8s.model.applications[APP_NAME].add_unit(count=amount)
 
         logger.info(f"Waiting for {amount} units to be added and stable")
-        if is_cross_model and not traefik:
+        if SUBSTRATE == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name],
+                apps=[APP_NAME],
                 status="blocked",
                 wait_for_exact_units=expected,
                 timeout=1000,
@@ -196,14 +194,14 @@ class TestScaling:
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name],
+                apps=[APP_NAME],
                 status="active",
                 wait_for_exact_units=expected,
                 timeout=1000,
                 idle_period=30,
             )
 
-        num_units = len(ops_test_microk8s.model.applications[app_name].units)
+        num_units = len(ops_test_microk8s.model.applications[APP_NAME].units)
         assert num_units == expected
 
         logger.info("Checking the functionality of the new units")
@@ -216,31 +214,28 @@ class TestScaling:
         ops_test_microk8s: OpsTest,
         unit_ids: list[int],
         config_matrix_rest: dict,
-        https: bool = False,
     ) -> None:
         """Testing that decreasing units keeps functionality."""
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-
-        init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
+        init_units_count = len(ops_test_microk8s.model.applications[APP_NAME].units)
         amount = len(unit_ids)
         expected = init_units_count - amount
         traefik = config_matrix_rest["traefik"]
+        https = is_https_enabled(config_matrix_rest)
 
         # scale down
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             logger.info(f"Removing units to {expected}")
-            await ops_test_microk8s.model.applications[app_name].scale(expected)
+            await ops_test_microk8s.model.applications[APP_NAME].scale(expected)
         else:
             logger.info(f"Removing units {unit_ids}")
-            await ops_test_microk8s.model.applications[app_name].destroy_unit(
-                *[f"{app_name}/{cnt}" for cnt in unit_ids]
+            await ops_test_microk8s.model.applications[APP_NAME].destroy_unit(
+                *[f"{APP_NAME}/{cnt}" for cnt in unit_ids]
             )
 
         logger.info(f"Waiting for units {unit_ids} to be removed safely")
-        if is_cross_model and not traefik:
+        if SUBSTRATE == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name],
+                apps=[APP_NAME],
                 status="blocked",
                 wait_for_exact_units=expected,
                 timeout=1000,
@@ -248,14 +243,14 @@ class TestScaling:
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name],
+                apps=[APP_NAME],
                 status="active",
                 wait_for_exact_units=expected,
                 timeout=1000,
                 idle_period=30,
             )
 
-        num_units = len(ops_test_microk8s.model.applications[app_name].units)
+        num_units = len(ops_test_microk8s.model.applications[APP_NAME].units)
         assert num_units == expected
 
         logger.info("Checking the functionality of the remaining units")
@@ -274,21 +269,10 @@ class TestScaling:
         self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
     ) -> None:
         """Testing that newly added units are functional."""
-        tls = config_matrix_rest["tls"]
-        traefik = config_matrix_rest["traefik"]
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        https = False
-        if (
-            (traefik and tls)
-            or (not is_cross_model and tls)
-            or (is_cross_model and tls and not traefik)
-        ):
-            https = True
         await self.scale_up(
             ops_test,
             ops_test_microk8s,
             amount=2,
-            https=https,
             config_matrix_rest=config_matrix_rest,
         )
 
@@ -297,21 +281,10 @@ class TestScaling:
         self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
     ) -> None:
         """Testing that decreasing units keeps functionality."""
-        tls = config_matrix_rest["tls"]
-        traefik = config_matrix_rest["traefik"]
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        https = False
-        if (
-            (traefik and tls)
-            or (not is_cross_model and tls)
-            or (is_cross_model and tls and not traefik)
-        ):
-            https = True
         await self.scale_down(
             ops_test,
             ops_test_microk8s,
             unit_ids=[1, 2],
-            https=https,
             config_matrix_rest=config_matrix_rest,
         )
 
@@ -320,21 +293,10 @@ class TestScaling:
         self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
     ) -> None:
         """Testing that scaling down to 0 units is possible."""
-        tls = config_matrix_rest["tls"]
-        traefik = config_matrix_rest["traefik"]
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        https = False
-        if (
-            (traefik and tls)
-            or (not is_cross_model and tls)
-            or (is_cross_model and tls and not traefik)
-        ):
-            https = True
         await self.scale_down(
             ops_test,
             ops_test_microk8s,
             unit_ids=[0],
-            https=https,
             config_matrix_rest=config_matrix_rest,
         )
 
@@ -343,20 +305,9 @@ class TestScaling:
         self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
     ) -> None:
         """Testing that scaling up from zero units works."""
-        tls = config_matrix_rest["tls"]
-        traefik = config_matrix_rest["traefik"]
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        https = False
-        if (
-            (traefik and tls)
-            or (not is_cross_model and tls)
-            or (is_cross_model and tls and not traefik)
-        ):
-            https = True
         await self.scale_up(
             ops_test,
             ops_test_microk8s,
             amount=3,
-            https=https,
             config_matrix_rest=config_matrix_rest,
         )

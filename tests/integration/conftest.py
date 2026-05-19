@@ -22,6 +22,12 @@ def opensearch_sysctl_settings():
     subprocess.run(["sudo", "sysctl", "-w", "net.ipv4.tcp_retries2=5"])
 
 
+@pytest.fixture(scope="session")
+def substrate():
+    """Returns the substrate"""
+    return os.environ.get("SUBSTRATE", "vm").lower()
+
+
 @pytest.fixture
 def charm_base():
     """Returns the base in the modern format, e.g., 'ubuntu@22.04'."""
@@ -91,7 +97,7 @@ async def ops_test_microk8s(
 ) -> AsyncGenerator[OpsTest, Any]:
     """Conditionally returns a MicroK8s OpsTest, or the primary VM OpsTest."""
 
-    if not request.config.getoption("--k8s-charm"):
+    if os.environ.get("SUBSTRATE", "vm").lower() != "k8s":
         yield ops_test
         return
 

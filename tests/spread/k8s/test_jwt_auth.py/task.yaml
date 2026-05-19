@@ -1,6 +1,7 @@
 summary: test_jwt_auth.py
 environment:
   TEST_MODULE: test_jwt_auth.py
+  SUBSTRATE: "k8s"
 
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results" --k8s-charm

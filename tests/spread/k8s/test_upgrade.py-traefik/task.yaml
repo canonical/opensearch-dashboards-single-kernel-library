@@ -2,6 +2,7 @@ summary: test_upgrade.py
 environment:
   TEST_MODULE: test_upgrade.py
   TEST_TRAEFIK: true
+  SUBSTRATE: "k8s"
 
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results" --k8s-charm

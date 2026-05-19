@@ -2,6 +2,7 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 import logging
+import os
 from asyncio import gather
 from pathlib import Path
 
@@ -19,11 +20,8 @@ from pytest_operator.plugin import OpsTest
 
 from .helpers import (
     CONFIG_OPTS,
-    DUMMY_CHARM,
-    TLS_CERTIFICATES_APP_NAME,
-    TLS_STABLE_CHANNEL,
-    get_address,
     get_dashboard_routing,
+    is_https_enabled,
 )
 
 pytest_plugins = ["oauth_tools.fixtures"]
@@ -32,8 +30,6 @@ logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
-APP_NAME = METADATA_VM["name"]
-APP_NAME_K8S = METADATA_K8S["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -56,6 +52,9 @@ RESOURCE = {
         "upstream-source"
     ]
 }
+
+SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
+APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 
 
 @pytest.mark.usefixtures("config_matrix_rest")
@@ -83,21 +82,20 @@ class TestOAuth:
             config=CONFIG_OPTS,
         )
 
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        charm = charmk8s if is_cross_model else charmvm
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
         traefik = config_matrix_rest["traefik"]
 
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             await ops_test_microk8s.model.deploy(
-                charm, application_name=app_name, base=charm_base, resources=RESOURCE
+                charmk8s, application_name=APP_NAME, base=charm_base, resources=RESOURCE
             )
             if traefik:
                 await ops_test_microk8s.model.deploy(
                     TRAEFIK_APP_NAME, channel="latest/stable", trust=True
                 )
         else:
-            await ops_test_microk8s.model.deploy(charm, application_name=app_name, base=charm_base)
+            await ops_test_microk8s.model.deploy(
+                charmvm, application_name=APP_NAME, base=charm_base
+            )
 
     @pytest.mark.abort_on_fail
     @pytest.mark.skip_if_deployed
@@ -130,13 +128,11 @@ class TestOAuth:
         config_matrix_rest: dict,
     ):
         """Establish all the required relations."""
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
         tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
         if traefik:
-            await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+            await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
 
         await ops_test_oauth.model.create_offer(
@@ -146,18 +142,18 @@ class TestOAuth:
         await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
 
         if tls:
-            if is_cross_model:
+            if SUBSTRATE == "k8s":
 
                 await ops_test_microk8s.model.consume(
                     f"admin/{ops_test_oauth.model_name}.certificates"
                 )
-            await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
+            await ops_test_microk8s.model.integrate(f"{APP_NAME}:certificates", "certificates")
             if traefik:
                 await ops_test_microk8s.model.integrate(
                     f"{TRAEFIK_APP_NAME}:certificates", "certificates"
                 )
             await ops_test_microk8s.model.wait_for_idle(timeout=1000)
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             await ops_test.model.create_offer(
                 "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
             )
@@ -166,7 +162,7 @@ class TestOAuth:
             )
 
         await ops_test_microk8s.model.integrate(
-            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{app_name}:opensearch-client"
+            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{APP_NAME}:opensearch-client"
         )
 
         await gather(
@@ -178,11 +174,11 @@ class TestOAuth:
         await ops_test_oauth.model.create_offer("oauth", "oauth", "hydra")
         await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.oauth")
 
-        if is_cross_model:
+        if SUBSTRATE == "k8s":
             await ops_test_microk8s.model.consume(f"admin/{ops_test_oauth.model_name}.oauth")
 
         await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "oauth")
-        await ops_test_microk8s.model.integrate(f"{app_name}:oauth", "oauth")
+        await ops_test_microk8s.model.integrate(f"{APP_NAME}:oauth", "oauth")
 
         await gather(
             ops_test.model.wait_for_idle(status="active"),
@@ -193,7 +189,6 @@ class TestOAuth:
     @pytest.mark.abort_on_fail
     async def test_oauth(
         self,
-        ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         ops_test_oauth: OpsTest,
         page: Page,
@@ -201,21 +196,11 @@ class TestOAuth:
         config_matrix_rest: dict,
     ):
         """Ensure that SSO works for OpenSearch Dashboards login."""
-        is_cross_model = ops_test.model.name != ops_test_microk8s.model.name
-        app_name = APP_NAME_K8S if is_cross_model else APP_NAME
-        tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
-        https = False
-        if (
-            (traefik and tls)
-            or (not is_cross_model and tls)
-            or (is_cross_model and tls and not traefik)
-        ):
-            https = True
-        protocol = "https" if https else "http"
+        protocol = "https" if is_https_enabled(config_matrix_rest) else "http"
 
-        unit = ops_test_microk8s.model.applications[app_name].units[0]
+        unit = ops_test_microk8s.model.applications[APP_NAME].units[0]
         host, port, path = await get_dashboard_routing(
             ops_test_microk8s,
             unit.name,
