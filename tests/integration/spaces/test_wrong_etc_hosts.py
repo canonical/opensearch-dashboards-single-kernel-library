@@ -106,10 +106,10 @@ async def test_build_and_deploy(
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access_http(ops_test: OpsTest, ops_test_microk8s: OpsTest):
+async def test_dashboard_access_http(ops_test: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=False, verify=False)
-    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)
+    assert await access_all_dashboards(ops_test, ops_test, https=False, verify=False)
+    assert await access_all_prometheus_exporters(ops_test)
 
 
 ##############################################################################
@@ -130,7 +130,7 @@ async def test_tls_on(ops_test: OpsTest) -> None:
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access_https(ops_test: OpsTest, ops_test_microk8s: OpsTest):
+async def test_dashboard_access_https(ops_test: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True, verify=True)
-    assert await access_all_prometheus_exporters(ops_test, ops_test_microk8s)
+    assert await access_all_dashboards(ops_test, ops_test, https=True, verify=True)
+    assert await access_all_prometheus_exporters(ops_test)
