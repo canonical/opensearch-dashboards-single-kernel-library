@@ -130,7 +130,7 @@ jobs:
       - name: Juju setup (K8s)
         if: matrix.target == 'k8s'
         run: |
-          juju bootstrap microk8s
+          sg 'snap_microk8s' -c "juju bootstrap microk8s"
           juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
           juju add-model test
 
