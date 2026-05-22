@@ -39,7 +39,7 @@ class ClusterManager(BaseManager):
         logger.info("restarting Opensearch Dashboards service")
         self.workload.restart()
         start_time = time.time()
-        while not self.workload.alive() and time.time() - start_time < RESTART_TIMEOUT:
+        while not self.workload.healthy() and time.time() - start_time < RESTART_TIMEOUT:
             time.sleep(5)
         logger.info("Opensearch Dashboards service restarted")
 

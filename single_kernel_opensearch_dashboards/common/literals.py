@@ -47,6 +47,7 @@ RESTART_REL_NAME = "restart"
 # Components names
 CLUSTER_MANAGER_NAME = "cluster_manager"
 CONFIG_MANAGER_NAME = "config_manager"
+COS_MANAGER_NAME = "cos_manager"
 DASHBOARDS_NAME = "dashboards"
 HEALTH_MANAGER_NAME = "health_manager"
 UPGRADE_MANAGER_NAME = "upgrade_manager"

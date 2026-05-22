@@ -8,6 +8,7 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.literals import (
+    COS_MANAGER_NAME,
     COS_PORT,
     COS_RELATION_NAME,
     Substrates,
@@ -45,7 +46,7 @@ class COSManager(BaseManager):
     ) -> None:
         super().__init__(state, workload)
         self.charm = charm
-        self.name = "cos_manager"
+        self.name = COS_MANAGER_NAME
 
         if self.state.substrate == Substrates.VM:
             self.cos_integration = COSAgentProvider(
@@ -64,7 +65,7 @@ class COSManager(BaseManager):
                 self.charm,
                 relation_name="metrics-endpoint",
                 jobs=self.scrape_config(),
-                alert_rules_path="./src/alert_rules/prometheus",
+                alert_rules_path=f"{self.charm.charm_dir}/src/alert_rules/prometheus",
             )
 
             # 2. Logs (Loki)

@@ -20,9 +20,12 @@ from single_kernel_opensearch_dashboards.common.literals import (
     EXPORTER_SERVICE,
     LAYER_NAME,
     OSD_SERVICE,
-    Substrates,
 )
-from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
+from single_kernel_opensearch_dashboards.workload.base import (
+    K8sPaths,
+    Paths,
+    WorkloadBase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +52,7 @@ class K8sWorkload(WorkloadBase):
         # Note: In K8s charms, file operations are usually done via self.container.push/pull,
         # but the logical path root is still "/"
 
-        return Paths(
-            pathops.ContainerPath("/", container=self.container), substrate=Substrates.K8S
-        )
+        return K8sPaths(pathops.ContainerPath("/", container=self.container))
 
     @override
     def stop(self) -> None:
@@ -84,7 +85,7 @@ class K8sWorkload(WorkloadBase):
             logger.exception(f"Failed to restart services: {e}")
             raise
 
-        return self.alive()
+        return self.healthy()
 
     @override
     def configure(self, key: str, value: Any) -> None:
@@ -151,15 +152,14 @@ class K8sWorkload(WorkloadBase):
     @retry(
         wait=wait_fixed(3),
         stop=stop_after_attempt(5),
-        retry_error_callback=lambda state: state.outcome.result(),
-        # type: ignore
+        retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_if_not_result(lambda result: True if result else False),
     )
-    def alive(self) -> bool:
-        """Checks if the main application service is active in Pebble.
+    def healthy(self) -> bool:
+        """Checks if the workload is healthy.
 
         Returns:
-            bool: True if the main pebble application service is active, False otherwise.
+            bool: True if the workload is alive and functioning as expected.
         """
         if not self.container.can_connect():
             logger.debug("can't connect to container")
@@ -182,15 +182,6 @@ class K8sWorkload(WorkloadBase):
             return False
 
     @override
-    def healthy(self) -> bool:
-        """Checks if the workload is healthy.
-
-        Returns:
-            bool: True if the workload is alive and functioning as expected.
-        """
-        return self.alive()
-
-    @override
     def install(self) -> None:
         """Installs the workload.
 
@@ -206,7 +197,6 @@ class K8sWorkload(WorkloadBase):
             return False
         return True
 
-    @override
     def copy_certs(self, path: PathProtocol) -> str | None:
         """Copies certs to another container and returns the local path"""
         # request library is run on other container than the opensearch is located so we temporarily
@@ -220,7 +210,6 @@ class K8sWorkload(WorkloadBase):
             # We don't move ca if it's not exists so `requests` handles it (ignoring it for HTTP, erroring for HTTPS).
             return None
 
-    @override
     def remove_certs(self, local_ca_path: str) -> None:
         """Removes certs from container"""
         if os.path.exists(local_ca_path):

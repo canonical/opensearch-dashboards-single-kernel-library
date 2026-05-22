@@ -12,6 +12,7 @@ import requests
 from ops import StoredState
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
+from urllib3.util import url
 
 from single_kernel_opensearch_dashboards.common.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
@@ -281,7 +282,7 @@ class OSDServer(StateBase):
 
     # --- Config ---
     @property
-    def log_level(self) -> str:
+    def log_level(self) -> str | None:
         """Get log level value."""
         return self.relation_data.get("log_level", None)
 
@@ -412,4 +413,4 @@ class Ingress:
         if not self.url:
             return None
 
-        return self.url.split("/")[-1]
+        return url.parse_url(self.url).path

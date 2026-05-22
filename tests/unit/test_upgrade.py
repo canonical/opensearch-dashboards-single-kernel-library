@@ -37,7 +37,7 @@ OPENSEARCH_APP_NAME = "opensearch"
 def test_pre_upgrade_check_succeeds(harness, mocker):
     """pre_upgrade_check successful on a healthy system."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
     ):
         assert harness.charm.upgrade_events.pre_upgrade_check() is None
 
@@ -55,7 +55,7 @@ def test_pre_upgrade_check_succeeds(harness, mocker):
 def test_pre_upgrade_check_fails_if_workload_down(harness, mocker):
     """Simulate a workflow failure to verify pre_upgrade_check fails then."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=False
     ):
         with pytest.raises(ClusterNotReadyError):
             assert harness.charm.upgrade_events.pre_upgrade_check() is None

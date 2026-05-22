@@ -4,14 +4,12 @@
 
 """Handler for General OpenSearch Dashboards charm events."""
 import logging
+from typing import Any, cast
 
 import ops
 from pydantic import ValidationError
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
-from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     UPGRADE_MANAGER_NAME,
@@ -28,6 +26,7 @@ from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 from ops import (
+    CharmBase,
     ConfigChangedEvent,
     EventBase,
     InstallEvent,
@@ -49,16 +48,13 @@ class OpenSearchDashboardsEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
         cluster_manager: ClusterManager,
         tls_manager: TLSManager,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
-        super().__init__(
-            charm,
-            "opensearch-dashboards-events",
-        )
+        super().__init__(charm, "opensearch-dashboards-events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.cluster_manager = cluster_manager
@@ -122,7 +118,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_update_status(self, event: EventBase) -> None:
         """Handle the `update-status` event."""
-        update_grafana_dashboards_title(self.charm)
+        update_grafana_dashboards_title(cast(CharmBase, cast(Any, self.charm)))
 
         if not self.pre_restart_check():
             event.defer()

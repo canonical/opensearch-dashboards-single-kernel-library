@@ -103,7 +103,7 @@ class HealthManager(BaseManager):
         Returns:
             bool: True if the underlying workload process is alive, False otherwise.
         """
-        return self.workload.alive()
+        return self.workload.healthy()
 
     def check_unit_health(self) -> bool:
         """Returns true if OSD is healthy otherwise false"""

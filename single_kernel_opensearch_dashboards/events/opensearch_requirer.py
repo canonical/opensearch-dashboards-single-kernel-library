@@ -4,13 +4,13 @@
 
 """Event handler for related applications on the `opensearch-client` relation interface."""
 import logging
+from typing import cast
 
-from ops import Object
+from ops import CharmBase, Object
 from ops.charm import RelationBrokenEvent, RelationDepartedEvent, RelationEvent
+from typing_extensions import Any
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
@@ -31,19 +31,16 @@ class RequirerEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
         tls_manager: TLSManager,
     ) -> None:
-        super().__init__(
-            charm,
-            "provider",
-        )
+        super().__init__(charm, "provider")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
         self.requirer_events = OpenSearchRequiresEventHandlers(
-            self.charm, self.state.client_requires_data
+            cast(CharmBase, cast(Any, charm)), self.state.client_requires_data
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed

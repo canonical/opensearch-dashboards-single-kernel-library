@@ -51,6 +51,9 @@ from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
     ClientConfig,
     OAuthRequirer,
 )
+from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
+    IngressPerAppRequirer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +67,12 @@ class ClusterState(Object, StatusesStateProtocol):
         self,
         charm: TypedCharmBase[CharmConfig],
         substrate: Substrates,
+        ingress_requirer: IngressPerAppRequirer | None,
     ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
         self.charm = charm
+        self.ingress_requirer = ingress_requirer
         self._stored_state.set_default(unit_dying=False)
         self._servers_data = {}
 
@@ -291,14 +296,14 @@ class ClusterState(Object, StatusesStateProtocol):
             return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
         else:
             if self.ingress_relation and self.ingress.url:
-                return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}/{self.ingress.base_path}"
+                return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}{self.ingress.base_path}"
 
             return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
 
     @property
     def oauth_url(self) -> str:
         scheme = "https" if self.unit_server.tls_enabled else "http"
-        if self.ingress and self.ingress.url:
+        if self.ingress_relation and self.ingress.url:
             return self.ingress.url
         elif self.substrate == Substrates.VM:
             return self.url

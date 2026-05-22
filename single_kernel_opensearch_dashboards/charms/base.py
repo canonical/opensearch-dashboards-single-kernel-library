@@ -4,16 +4,19 @@
 
 """OpenSearch Dashboards Base Charm."""
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from typing import Any, cast
 
 from data_platform_helpers.advanced_statuses import StatusHandler
 from ops import EventBase
 
-from single_kernel_opensearch_dashboards.charms.charm_status import (
-    OpenSearchDashboardsStatusHandler,
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDFileOperationError,
+    OSDNotTrusted,
 )
-from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
+    CERTS_REL_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
@@ -36,9 +39,15 @@ from single_kernel_opensearch_dashboards.events.opensearch_requirer import (
 )
 from single_kernel_opensearch_dashboards.events.tls import TLSEvents
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
+    TypedCharmBase,
+)
 from single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops import (
     Lock,
     RollingOpsManager,
+)
+from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
+    IngressPerAppRequirer,
 )
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
@@ -52,7 +61,7 @@ from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 logger = logging.getLogger(__name__)
 
 
-class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
+class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     """Base OpenSearch Dashboards Charm, this will include base structure for both machine and k8s charms."""
 
     config_type = CharmConfig
@@ -63,7 +72,16 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         self.name = DASHBOARDS_NAME
 
         # --- State ---
-        self.state = ClusterState(self, self.substrate)
+        self.ingress = None
+        if self.substrate == Substrates.K8S:
+            self.ingress = IngressPerAppRequirer(
+                self,
+                port=SERVER_PORT,
+                scheme="https" if self.model.get_relation(CERTS_REL_NAME) else "http",
+                strip_prefix=False,
+                # for the time being, while we support full load balancing
+            )
+        self.state = ClusterState(self, self.substrate, self.ingress)
 
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
@@ -73,32 +91,34 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)
         self.restart_manager = RollingOpsManager(
-            self, relation=RESTART_REL_NAME, callback=self.restart
+            self, relation=RESTART_REL_NAME, callback=self.restart_on_lock_acquired
         )
         self.cos_manager = COSManager(self, self.state, self.workload)
 
         # --- Event Handlers ---
+        protocol_self = cast(StatusHandlingCharm, cast(Any, self))
         self.opensearch_dashboards_events = OpenSearchDashboardsEvents(
-            self, self.state, self.cluster_manager, self.tls_manager
+            protocol_self, self.state, self.cluster_manager, self.tls_manager
         )
-        self.jwt_events = JwtEvents(
-            self,
-            self.state,
+        self.jwt_events = JwtEvents(protocol_self, self.state)
+        self.tls_events = TLSEvents(
+            protocol_self, self.state, self.tls_manager, self.ingress_manager
         )
-        self.tls_events = TLSEvents(self, self.state, self.tls_manager, self.ingress_manager)
-        self.requirer_events = RequirerEvents(self, self.state, self.tls_manager)
-        self.oauth = OAuthEvents(
-            self,
-            self.state,
-        )
-        self.ingress_events = IngressEvents(self, self.state)
+        self.requirer_events = RequirerEvents(protocol_self, self.state, self.tls_manager)
+        self.oauth = OAuthEvents(protocol_self, self.state)
+        self.ingress_events = IngressEvents(protocol_self, self.state)
 
-        self.upgrade_events = UpgradeEvents(
-            self,
-            self.state,
-            self.upgrade_manager,
-            self.health_manager,
-        )
+        try:
+            self.upgrade_events = UpgradeEvents(
+                self,
+                self.state,
+                self.upgrade_manager,
+                self.health_manager,
+            )
+        except OSDNotTrusted:
+            logger.error(
+                "OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible"
+            )
 
         self.status_handler = StatusHandler(
             self,
@@ -123,7 +143,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         """Access current substrate."""
         ...
 
-    def restart(self, event: EventBase):
+    def restart_on_lock_acquired(self, event: EventBase):
         """Restart method for RollingOpsManager"""
         logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
         self.config_manager.set_dashboard_properties()
@@ -206,6 +226,7 @@ class OpenSearchDashboardsBaseCharm(OpenSearchDashboardsStatusHandler):
         except OSDFileOperationError as e:
             logger.error(f"{e}")
             event.defer()
+            return
         try:
             if not self.config_manager.config_changed():
                 if lock.is_pending() or lock.is_held():

@@ -8,9 +8,7 @@ import logging
 
 from ops import EventBase, ModelError, Object, RelationDepartedEvent
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     CONFIG_MANAGER_NAME,
@@ -30,13 +28,10 @@ class OAuthEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
     ) -> None:
-        super().__init__(
-            charm,
-            "oauth_events",
-        )
+        super().__init__(charm, "oauth_events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.framework.observe(

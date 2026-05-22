@@ -7,9 +7,7 @@ import logging
 
 from ops import Object, RelationDepartedEvent
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
     INGRESS_REL_NAME,
     Substrates,
@@ -28,18 +26,16 @@ class IngressEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
     ) -> None:
-        super().__init__(charm, "ingress_events")
+        super().__init__(charm, "ingress_events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         if self.state.substrate == Substrates.K8S:
+            self.framework.observe(self.state.ingress_requirer.on.ready, self._on_ingress_ready)
             self.framework.observe(
-                getattr(self.charm, "ingress_manager").ingress.on.ready, self._on_ingress_ready
-            )
-            self.framework.observe(
-                getattr(self.charm, "ingress_manager").ingress.on.revoked, self._on_ingress_revoked
+                self.state.ingress_requirer.on.revoked, self._on_ingress_revoked
             )
             self.framework.observe(
                 self.charm.on[INGRESS_REL_NAME].relation_departed, self._on_ingress_departed
@@ -53,7 +49,7 @@ class IngressEvents(Object):
         """Handle ingress revoked event."""
         if self.state.unit_server.unit_dying:
             return
-        logger.warning("Ingress revoked, falling back to direct access. %s")
+        logger.warning("Ingress revoked, falling back to direct access.")
         self.charm.emit_restart(event)
 
     def _on_ingress_departed(self, event: RelationDepartedEvent) -> None:

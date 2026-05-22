@@ -12,7 +12,6 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
-    OSDFileOperationError,
     OSDTLSMissingDataError,
 )
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
@@ -57,7 +56,7 @@ class TLSManager(BaseManager):
 
         self.workload.write_text(self.state.unit_server.ca, self.workload.paths.ca)
 
-    def set_ca_opensearch(self) -> bool:
+    def set_ca_opensearch(self) -> None:
         """Sets the unit CA."""
         if (
             self.state.opensearch_server
@@ -68,8 +67,6 @@ class TLSManager(BaseManager):
             self.workload.write_text(
                 self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
             )
-            return True
-        return False
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
@@ -142,6 +139,8 @@ class TLSManager(BaseManager):
         """Writes necessary data from databag to files.
         Used for when k8s pod is recreated
         Or a unit added after relation with OpenSearch was created
+        Raises:
+            OSDFileOperationError: If there was an error when writing/reading files.
         """
         if (
             self.state.opensearch_server

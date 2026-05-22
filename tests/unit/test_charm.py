@@ -205,7 +205,7 @@ def test_restart_initializes_unstarted_server(harness):
             "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm._check_osd_status"
         ) as mock_check_status,
     ):
-        handler.restart(mock_event)
+        handler.restart_on_lock_acquired(mock_event)
 
         mock_set_props.assert_called_once()
         mock_restart_server.assert_called_once()
@@ -319,7 +319,7 @@ def test_restart_sleep_no_wait_once_service_up(harness):
     # to reduce the scope of the test to the service availability delay
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
@@ -329,7 +329,7 @@ def test_restart_sleep_no_wait_once_service_up(harness):
         ),
         patch("time.sleep") as patched_sleep,
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         patched_restart.assert_called_once()
 
         # sleep() was only called to allow the service to establish
@@ -375,7 +375,8 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
     patched_timeout = 5
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT",
@@ -395,7 +396,7 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         start_time = time.time()
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         end_time = time.time()
         patched_restart.assert_called_once()
 
@@ -426,11 +427,12 @@ def test_restart_restarts_with_sleep(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch("time.sleep") as patched_sleep,
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         patched_restart.assert_called_once()
         assert patched_sleep.call_count >= 1
 
@@ -459,7 +461,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
             component_name=HEALTH_MANAGER_NAME,
@@ -503,7 +505,7 @@ def test_init_server_calls_necessary_methods_leader(harness):
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
 
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
@@ -538,7 +540,7 @@ def test_config_changed_applies_relation_data(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"
@@ -574,7 +576,8 @@ def test_workload_down_blocked_status(harness):
         patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart",
@@ -596,7 +599,7 @@ def test_workload_down_blocked_status(harness):
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
@@ -629,7 +632,7 @@ def test_service_unavailable_blocked_status(harness):
         harness.set_leader(True)
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
@@ -652,7 +655,7 @@ def test_service_unavailable_blocked_status(harness):
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNAVAILABLE.value,
@@ -698,7 +701,7 @@ def test_service_unhealthy(harness):
             return_value=opensearch_ca,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
@@ -744,7 +747,7 @@ def test_service_unhealthy(harness):
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNHEALTHY.value,
@@ -785,7 +788,7 @@ def test_service_error(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
@@ -836,7 +839,7 @@ def test_service_error(harness):
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_ERROR.value,
@@ -877,7 +880,7 @@ def test_service_available(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
@@ -924,7 +927,7 @@ def test_service_available(harness):
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         add.assert_not_called()
 
 
@@ -960,7 +963,7 @@ def test_wrong_opensearch_version(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True

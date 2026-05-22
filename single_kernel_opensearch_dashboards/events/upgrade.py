@@ -6,10 +6,18 @@
 import logging
 
 from lightkube import ApiError, Client
+from lightkube.models.authorization_v1 import (
+    ResourceAttributes,
+    SelfSubjectAccessReviewSpec,
+)
 from lightkube.resources.apps_v1 import StatefulSet
+from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
 from typing_extensions import override
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDInstallError,
+    OSDNotTrusted,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     Substrates,
@@ -53,13 +61,17 @@ class UpgradeEvents(DataUpgrade):
             "vm" if osd_state.substrate == Substrates.VM else "k8s",
         )
         self.osd_state = osd_state
+        if self.osd_state.substrate == Substrates.K8S and not self.is_charm_trusted(
+            self.charm.model.name
+        ):
+            raise OSDNotTrusted
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
         self.framework.observe(self.charm.on.upgrade_charm, self._on_k8s_upgrade_charm)
 
     def _on_k8s_upgrade_charm(self, event) -> None:
         """Handle the K8s-specific upgrade flow."""
-        if self.substrate == Substrates.VM:
+        if self.substrate == Substrates.VM.value:
             return
 
         if self.osd_state.upgrade_idle:
@@ -176,3 +188,22 @@ class UpgradeEvents(DataUpgrade):
             else:
                 cause = str(e)
             raise KubernetesClientError(message="Kubernetes StatefulSet patch failed", cause=cause)
+
+    def is_charm_trusted(self, namespace: str) -> bool:
+        """Checks if the charm has RBAC permissions to patch StatefulSets."""
+        client = Client()
+
+        resource_attrs = ResourceAttributes(
+            namespace=namespace, verb="patch", group="apps", resource="statefulsets"
+        )
+
+        review = SelfSubjectAccessReview(
+            spec=SelfSubjectAccessReviewSpec(resourceAttributes=resource_attrs)
+        )
+
+        try:
+            response = client.create(review)
+            return response.status.allowed
+        except Exception as e:
+            logger.error(f"Failed to check permissions: {e}")
+            return False

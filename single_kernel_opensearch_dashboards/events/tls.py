@@ -7,14 +7,13 @@ import base64
 import logging
 import re
 from subprocess import CalledProcessError
+from typing import Any, cast
 
 from ops import Object
-from ops.charm import ActionEvent, RelationDepartedEvent
+from ops.charm import ActionEvent, CharmBase, RelationDepartedEvent
 from ops.framework import EventBase
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDFileOperationError,
     OSDTLSMissingDataError,
@@ -43,20 +42,19 @@ class TLSEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
         tls_manager: TLSManager,
         ingress_manager: IngressManager,
     ) -> None:
-        super().__init__(
-            charm,
-            "tls",
-        )
+        super().__init__(charm, "tls")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.tls_manager = tls_manager
         self.ingress_manager = ingress_manager
-        self.certificates = TLSCertificatesRequiresV3(self.charm, CERTS_REL_NAME)
+        self.certificates = TLSCertificatesRequiresV3(
+            cast(CharmBase, cast(Any, charm)), CERTS_REL_NAME
+        )
 
         self.framework.observe(
             self.charm.on[CERTS_REL_NAME].relation_created, self._on_certs_relation_created
@@ -131,8 +129,8 @@ class TLSEvents(Object):
             return
 
         self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
-        if self.state.substrate == Substrates.K8S and self.state.ingress:
-            self.ingress_manager.ingress.provide_ingress_requirements(
+        if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
+            self.state.ingress_requirer.provide_ingress_requirements(
                 scheme="https", port=SERVER_PORT
             )
             logger.info("Updated ingress relation to use HTTPS scheme.")
@@ -189,8 +187,8 @@ class TLSEvents(Object):
         if self.state.unit_server.unit_dying:
             return
 
-        if self.state.substrate == Substrates.K8S and self.state.ingress:
-            self.ingress_manager.ingress.provide_ingress_requirements(
+        if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
+            self.state.ingress_requirer.provide_ingress_requirements(
                 scheme="http", port=SERVER_PORT
             )
             logger.info("Updated ingress relation to use HTTP scheme.")

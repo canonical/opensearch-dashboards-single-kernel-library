@@ -7,7 +7,6 @@ import logging
 import subprocess
 
 from charmlibs import pathops
-from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
@@ -17,10 +16,13 @@ from typing_extensions import override
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     OPENSEARCH_DASHBOARDS_SNAP_REVISION,
-    Substrates,
 )
 from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
-from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
+from single_kernel_opensearch_dashboards.workload.base import (
+    Paths,
+    VMPaths,
+    WorkloadBase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ class VMWorkload(WorkloadBase):
         Returns:
             Paths: An object representing the local paths, rooted at '/'.
         """
-        return Paths(pathops.LocalPath("/"), substrate=Substrates.VM)
+        return VMPaths(pathops.LocalPath("/"))
 
     @override
     def stop(self) -> None:
@@ -79,7 +81,7 @@ class VMWorkload(WorkloadBase):
         except snap.SnapError as e:
             logger.exception(str(e))
             raise
-        return self.alive()
+        return self.healthy()
 
     @override
     def configure(self, key, value) -> None:
@@ -123,28 +125,18 @@ class VMWorkload(WorkloadBase):
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_if_not_result(lambda result: True if result else False),
     )
-    def alive(self) -> bool:
-        """Checks if the main application service is active.
+    def healthy(self) -> bool:
+        """Checks if the workload is healthy.
 
         This method retries up to 5 times to confirm the service is running.
 
         Returns:
-            bool: True if the main snap application service is active, False otherwise.
+            bool: True if the workload is alive and functioning as expected, False otherwise.
         """
-        """The main application is alive."""
         try:
             return bool(self.dashboards.services[self.SNAP_APP_SERVICE]["active"])
         except KeyError:
             return False
-
-    @override
-    def healthy(self) -> bool:
-        """Checks if the workload is healthy.
-
-        Returns:
-            bool: True if the workload is alive and functioning as expected, False otherwise.
-        """
-        return self.alive()
 
     @override
     @retry(
@@ -181,13 +173,3 @@ class VMWorkload(WorkloadBase):
     def ready(self) -> bool:
         """Checks if workload is ready."""
         return True
-
-    @override
-    def copy_certs(self, path: PathProtocol) -> str | None:
-        """Copies certs to another container"""
-        return
-
-    @override
-    def remove_certs(self, local_ca_path: str) -> None:
-        """Removes certs from container"""
-        return

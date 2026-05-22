@@ -41,7 +41,6 @@ opensearch-dashboards-charms-single-kernel = { path = "single_kernel_opensearch_
 ops = "^2.23.0"
 # data_platform_libs/v1/upgrade.py
 poetry-core = "^2.1.3"
-lightkube = "0.17.0"
 # tls_certificates_interface/v3/tls_certificates.py
 cryptography = "^45.0.4"
 jsonschema = "^4.24.0"

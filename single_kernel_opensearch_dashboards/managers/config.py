@@ -66,7 +66,11 @@ class ConfigManager(BaseManager):
         )
 
     def load_dashboard_properties(self) -> dict[str, Any]:
-        """Reads built config file."""
+        """
+        Reads built config file.
+        Raises:
+            OSDFileOperationError: If there was an error when reading config.
+        """
         return yaml.load(
             self.workload.read_text(self.workload.paths.properties), yaml.UnsafeLoader
         )
@@ -126,7 +130,7 @@ class ConfigManager(BaseManager):
         ):
             properties |= {
                 "server.rewriteBasePath": True,
-                "server.basePath": f"/{self.state.ingress.base_path}",
+                "server.basePath": f"{self.state.ingress.base_path}",
             }
 
         if self.state.oauth_relation:

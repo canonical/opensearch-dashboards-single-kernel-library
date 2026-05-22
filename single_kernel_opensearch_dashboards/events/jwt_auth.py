@@ -7,9 +7,7 @@ import logging
 
 from ops import Object, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     JWT_REL_NAME,
@@ -25,13 +23,10 @@ class JwtEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
     ) -> None:
-        super().__init__(
-            charm,
-            "jwt_events",
-        )
+        super().__init__(charm, "jwt_events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.framework.observe(

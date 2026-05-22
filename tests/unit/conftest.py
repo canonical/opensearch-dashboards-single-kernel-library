@@ -38,7 +38,6 @@ def patched_pebble_restart(mocker):
 def patched_healthy(mocker):
     mocker.patch(
         "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
-        new_callable=PropertyMock,
         return_value=True,
     )
 
