@@ -303,7 +303,7 @@ async def dashboard_unavailable(
         response = requests.get(**arguments)
     except (ConnectionError, Timeout) as e:
         return True
-    return response.status_code == 503
+    return response.status_code == 503 or response.status_code == 502
 
 
 @retry(
@@ -391,7 +391,7 @@ async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> 
         # We should retry until a host could be retrieved
         if not host:
             continue
-
+        logger.info(f"Trying to reach host:{host} port:{port} path:{path} https: {https}")
         unavail = unavail and await dashboard_unavailable(ops_test, host, https, port, path)
     return unavail
 

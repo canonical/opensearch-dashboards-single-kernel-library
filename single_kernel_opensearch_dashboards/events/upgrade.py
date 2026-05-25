@@ -5,13 +5,6 @@
 """Event handler for handling OpensearchDashboards in-place upgrades."""
 import logging
 
-from lightkube import ApiError, Client
-from lightkube.models.authorization_v1 import (
-    ResourceAttributes,
-    SelfSubjectAccessReviewSpec,
-)
-from lightkube.resources.apps_v1 import StatefulSet
-from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
@@ -172,6 +165,9 @@ class UpgradeEvents(DataUpgrade):
         if self.substrate == Substrates.VM:
             return
 
+        from lightkube import ApiError, Client
+        from lightkube.resources.apps_v1 import StatefulSet
+
         try:
             patch = {"spec": {"updateStrategy": {"rollingUpdate": {"partition": partition}}}}
             Client().patch(
@@ -191,6 +187,13 @@ class UpgradeEvents(DataUpgrade):
 
     def is_charm_trusted(self, namespace: str) -> bool:
         """Checks if the charm has RBAC permissions to patch StatefulSets."""
+        from lightkube import Client
+        from lightkube.models.authorization_v1 import (
+            ResourceAttributes,
+            SelfSubjectAccessReviewSpec,
+        )
+        from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
+
         client = Client()
 
         resource_attrs = ResourceAttributes(
