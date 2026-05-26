@@ -97,18 +97,10 @@ class HealthManager(BaseManager):
 
         return False, HealthStatuses.DB_DOWN.value
 
-    def service_healthy(self) -> bool:
-        """Perform a unit-level global health check.
-
-        Returns:
-            bool: True if the underlying workload process is alive, False otherwise.
-        """
-        return self.workload.healthy()
-
     def check_unit_health(self) -> bool:
         """Returns true if OSD is healthy otherwise false"""
 
-        if not self.service_healthy():
+        if not self.workload.healthy():
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
@@ -165,7 +157,7 @@ class HealthManager(BaseManager):
 
         Returns true if OSD is healthy otherwise false
         """
-        if not self.service_healthy():
+        if not self.workload.healthy():
             self.state.add_status_to_both(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value, component=self.name
             )
@@ -192,7 +184,7 @@ class HealthManager(BaseManager):
 
         status_list: list[StatusObject] = []
 
-        if not self.service_healthy():
+        if not self.workload.healthy():
             status_list.append(HealthStatuses.WORKLOAD_IS_DOWN.value)
             # Return immediately because we cannot access the dashboards API if the service is down
             return status_list

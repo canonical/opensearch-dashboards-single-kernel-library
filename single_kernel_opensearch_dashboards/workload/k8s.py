@@ -197,20 +197,20 @@ class K8sWorkload(WorkloadBase):
             return False
         return True
 
-    def copy_certs(self, path: PathProtocol) -> str | None:
+    def write_certs(self, ca: str | None) -> str | None:
         """Copies certs to another container and returns the local path"""
         # request library is run on other container than the opensearch is located so we temporarily
-        # copy certificates and remove them after request
-        try:
-            ca_content = self.container.pull(path.as_posix()).read()
-            with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
-                local_ca_file.write(ca_content)
-                return local_ca_file.name
-        except PathError:
-            # We don't move ca if it's not exists so `requests` handles it (ignoring it for HTTP, erroring for HTTPS).
+        # write certificates and remove them after request
+        if ca is None:
             return None
 
-    def remove_certs(self, local_ca_path: str) -> None:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
+            local_ca_file.write(ca)
+            return local_ca_file.name
+
+    def remove_certs(self, local_ca_path: str | None) -> None:
         """Removes certs from container"""
+        if local_ca_path is None:
+            return
         if os.path.exists(local_ca_path):
             os.remove(local_ca_path)

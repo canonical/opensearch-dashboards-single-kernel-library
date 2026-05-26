@@ -32,6 +32,7 @@ from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
 )
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class UpgradeEvents(DataUpgrade):
         self,
         charm: TypedCharmBase[CharmConfig],
         osd_state: ClusterState,
+        workload: WorkloadBase,
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
     ) -> None:
@@ -54,6 +56,7 @@ class UpgradeEvents(DataUpgrade):
             "vm" if osd_state.substrate == Substrates.VM else "k8s",
         )
         self.osd_state = osd_state
+        self.workload = workload
         if self.osd_state.substrate == Substrates.K8S and not self.is_charm_trusted(
             self.charm.model.name
         ):
@@ -104,7 +107,7 @@ class UpgradeEvents(DataUpgrade):
         Raises:
             ClusterNotReadyError: If the workload is not running.
         """
-        if not self.health_manager.service_healthy():
+        if not self.workload.healthy():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
                 cause="Unit workload is not running",

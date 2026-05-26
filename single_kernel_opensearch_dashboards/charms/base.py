@@ -98,7 +98,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         # --- Event Handlers ---
         protocol_self = cast(StatusHandlingCharm, cast(Any, self))
         self.opensearch_dashboards_events = OpenSearchDashboardsEvents(
-            protocol_self, self.state, self.cluster_manager, self.tls_manager
+            protocol_self, self.state, self.workload, self.cluster_manager, self.tls_manager
         )
         self.jwt_events = JwtEvents(protocol_self, self.state)
         self.tls_events = TLSEvents(
@@ -112,6 +112,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             self.upgrade_events = UpgradeEvents(
                 self,
                 self.state,
+                self.workload,
                 self.upgrade_manager,
                 self.health_manager,
             )

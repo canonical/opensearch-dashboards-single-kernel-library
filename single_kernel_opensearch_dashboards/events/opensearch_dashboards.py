@@ -23,6 +23,7 @@ from single_kernel_opensearch_dashboards.core.statuses import (
 )
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 from ops import (
@@ -50,6 +51,7 @@ class OpenSearchDashboardsEvents(Object):
         self,
         charm: StatusHandlingCharm,
         state: ClusterState,
+        workload: WorkloadBase,
         cluster_manager: ClusterManager,
         tls_manager: TLSManager,
     ) -> None:
@@ -57,6 +59,7 @@ class OpenSearchDashboardsEvents(Object):
         super().__init__(charm, "opensearch-dashboards-events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
+        self.workload = workload
         self.cluster_manager = cluster_manager
         self.tls_manager = tls_manager
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -82,7 +85,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
         """Define the initial Pebble layer and start the service."""
-        if not self.cluster_manager.ready():
+        if not self.workload.ready():
             self.state.statuses.add(
                 status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
                 scope="unit",
@@ -199,7 +202,7 @@ class OpenSearchDashboardsEvents(Object):
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""
         # CONTAINER CHECK
-        if not self.cluster_manager.ready():
+        if not self.workload.ready():
             return False
 
         # PEER RELATION CHECK

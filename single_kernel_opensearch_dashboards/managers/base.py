@@ -166,9 +166,15 @@ class BaseManager(ManagerStatusProtocol):
             "timeout": REQUEST_TIMEOUT,
             "data": json.dumps(payload),
         }
+        path = None
         if self.state.substrate == Substrates.K8S:
             workload = cast(K8sWorkload, self.workload)
-            path = workload.copy_certs(cert_path)
+            cert = (
+                self.state.unit_server.ca
+                if cert_path == self.workload.paths.ca
+                else self.state.opensearch_server.tls_ca
+            )
+            path = workload.write_certs(cert)
             request_kwargs["verify"] = path
 
         try:

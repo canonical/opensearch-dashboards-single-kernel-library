@@ -49,10 +49,6 @@ class ClusterManager(BaseManager):
         self.workload.install()
         logger.info("Opensearch Dashboards installed")
 
-    def ready(self) -> bool:
-        """Checks if workload is ready"""
-        return self.workload.ready()
-
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the server manager's statuses."""
         if not recompute:
