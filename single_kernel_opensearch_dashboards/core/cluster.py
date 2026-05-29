@@ -332,7 +332,7 @@ class ClusterState(Object, StatusesStateProtocol):
         Returns:
             True if all application units in idle state. Otherwise False
         """
-        return not (s := self.upgrade_unit_states) or set(s) == {"idle"}
+        return not (s := self.upgrade_unit_states) or set(s) == {""} or  set(s) == {"idle"}
 
     @property
     def upgrade_app_units(self) -> set[Unit]:
