@@ -133,7 +133,7 @@ class ConfigManager(BaseManager):
                 "server.basePath": f"{self.state.ingress.base_path}",
             }
 
-        if self.state.oauth_relation:
+        if self.state.oauth_relation and self.state.unit_server.tls_enabled:
             properties |= {
                 "opensearch_security.auth.type": ["basicauth", "openid"],
                 "opensearch_security.auth.multiple_auth_enabled": True,
@@ -147,7 +147,7 @@ class ConfigManager(BaseManager):
                 properties |= {"opensearch_security.openid.root_ca": opensearch_ca.as_posix()}
 
         if self.state.jwt_relation:
-            if self.state.oauth_relation:
+            if self.state.oauth_relation and self.state.unit_server.tls_enabled:
                 properties["opensearch_security.auth.type"] = ["basicauth", "openid", "jwt"]
             else:
                 properties["opensearch_security.auth.type"] = ["basicauth", "jwt"]

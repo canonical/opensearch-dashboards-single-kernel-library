@@ -128,7 +128,6 @@ class TestOAuth:
         config_matrix_rest: dict,
     ):
         """Establish all the required relations."""
-        tls = config_matrix_rest["tls"]
         traefik = config_matrix_rest["traefik"]
 
         if traefik:
@@ -141,18 +140,16 @@ class TestOAuth:
         await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.certificates")
         await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
 
-        if tls:
-            if SUBSTRATE == "k8s":
-
-                await ops_test_microk8s.model.consume(
-                    f"admin/{ops_test_oauth.model_name}.certificates"
-                )
-            await ops_test_microk8s.model.integrate(f"{APP_NAME}:certificates", "certificates")
-            if traefik:
-                await ops_test_microk8s.model.integrate(
-                    f"{TRAEFIK_APP_NAME}:certificates", "certificates"
-                )
-            await ops_test_microk8s.model.wait_for_idle(timeout=1000)
+        if SUBSTRATE == "k8s":
+            await ops_test_microk8s.model.consume(
+                f"admin/{ops_test_oauth.model_name}.certificates"
+            )
+        await ops_test_microk8s.model.integrate(f"{APP_NAME}:certificates", "certificates")
+        if traefik:
+            await ops_test_microk8s.model.integrate(
+                f"{TRAEFIK_APP_NAME}:certificates", "certificates"
+            )
+        await ops_test_microk8s.model.wait_for_idle(timeout=1000)
         if SUBSTRATE == "k8s":
             await ops_test.model.create_offer(
                 "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"

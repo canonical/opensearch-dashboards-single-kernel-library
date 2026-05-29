@@ -21,10 +21,11 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     SERVER_PORT,
+    TLS_MANAGER_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import TLSStatuses
+from single_kernel_opensearch_dashboards.core.statuses import OauthStatuses, TLSStatuses
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
@@ -186,6 +187,21 @@ class TLSEvents(Object):
         # In case we have valid certificates, we keep them for smooth service function
         if self.state.unit_server.unit_dying:
             return
+
+        if self.state.oauth_relation:
+            logger.error(
+                "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
+            )
+            self.state.add_status_to_both(
+                status=OauthStatuses.NO_TLS.value,
+                component=TLS_MANAGER_NAME,
+            )
+        else:
+            self.state.delete_status_if_present(
+                status=OauthStatuses.NO_TLS.value,
+                scope="both",
+                component=TLS_MANAGER_NAME,
+            )
 
         if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
             self.state.ingress_requirer.provide_ingress_requirements(

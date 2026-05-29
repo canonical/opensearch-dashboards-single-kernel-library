@@ -13,10 +13,12 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
+    TLS_MANAGER_NAME,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
+    OauthStatuses,
     ServerStatuses,
 )
 
@@ -63,6 +65,23 @@ class OAuthEvents(Object):
             status=ServerStatuses.SERVERS_IS_DOWN.value,
             scope="app",
             component=CLUSTER_MANAGER_NAME,
+        )
+
+        if not self.state.unit_server.tls_enabled:
+            logger.error(
+                "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
+            )
+            self.state.add_status_to_both(
+                status=OauthStatuses.NO_TLS.value,
+                component=TLS_MANAGER_NAME,
+            )
+            event.defer()
+            return
+
+        self.state.delete_status_if_present(
+            status=OauthStatuses.NO_TLS.value,
+            scope="both",
+            component=TLS_MANAGER_NAME,
         )
 
         try:

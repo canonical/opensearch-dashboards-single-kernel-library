@@ -302,13 +302,16 @@ class ClusterState(Object, StatusesStateProtocol):
 
     @property
     def oauth_url(self) -> str:
-        scheme = "https" if self.unit_server.tls_enabled else "http"
         if self.ingress_relation and self.ingress.url:
             return self.ingress.url
         elif self.substrate == Substrates.VM:
             return self.url
         else:
-            return f"{scheme}://127.0.0.1:{SERVER_PORT}"
+            return (
+                f"https://{bind}:{SERVER_PORT}"
+                if (bind := self.bind_address)
+                else f"https://127.0.0.1:{SERVER_PORT}"
+            )
 
     # --- UPGRADE RELATED ---
     @property
@@ -332,7 +335,7 @@ class ClusterState(Object, StatusesStateProtocol):
         Returns:
             True if all application units in idle state. Otherwise False
         """
-        return not (s := self.upgrade_unit_states) or set(s) == {""} or  set(s) == {"idle"}
+        return not (s := self.upgrade_unit_states) or set(s) == {""} or set(s) == {"idle"}
 
     @property
     def upgrade_app_units(self) -> set[Unit]:
