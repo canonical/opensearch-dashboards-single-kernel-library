@@ -194,18 +194,15 @@ class TestOAuth:
     ):
         """Ensure that SSO works for OpenSearch Dashboards login."""
         traefik = config_matrix_rest["traefik"]
-
-        protocol = "https" if is_https_enabled(config_matrix_rest) else "http"
-
         unit = ops_test_microk8s.model.applications[APP_NAME].units[0]
         host, port, path = await get_dashboard_routing(
             ops_test_microk8s,
             unit.name,
         )
         if not traefik:
-            url = f"{protocol}://{host}:{port}{path}"
+            url = f"https://{host}:{port}{path}"
         else:
-            url = f"{protocol}://{host}{path}"
+            url = f"https://{host}{path}"
         await access_application_login_page(
             page=page,
             url=url,
