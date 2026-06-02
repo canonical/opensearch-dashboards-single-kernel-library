@@ -28,7 +28,7 @@ resources:
   opensearch-dashboards-image:
     type: oci-image
     description: OCI image for opensearch-dashboards
-    upstream-source: ghcr.io/canonical/charmed-opensearch-dashboards@sha256:d48e898c0a49ca0ddba123a4d5afbe8359bed770c59de3df8553d7fdaad10e94
+    upstream-source: ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge
 
 peers:
   dashboard_peers:
