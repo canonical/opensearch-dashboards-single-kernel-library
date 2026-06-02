@@ -60,9 +60,8 @@ class ClusterManager(BaseManager):
         if not self.state.servers:
             status_list.append(ServerStatuses.SERVERS_IS_DOWN.value)
 
-        if scope == "unit":
-            if not self.workload.ready():
-                status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
+        if scope == "unit" and not self.workload.ready():
+            status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
 
         if not self.state.opensearch_server or not self.state.opensearch_server.password:
             status_list.append(

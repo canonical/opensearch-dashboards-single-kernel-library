@@ -3,7 +3,6 @@
 # See LICENSE file for licensing details.
 
 import logging
-import os
 from pathlib import Path
 
 import pytest
@@ -11,6 +10,7 @@ import requests
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from .conftest import Flags
 from .helpers import (
     CONFIG_OPTS,
     TLS_CERTIFICATES_APP_NAME,
@@ -45,170 +45,156 @@ RESOURCE = {
     ]
 }
 
-SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 
-
-@pytest.mark.usefixtures("config_matrix_rest")
-class TestJWTAuth:
-    """Grouped tests for JWT Authentication with OpenSearch Dashboards."""
-
-    @pytest.mark.abort_on_fail
-    async def test_build_and_deploy(
-        self,
-        ops_test: OpsTest,
-        ops_test_microk8s: OpsTest,
-        charmvm: str,
-        charmk8s: str,
-        charm_base: str,
-        config_matrix_rest: dict,
-    ):
-        """Deploying all charms required for the tests, and wait for their complete setup to be done."""
-        tls = config_matrix_rest.get("tls", False)
-        traefik = config_matrix_rest.get("traefik", False)
-        if SUBSTRATE == "k8s":
-            await ops_test_microk8s.model.deploy(
-                charmk8s, application_name=APP_NAME, base=charm_base, resources=RESOURCE
-            )
-        else:
-            await ops_test_microk8s.model.deploy(
-                charmvm, application_name=APP_NAME, base=charm_base
-            )
-
-        await ops_test.model.set_config(OPENSEARCH_CONFIG)
-        config = {"ca-common-name": "CN_CA"}
-        await ops_test.model.deploy(
-            OPENSEARCH_APP_NAME,
-            channel="2/edge",
-            num_units=3,
-            config=CONFIG_OPTS,
+@pytest.mark.abort_on_fail
+async def test_build_and_deploy(
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    charm_base: str,
+    substrate: str,
+    test_flags: Flags,
+):
+    """Deploying all charms required for the tests, and wait for their complete setup to be done."""
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    tls = test_flags.tls
+    traefik = test_flags.traefik
+    if substrate == "k8s":
+        await ops_test_microk8s.model.deploy(
+            charmk8s, application_name=app_name, base=charm_base, resources=RESOURCE
         )
+    else:
+        await ops_test_microk8s.model.deploy(charmvm, application_name=app_name, base=charm_base)
 
-        # TLS is still deployed on the VM model as it's required by OpenSearch
-        await ops_test.model.deploy(
-            TLS_CERTIFICATES_APP_NAME, channel=TLS_STABLE_CHANNEL, config=config
-        )
-        await ops_test.model.deploy(JWT_APP_NAME, channel="1/edge")
-        await ops_test.model.wait_for_idle(apps=[TLS_CERTIFICATES_APP_NAME], status="active")
+    await ops_test.model.set_config(OPENSEARCH_CONFIG)
+    config = {"ca-common-name": "CN_CA"}
+    await ops_test.model.deploy(
+        OPENSEARCH_APP_NAME,
+        channel="2/edge",
+        num_units=3,
+        config=CONFIG_OPTS,
+    )
 
-        logger.info(f"Integrating {OPENSEARCH_APP_NAME} with {TLS_CERTIFICATES_APP_NAME}")
-        await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
-        await ops_test.model.wait_for_idle(
-            apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME],
-            status="active",
-        )
+    # TLS is still deployed on the VM model as it's required by OpenSearch
+    await ops_test.model.deploy(
+        TLS_CERTIFICATES_APP_NAME, channel=TLS_STABLE_CHANNEL, config=config
+    )
+    await ops_test.model.deploy(JWT_APP_NAME, channel="1/edge")
+    await ops_test.model.wait_for_idle(apps=[TLS_CERTIFICATES_APP_NAME], status="active")
 
-        if SUBSTRATE == "k8s":
-            await ops_test.model.create_offer(
-                "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
-            )
-            await ops_test.model.create_offer(JWT_REL_NAME, JWT_APP_NAME, "jwt-integrator")
-            await ops_test_microk8s.model.consume(
-                f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}"
-            )
-            await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{JWT_APP_NAME}")
+    logger.info(f"Integrating {OPENSEARCH_APP_NAME} with {TLS_CERTIFICATES_APP_NAME}")
+    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME],
+        status="active",
+    )
 
-            if tls:
-                await ops_test.model.create_offer(
-                    endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
-                    offer_name="self-signed-certificates",
-                )
-                await ops_test_microk8s.model.consume(
-                    f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
-                )
-
-        logger.info(f"Integrating {APP_NAME} with {OPENSEARCH_APP_NAME}")
-        await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
-
-        logger.info("Create JWT configuration")
-        global generated_jwt
-        generated_jwt = generate_json_web_token()
-
-        secret_name = "jwt-signing-key"
-        secret_id = await ops_test.model.add_secret(
-            name=secret_name, data_args=[f"signing-key={generated_jwt['signing-key']}"]
-        )
-        await ops_test.model.grant_secret(secret_name=secret_name, application=JWT_APP_NAME)
-
-        jwt_config = {
-            "signing-key": secret_id,
-            "roles-key": "role",
-            "subject-key": "user",
-            "jwt-url-parameter": "jwt",
-        }
-        await ops_test.model.applications[JWT_APP_NAME].set_config(jwt_config)
-
-        logger.info(f"Integrating {OPENSEARCH_APP_NAME} with {JWT_APP_NAME}")
-        await ops_test.model.integrate(JWT_APP_NAME, OPENSEARCH_APP_NAME)
-        await ops_test.model.wait_for_idle(
-            apps=[OPENSEARCH_APP_NAME, JWT_APP_NAME], status="active"
-        )
-
-        logger.info(f"Integrating {APP_NAME} with {JWT_APP_NAME}")
-        await ops_test_microk8s.model.integrate(JWT_APP_NAME, APP_NAME)
-
-        if SUBSTRATE == "k8s":
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME], status="blocked", timeout=1000
-            )
-        else:
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME], status="active", timeout=1000
-            )
-
-        if traefik:
-            await ops_test_microk8s.model.deploy(
-                TRAEFIK_APP_NAME, channel="latest/stable", trust=True
-            )
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
-            )
-            await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
+    if substrate == "k8s":
+        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
+        await ops_test.model.create_offer(JWT_REL_NAME, JWT_APP_NAME, "jwt-integrator")
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{JWT_APP_NAME}")
 
         if tls:
-            await ops_test_microk8s.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
-            if traefik:
-                await ops_test_microk8s.model.integrate(
-                    TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
-                )
+            await ops_test.model.create_offer(
+                endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
+                offer_name="self-signed-certificates",
+            )
+            await ops_test_microk8s.model.consume(
+                f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
+            )
 
-        await wait_for_dashboard_idle(ops_test_microk8s, traefik)
-        await ops_test.model.wait_for_idle(apps=[JWT_APP_NAME], status="active")
+    logger.info(f"Integrating {app_name} with {OPENSEARCH_APP_NAME}")
+    await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
 
-    @pytest.mark.abort_on_fail
-    async def test_dashboard_access(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
-    ):
-        """Test access to dashboard unit with JWT and basic auth."""
-        tls = config_matrix_rest.get("tls", False)
-        traefik = config_matrix_rest.get("traefik", False)
+    logger.info("Create JWT configuration")
+    global generated_jwt
+    generated_jwt = generate_json_web_token()
 
-        # Calculate protocol depending on tls/traefik state
-        protocol = "https" if is_https_enabled(config_matrix_rest) else "http"
-        unit = ops_test_microk8s.model.applications[APP_NAME].units[0]
-        host, port, path = await get_dashboard_routing(
-            ops_test_microk8s,
-            unit.name,
+    secret_name = "jwt-signing-key"
+    secret_id = await ops_test.model.add_secret(
+        name=secret_name, data_args=[f"signing-key={generated_jwt['signing-key']}"]
+    )
+    await ops_test.model.grant_secret(secret_name=secret_name, application=JWT_APP_NAME)
+
+    jwt_config = {
+        "signing-key": secret_id,
+        "roles-key": "role",
+        "subject-key": "user",
+        "jwt-url-parameter": "jwt",
+    }
+    await ops_test.model.applications[JWT_APP_NAME].set_config(jwt_config)
+
+    logger.info(f"Integrating {OPENSEARCH_APP_NAME} with {JWT_APP_NAME}")
+    await ops_test.model.integrate(JWT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME, JWT_APP_NAME], status="active")
+
+    logger.info(f"Integrating {app_name} with {JWT_APP_NAME}")
+    await ops_test_microk8s.model.integrate(JWT_APP_NAME, app_name)
+
+    if substrate == "k8s":
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], status="blocked", timeout=1000
         )
-        url = f"{protocol}://{host}:{port}{path}/api/status"
+    else:
+        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
-        logger.info(f"Test access with JWT to {url}")
-        jwt_result = requests.get(
-            url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
+    if traefik:
+        await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
         )
-        assert jwt_result.status_code == 200, "Request failed"
-        logger.info("Access with JWT successful")
+        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
 
-        logger.info(f"Remove relation of {JWT_APP_NAME} with {APP_NAME}")
-        await ops_test_microk8s.juju("remove-relation", JWT_APP_NAME, APP_NAME)
+    if tls:
+        await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        if traefik:
+            await ops_test_microk8s.model.integrate(
+                TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
+            )
 
-        logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
-        await ops_test.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
+    await wait_for_dashboard_idle(ops_test_microk8s, traefik)
+    await ops_test.model.wait_for_idle(apps=[JWT_APP_NAME], status="active")
 
-        await wait_for_dashboard_idle(ops_test_microk8s, traefik, 60)
-        logger.info("Test access with JWT after disabling")
-        jwt_result = requests.get(
-            url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
-        )
-        assert jwt_result.status_code == 401, "`Unauthorized` error expected"
-        logger.info("Access with JWT failed as expected")
+
+@pytest.mark.abort_on_fail
+async def test_dashboard_access(
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    substrate: str,
+    test_flags: Flags,
+):
+    """Test access to dashboard unit with JWT and basic auth."""
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    traefik = test_flags.traefik
+
+    # Calculate protocol depending on tls/traefik state
+    protocol = "https" if is_https_enabled(test_flags) else "http"
+    unit = ops_test_microk8s.model.applications[app_name].units[0]
+    host, port, path = await get_dashboard_routing(
+        ops_test_microk8s,
+        unit.name,
+    )
+    url = f"{protocol}://{host}:{port}{path}/api/status"
+
+    logger.info(f"Test access with JWT to {url}")
+    jwt_result = requests.get(
+        url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
+    )
+    assert jwt_result.status_code == 200, "Request failed"
+    logger.info("Access with JWT successful")
+
+    logger.info(f"Remove relation of {JWT_APP_NAME} with {app_name}")
+    await ops_test_microk8s.juju("remove-relation", JWT_APP_NAME, app_name)
+
+    logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
+    await ops_test.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
+
+    await wait_for_dashboard_idle(ops_test_microk8s, traefik, 60)
+    logger.info("Test access with JWT after disabling")
+    jwt_result = requests.get(
+        url, headers={"Authorization": f"Bearer {generated_jwt['token']}"}, verify=False
+    )
+    assert jwt_result.status_code == 401, "`Unauthorized` error expected"
+    logger.info("Access with JWT failed as expected")

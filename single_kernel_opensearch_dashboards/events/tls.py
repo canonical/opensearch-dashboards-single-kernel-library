@@ -32,7 +32,7 @@ from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.managers.ingres import IngressManager
+from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
@@ -194,12 +194,6 @@ class TLSEvents(Object):
             )
             self.state.add_status_to_both(
                 status=OauthStatuses.NO_TLS.value,
-                component=TLS_MANAGER_NAME,
-            )
-        else:
-            self.state.delete_status_if_present(
-                status=OauthStatuses.NO_TLS.value,
-                scope="both",
                 component=TLS_MANAGER_NAME,
             )
 

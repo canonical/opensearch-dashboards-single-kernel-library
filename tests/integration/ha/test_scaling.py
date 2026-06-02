@@ -3,12 +3,13 @@
 # See LICENSE file for licensing details.
 
 import logging
-import os
 from pathlib import Path
 
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
+
+from tests.integration.conftest import Flags
 
 from ..helpers import (
     CONFIG_OPTS,
@@ -23,8 +24,6 @@ logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
-SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
@@ -59,14 +58,16 @@ class TestScaling:
         charmk8s: str,
         charm_base: str,
         dashboard_tester_charm: str,
-        config_matrix_rest: dict,
+        substrate: str,
+        test_flags: Flags,
     ):
         """Deploying all charms required for the tests, and wait for complete setup."""
-        tls = config_matrix_rest["tls"]
-        traefik = config_matrix_rest["traefik"]
+        app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+        tls = test_flags.tls
+        traefik = test_flags.traefik
 
-        deploy_kwargs = {"application_name": APP_NAME, "num_units": 1, "base": charm_base}
-        if SUBSTRATE == "k8s":
+        deploy_kwargs = {"application_name": app_name, "num_units": 1, "base": charm_base}
+        if substrate == "k8s":
             deploy_kwargs["resources"] = RESOURCE
         else:
             deploy_kwargs["base"] = charm_base
@@ -92,7 +93,7 @@ class TestScaling:
         )
 
         # 2. Deploy Dashboards Charm
-        if SUBSTRATE == "k8s":
+        if substrate == "k8s":
             await ops_test.model.create_offer(
                 "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
             )
@@ -116,46 +117,46 @@ class TestScaling:
                 TRAEFIK_APP_NAME, channel="latest/stable", trust=True
             )
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[APP_NAME], status="blocked", timeout=1000, idle_period=30
+            apps=[app_name], status="blocked", timeout=1000, idle_period=30
         )
-        pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
+        pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
         await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
         )
 
         if traefik:
-            await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
+            await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
             )
 
         if tls:
-            await ops_test_microk8s.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
+            await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
             if traefik:
                 await ops_test_microk8s.model.integrate(
                     TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
                 )
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
+                    apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
                 )
-            elif not SUBSTRATE == "k8s" or traefik:
+            elif not substrate == "k8s" or traefik:
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[APP_NAME], status="active", timeout=1000
+                    apps=[app_name], status="active", timeout=1000
                 )
             else:
                 await ops_test_microk8s.model.deploy(
                     dashboard_tester_charm, application_name=DUMMY_CHARM
                 )
                 await ops_test_microk8s.model.wait_for_idle(
-                    apps=[APP_NAME], status="blocked", timeout=1000
+                    apps=[app_name], status="blocked", timeout=1000
                 )
-        elif SUBSTRATE == "k8s" and not traefik:
+        elif substrate == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME], status="blocked", timeout=1000
+                apps=[app_name], status="blocked", timeout=1000
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME], wait_for_active=True, timeout=1000
+                apps=[app_name], wait_for_active=True, timeout=1000
             )
 
     ##############################################################################
@@ -167,26 +168,28 @@ class TestScaling:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         amount: int,
-        config_matrix_rest: dict,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that newly added units are functional."""
-        init_units_count = len(ops_test_microk8s.model.applications[APP_NAME].units)
+        app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+        traefik = test_flags.traefik
+        init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
         expected = init_units_count + amount
-        traefik = config_matrix_rest["traefik"]
-        https = is_https_enabled(config_matrix_rest)
+        https = is_https_enabled(test_flags)
 
         # scale up
-        if SUBSTRATE == "k8s":
+        if substrate == "k8s":
             logger.info(f"Adding units to {expected}")
-            await ops_test_microk8s.model.applications[APP_NAME].scale(expected)
+            await ops_test_microk8s.model.applications[app_name].scale(expected)
         else:
             logger.info(f"Adding {amount} units")
-            await ops_test_microk8s.model.applications[APP_NAME].add_unit(count=amount)
+            await ops_test_microk8s.model.applications[app_name].add_unit(count=amount)
 
         logger.info(f"Waiting for {amount} units to be added and stable")
-        if SUBSTRATE == "k8s" and not traefik:
+        if substrate == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME],
+                apps=[app_name],
                 status="blocked",
                 wait_for_exact_units=expected,
                 timeout=1000,
@@ -194,14 +197,14 @@ class TestScaling:
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME],
+                apps=[app_name],
                 status="active",
                 wait_for_exact_units=expected,
                 timeout=1000,
                 idle_period=30,
             )
 
-        num_units = len(ops_test_microk8s.model.applications[APP_NAME].units)
+        num_units = len(ops_test_microk8s.model.applications[app_name].units)
         assert num_units == expected
 
         logger.info("Checking the functionality of the new units")
@@ -213,29 +216,31 @@ class TestScaling:
         ops_test: OpsTest,
         ops_test_microk8s: OpsTest,
         unit_ids: list[int],
-        config_matrix_rest: dict,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that decreasing units keeps functionality."""
-        init_units_count = len(ops_test_microk8s.model.applications[APP_NAME].units)
+        app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+        traefik = test_flags.traefik
+        https = is_https_enabled(test_flags)
+        init_units_count = len(ops_test_microk8s.model.applications[app_name].units)
         amount = len(unit_ids)
         expected = init_units_count - amount
-        traefik = config_matrix_rest["traefik"]
-        https = is_https_enabled(config_matrix_rest)
 
         # scale down
-        if SUBSTRATE == "k8s":
+        if substrate == "k8s":
             logger.info(f"Removing units to {expected}")
-            await ops_test_microk8s.model.applications[APP_NAME].scale(expected)
+            await ops_test_microk8s.model.applications[app_name].scale(expected)
         else:
             logger.info(f"Removing units {unit_ids}")
-            await ops_test_microk8s.model.applications[APP_NAME].destroy_unit(
-                *[f"{APP_NAME}/{cnt}" for cnt in unit_ids]
+            await ops_test_microk8s.model.applications[app_name].destroy_unit(
+                *[f"{app_name}/{cnt}" for cnt in unit_ids]
             )
 
         logger.info(f"Waiting for units {unit_ids} to be removed safely")
-        if SUBSTRATE == "k8s" and not traefik:
+        if substrate == "k8s" and not traefik:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME],
+                apps=[app_name],
                 status="blocked",
                 wait_for_exact_units=expected,
                 timeout=1000,
@@ -243,14 +248,14 @@ class TestScaling:
             )
         else:
             await ops_test_microk8s.model.wait_for_idle(
-                apps=[APP_NAME],
+                apps=[app_name],
                 status="active",
                 wait_for_exact_units=expected,
                 timeout=1000,
                 idle_period=30,
             )
 
-        num_units = len(ops_test_microk8s.model.applications[APP_NAME].units)
+        num_units = len(ops_test_microk8s.model.applications[app_name].units)
         assert num_units == expected
 
         logger.info("Checking the functionality of the remaining units")
@@ -266,48 +271,68 @@ class TestScaling:
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_up(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
+        self,
+        ops_test: OpsTest,
+        ops_test_microk8s: OpsTest,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that newly added units are functional."""
         await self.scale_up(
-            ops_test,
-            ops_test_microk8s,
+            ops_test=ops_test,
+            ops_test_microk8s=ops_test_microk8s,
             amount=2,
-            config_matrix_rest=config_matrix_rest,
+            substrate=substrate,
+            test_flags=test_flags,
         )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_down(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
+        self,
+        ops_test: OpsTest,
+        ops_test_microk8s: OpsTest,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that decreasing units keeps functionality."""
         await self.scale_down(
-            ops_test,
-            ops_test_microk8s,
+            ops_test=ops_test,
+            ops_test_microk8s=ops_test_microk8s,
             unit_ids=[1, 2],
-            config_matrix_rest=config_matrix_rest,
+            substrate=substrate,
+            test_flags=test_flags,
         )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_down_to_zero(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
+        self,
+        ops_test: OpsTest,
+        ops_test_microk8s: OpsTest,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that scaling down to 0 units is possible."""
         await self.scale_down(
-            ops_test,
-            ops_test_microk8s,
+            ops_test=ops_test,
+            ops_test_microk8s=ops_test_microk8s,
             unit_ids=[0],
-            config_matrix_rest=config_matrix_rest,
+            substrate=substrate,
+            test_flags=test_flags,
         )
 
     @pytest.mark.abort_on_fail
     async def test_horizontal_scale_up_from_zero(
-        self, ops_test: OpsTest, ops_test_microk8s: OpsTest, config_matrix_rest: dict
+        self,
+        ops_test: OpsTest,
+        ops_test_microk8s: OpsTest,
+        substrate: str,
+        test_flags: Flags,
     ) -> None:
         """Testing that scaling up from zero units works."""
         await self.scale_up(
-            ops_test,
-            ops_test_microk8s,
+            ops_test=ops_test,
+            ops_test_microk8s=ops_test_microk8s,
             amount=3,
-            config_matrix_rest=config_matrix_rest,
+            substrate=substrate,
+            test_flags=test_flags,
         )

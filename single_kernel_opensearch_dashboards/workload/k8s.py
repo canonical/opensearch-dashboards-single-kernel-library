@@ -20,14 +20,39 @@ from single_kernel_opensearch_dashboards.common.literals import (
     EXPORTER_SERVICE,
     LAYER_NAME,
     OSD_SERVICE,
+    OpenSearchDashboardsPaths,
 )
 from single_kernel_opensearch_dashboards.workload.base import (
-    K8sPaths,
     Paths,
     WorkloadBase,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class K8sPaths(Paths):
+    """K8s specific paths for Opensearch Dashboards."""
+
+    # DYNAMIC BASE PATHS
+    @property
+    def data(self) -> PathProtocol:
+        """The base directory where Opensearch Dashboards will store data."""
+        return self.root / OpenSearchDashboardsPaths.DATA
+
+    @property
+    def config_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store configs."""
+        return self.root / OpenSearchDashboardsPaths.CONF
+
+    @property
+    def bin_dir(self) -> PathProtocol:
+        """The directory containing Opensearch Dashboards binaries."""
+        return self.root / OpenSearchDashboardsPaths.BIN
+
+    @property
+    def log_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store logs."""
+        return self.root / OpenSearchDashboardsPaths.LOGS
 
 
 class K8sWorkload(WorkloadBase):

@@ -1,10 +1,8 @@
-summary: test_charm.py
+summary: test_process_interrupt.py
 environment:
-  TEST_MODULE: test_charm.py
-  TEST_TRAEFIK_TRUST: true
+  TEST_MODULE: ha/test_process_interrupt.py
   TEST_TLS: true
-  TRANSFER_TRAEFIK_CA: true
-  SUBSTRATE: "k8s"
+  SUBSTRATE: "vm"
 
 execute: |
   tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"

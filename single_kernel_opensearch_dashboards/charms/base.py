@@ -53,7 +53,7 @@ from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
 from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
-from single_kernel_opensearch_dashboards.managers.ingres import IngressManager
+from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import UpgradeManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -86,7 +86,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         # --- Managers ---
         self.tls_manager = TLSManager(self.state, self.workload)
         self.health_manager = HealthManager(self.state, self.workload)
-        self.ingress_manager = IngressManager(self, self.state, self.workload)
+        self.ingress_manager = IngressManager(self.state, self.workload)
         self.config_manager = ConfigManager(self.state, self.workload)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)

@@ -2,7 +2,7 @@ import logging
 import os
 import subprocess
 from asyncio import sleep
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Literal
 
 import pytest
 from pytest_operator.plugin import OpsTest
@@ -23,9 +23,14 @@ def opensearch_sysctl_settings():
 
 
 @pytest.fixture(scope="session")
-def substrate():
+def substrate() -> Literal["k8s", "vm"]:
     """Returns the substrate"""
-    return os.environ.get("SUBSTRATE", "vm").lower()
+    sub = os.environ.get("SUBSTRATE", "vm").lower()
+    if sub not in ("k8s", "vm"):
+        raise ValueError(
+            f"Substrate has invalid value. Correct values are k8s, vm. Current value {sub}."
+        )
+    return sub
 
 
 @pytest.fixture
@@ -74,21 +79,17 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture(scope="class")
-def config_matrix_charm():
-    """Fixture to provide TLS and Traefik configuration groups from Spread."""
-    tls_enabled = os.environ.get("TEST_TLS", "false").lower() == "true"
-    traefik_trust_enabled = os.environ.get("TEST_TRAEFIK_TRUST", "false").lower() == "true"
-    traefik_enabled = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
-    return {"tls": tls_enabled, "traefik": traefik_enabled, "traefik_trust": traefik_trust_enabled}
+class Flags:
+    def __init__(self):
+        self.tls = os.environ.get("TEST_TLS", "false").lower() == "true"
+        self.traefik = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
+        self.transfer_traefik_ca = os.environ.get("TRANSFER_TRAEFIK_CA", "false").lower() == "true"
 
 
 @pytest.fixture(scope="class")
-def config_matrix_rest():
+def test_flags() -> Flags:
     """Fixture to provide TLS and Traefik configuration groups from Spread."""
-    tls_enabled = os.environ.get("TEST_TLS", "false").lower() == "true"
-    traefik_enabled = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
-    return {"tls": tls_enabled, "traefik": traefik_enabled}
+    return Flags()
 
 
 @pytest.fixture(scope="module")

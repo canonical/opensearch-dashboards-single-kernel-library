@@ -27,6 +27,8 @@ from tenacity import (
     wait_fixed,
 )
 
+from .conftest import Flags
+
 METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
 METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
@@ -82,14 +84,14 @@ DASHBOARD_QUERY_PARAMS = {
 }
 
 
-def is_https_enabled(config_matrix: dict) -> bool:
+def is_https_enabled(flags: Flags) -> bool:
     """Centralized logic to determine if HTTPS is expected based on matrix and substrate."""
-    tls = config_matrix.get("tls", False)
-    traefik = config_matrix.get("traefik", False)
-    traefik_trust = config_matrix.get("traefik_trust", False)
+    tls = flags.tls
+    traefik = flags.traefik
+    transfer_traefik_ca = flags.transfer_traefik_ca
 
     if SUBSTRATE == "k8s":
-        return (traefik and tls and not traefik_trust) or (tls and not traefik)
+        return (traefik and tls and not transfer_traefik_ca) or (tls and not traefik)
     return tls
 
 

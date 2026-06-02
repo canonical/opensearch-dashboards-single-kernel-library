@@ -7,6 +7,7 @@ import logging
 import subprocess
 
 from charmlibs import pathops
+from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
@@ -15,16 +16,66 @@ from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
+    BASE_SNAP_DIR,
     OPENSEARCH_DASHBOARDS_SNAP_REVISION,
+    SNAP,
+    SNAP_COMMON,
+    SNAP_DATA,
+    OpenSearchDashboardsPaths,
 )
 from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
 from single_kernel_opensearch_dashboards.workload.base import (
     Paths,
-    VMPaths,
     WorkloadBase,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class VMPaths(Paths):
+    """VM (Snap) specific paths for Opensearch Dashboards."""
+
+    # SNAP-SPECIFIC PATHS
+    @property
+    def base_snap_dir(self) -> PathProtocol:
+        """Return path to the Base snap directory."""
+        return self.root / BASE_SNAP_DIR
+
+    @property
+    def snap_current(self) -> PathProtocol:
+        """Return path to the snap data directory."""
+        return self.base_snap_dir / SNAP_DATA
+
+    @property
+    def snap_common(self) -> PathProtocol:
+        """Return path to the snap common directory."""
+        return self.base_snap_dir / SNAP_COMMON
+
+    @property
+    def snap(self) -> PathProtocol:
+        """Return path to the snap directory."""
+        return self.root / SNAP
+
+    # DYNAMIC BASE PATHS
+    @property
+    def data(self) -> PathProtocol:
+        """The base directory where Opensearch Dashboards will store data."""
+        return self.snap_common / OpenSearchDashboardsPaths.DATA
+
+    @property
+    def config_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store configs."""
+        return self.snap_current / OpenSearchDashboardsPaths.CONF
+
+    @property
+    def bin_dir(self) -> PathProtocol:
+        """The directory containing Opensearch Dashboards binaries."""
+        return self.snap / OpenSearchDashboardsPaths.BIN
+
+    @property
+    def log_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store logs."""
+        return self.snap_common / OpenSearchDashboardsPaths.LOGS
 
 
 class VMWorkload(WorkloadBase):

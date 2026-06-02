@@ -6,13 +6,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ServerStatuses,
-)
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
-    TypedCharmBase,
 )
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -21,11 +17,8 @@ from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 class IngressManager(BaseManager):
     """Ingress manager for k8s."""
 
-    def __init__(
-        self, charm: TypedCharmBase[CharmConfig], state: ClusterState, workload: WorkloadBase
-    ) -> None:
+    def __init__(self, state: ClusterState, workload: WorkloadBase) -> None:
         super().__init__(state, workload)
-        self.charm = charm
         self.name = INGRESS_MANAGER_NAME
 
         if self.state.substrate == Substrates.VM:

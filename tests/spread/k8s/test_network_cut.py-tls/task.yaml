@@ -1,9 +1,7 @@
-summary: test_charm.py
+summary: test_network_cut.py
 environment:
-  TEST_MODULE: test_charm.py
-  TEST_TRAEFIK_TRUST: true
+  TEST_MODULE: ha/test_network_cut.py
   TEST_TLS: true
-  TRANSFER_TRAEFIK_CA: true
   SUBSTRATE: "k8s"
 
 execute: |

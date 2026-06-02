@@ -4,13 +4,14 @@
 
 import asyncio
 import logging
-import os
 from pathlib import Path
 
 import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, wait_fixed
+
+from tests.integration.conftest import Flags, test_flags
 
 from ..helpers import (
     CONFIG_OPTS,
@@ -54,11 +55,6 @@ K8s_CONFIG = {
 
 OPENSEARCH_RELATION_NAME = "opensearch-client"
 TLS_CERT_APP_NAME = "self-signed-certificates"
-
-SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
-
-APP_AND_TLS = [APP_NAME, TLS_CERT_APP_NAME]
 PEER = "dashboard_peers"
 SERVER_PORT = 5601
 
@@ -76,28 +72,35 @@ RESOURCE = {
 
 
 @pytest.fixture()
-async def restart_delay(ops_test: OpsTest, ops_test_microk8s: OpsTest):
-    if ops_test.model.name != ops_test_microk8s.model.name:
+async def restart_delay(ops_test: OpsTest, ops_test_microk8s: OpsTest, substrate: str):
+    if substrate == "k8s":
         return
-
-    for unit in ops_test.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[METADATA_VM["name"]].units:
         await patch_restart_delay(ops_test=ops_test, unit_name=unit.name, delay=RESTART_DELAY)
     yield
-    for unit in ops_test.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[METADATA_VM["name"]].units:
         await remove_restart_delay(ops_test=ops_test, unit_name=unit.name)
 
 
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, charmvm: str, charmk8s: str, charm_base: str
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    charm_base: str,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Tests that the charm deploys safely"""
-    if SUBSTRATE == "k8s":
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    tls = test_flags.tls
+    if substrate == "k8s":
         await ops_test_microk8s.model.set_config(K8s_CONFIG)
         await ops_test_microk8s.model.deploy(
             charmk8s,
-            application_name=APP_NAME,
+            application_name=app_name,
             num_units=NUM_UNITS_APP,
             base=charm_base,
             resources=RESOURCE,
@@ -105,7 +108,7 @@ async def test_build_and_deploy(
 
     else:
         await ops_test_microk8s.model.deploy(
-            charmvm, application_name=APP_NAME, num_units=NUM_UNITS_APP, base=charm_base
+            charmvm, application_name=app_name, num_units=NUM_UNITS_APP, base=charm_base
         )
 
     # Opensearch
@@ -130,29 +133,54 @@ async def test_build_and_deploy(
     # Opensearch Dashboards
     async with ops_test_microk8s.fast_forward():
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[APP_NAME],
+            apps=[app_name],
             wait_for_exact_units=NUM_UNITS_APP,
             timeout=1000,
             idle_period=30,
         )
 
-    assert ops_test_microk8s.model.applications[APP_NAME].status == "blocked"
+    assert ops_test_microk8s.model.applications[app_name].status == "blocked"
 
-    if SUBSTRATE == "k8s":
+    if substrate == "k8s":
         await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
         await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
         await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
         await ops_test_microk8s.model.wait_for_idle(
-            apps=[APP_NAME], status="blocked", timeout=1000
+            apps=[app_name], status="blocked", timeout=1000
         )
 
-    pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
-    if SUBSTRATE == "k8s":
-        await ops_test_microk8s.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
-    await ops_test_microk8s.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+    pytest.relation = await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
+    if substrate == "k8s":
+        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
+    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
+
+    if tls:
+        logger.info("Initializing TLS Charm connections")
+        if substrate == "k8s":
+            await ops_test.model.create_offer(
+                "certificates", TLS_CERT_APP_NAME, "self-signed-certificates"
+            )
+            await ops_test_microk8s.model.consume(
+                f"admin/{ops_test.model_name}.{TLS_CERT_APP_NAME}"
+            )
+            await ops_test_microk8s.model.integrate(
+                f"{TLS_CERT_APP_NAME}:certificates", TRAEFIK_APP_NAME
+            )
+
+        await ops_test_microk8s.model.integrate(app_name, TLS_CERT_APP_NAME)
+
+        await ops_test.model.wait_for_idle(
+            apps=[TLS_CERT_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
+        )
+        await ops_test_microk8s.model.wait_for_idle(
+            apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT
+        )
+
+        logger.info("Checking Dashboard access after TLS is configured")
+        assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True, verify=True)
 
 
 ##############################################################################
@@ -165,16 +193,19 @@ async def _recover_from_signal(
     ops_test_microk8s: OpsTest,
     signal: str,
     units: list[str],
+    app_name: str,
+    substrate: str,
+    test_flags: Flags,
     pid: bool = False,
-    app_name: str = APP_NAME,
     https: bool = False,
     verify: bool = False,
 ):
+    dash_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     container = ""
-    if app_name == APP_NAME and SUBSTRATE == "k8s":
+    if app_name == dash_name and substrate == "k8s":
         container = "opensearch-dashboards"
     pid_list = {}
-    if SUBSTRATE == "k8s" and signal != "SIGSTOP" and pid:
+    if substrate == "k8s" and signal != "SIGSTOP" and pid:
         for unit in units:
             pid_list[unit] = await get_service_pid(ops_test_microk8s, unit)
 
@@ -192,7 +223,7 @@ async def _recover_from_signal(
                 ]
             )
 
-            if SUBSTRATE == "k8s" and signal != "SIGSTOP" and pid:
+            if substrate == "k8s" and signal != "SIGSTOP" and pid:
                 logger.info(f"Asserting {app_name}:{units} service pid is changed")
                 for unit in units:
                     current_pid = await get_service_pid(ops_test_microk8s, unit)
@@ -211,7 +242,7 @@ async def _recover_from_signal(
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
-    if app_name == APP_NAME:
+    if app_name == dash_name:
         await ops_test_microk8s.model.wait_for_idle(
             apps=[app_name], wait_for_active=True, timeout=1000
         )
@@ -227,185 +258,144 @@ async def _recover_from_signal(
 
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
-async def test_signal_opensearch_process_leader(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
-):
-    """Signals OSD leader process and checks recovery + re-election."""
-    db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
-    await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, [db_leader_name], app_name=OPENSEARCH_APP_NAME
-    )
-
-
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
-@pytest.mark.abort_on_fail
-async def test_sigstop_opensearch_process_leader(ops_test: OpsTest, ops_test_microk8s: OpsTest):
-    """Signals Opensearch leader process and checks recovery + re-election."""
-    db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
-    await _recover_from_signal(
-        ops_test, ops_test_microk8s, "SIGSTOP", [db_leader_name], app_name=OPENSEARCH_APP_NAME
-    )
-
-
-@pytest.mark.abort_on_fail
-@pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
-async def test_signal_dashboard_process_leader(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
-):
-    """Signals OSD leader process and checks recovery + re-election."""
-    leader_name = await get_leader_name(ops_test_microk8s, APP_NAME)
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, [leader_name])
-
-
-@pytest.mark.abort_on_fail
-@pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
-async def test_signal_opensearch_process_cluster(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
-):
-    """Signals Opensearch leader process and checks recovery + re-election."""
-    db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
-    await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, db_units, app_name=OPENSEARCH_APP_NAME
-    )
-
-
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
-@pytest.mark.abort_on_fail
-async def test_sigstop_opensearch_process_cluster(ops_test: OpsTest, ops_test_microk8s: OpsTest):
-    """Signals Opensearch leader process and checks recovery + re-election."""
-    db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
-    await _recover_from_signal(
-        ops_test, ops_test_microk8s, "SIGSTOP", db_units, app_name=OPENSEARCH_APP_NAME
-    )
-
-
-@pytest.mark.abort_on_fail
-@pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
-async def test_signal_dashboard_process_cluster(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
-):
-    """Signals OSD leader process and checks recovery + re-election."""
-    units = [unit.name for unit in ops_test_microk8s.model.applications[APP_NAME].units]
-    await _recover_from_signal(ops_test, ops_test_microk8s, signal, units)
-
-
-##############################################################################
-
-
-@pytest.mark.abort_on_fail
-async def test_set_tls(ops_test: OpsTest, ops_test_microk8s: OpsTest):
-    """Not a real test but a separate stage to start TLS testing"""
-    logger.info("Initializing TLS Charm connections")
-    if SUBSTRATE == "k8s":
-        await ops_test.model.create_offer(
-            "certificates", TLS_CERT_APP_NAME, "self-signed-certificates"
-        )
-        await ops_test_microk8s.model.consume(f"admin/{ops_test.model_name}.{TLS_CERT_APP_NAME}")
-        await ops_test_microk8s.model.integrate(
-            f"{TLS_CERT_APP_NAME}:certificates", TRAEFIK_APP_NAME
-        )
-
-    await ops_test_microk8s.model.integrate(APP_NAME, TLS_CERT_APP_NAME)
-
-    await ops_test.model.wait_for_idle(
-        apps=[TLS_CERT_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
-    )
-    await ops_test_microk8s.model.wait_for_idle(
-        apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
-    )
-
-    logger.info("Checking Dashboard access after TLS is configured")
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=True, verify=True)
-
-
-##############################################################################
-
-
-@pytest.mark.abort_on_fail
-@pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
 async def test_signal_opensearch_process_leader_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    signal,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
     db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
     await _recover_from_signal(
-        ops_test,
-        ops_test_microk8s,
-        signal,
-        [db_leader_name],
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal=signal,
+        units=[db_leader_name],
         app_name=OPENSEARCH_APP_NAME,
-        https=True,
-        verify=True,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
 
 @pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 @pytest.mark.abort_on_fail
 async def test_sigstop_opensearch_process_leader_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals Opensearch leader process and checks recovery + re-election."""
     db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
     await _recover_from_signal(
-        ops_test,
-        ops_test_microk8s,
-        "SIGSTOP",
-        [db_leader_name],
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal="SIGSTOP",
+        units=[db_leader_name],
         app_name=OPENSEARCH_APP_NAME,
-        https=True,
-        verify=True,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
 async def test_signal_dashboard_process_leader_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    signal,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    leader_name = await get_leader_name(ops_test_microk8s, APP_NAME)
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    leader_name = await get_leader_name(ops_test_microk8s, app_name)
     await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, [leader_name], True, https=True, verify=True
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal=signal,
+        units=[leader_name],
+        app_name=app_name,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
 async def test_signal_opensearch_process_cluster_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    signal,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals Opensearch leader process and checks recovery + re-election."""
     db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
     await _recover_from_signal(
-        ops_test,
-        ops_test_microk8s,
-        signal,
-        db_units,
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal=signal,
+        units=db_units,
         app_name=OPENSEARCH_APP_NAME,
-        https=True,
-        verify=True,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
 
 @pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 @pytest.mark.abort_on_fail
 async def test_sigstop_opensearch_process_cluster_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals Opensearch leader process and checks recovery + re-election."""
     db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     await _recover_from_signal(
-        ops_test, ops_test_microk8s, "SIGSTOP", db_units, https=True, verify=True
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal="SIGSTOP",
+        units=db_units,
+        app_name=app_name,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
 async def test_signal_dashboard_process_cluster_https(
-    ops_test: OpsTest, ops_test_microk8s: OpsTest, signal
+    ops_test: OpsTest,
+    ops_test_microk8s: OpsTest,
+    signal,
+    substrate: str,
+    test_flags: Flags,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    units = [unit.name for unit in ops_test_microk8s.model.applications[APP_NAME].units]
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    units = [unit.name for unit in ops_test_microk8s.model.applications[app_name].units]
     await _recover_from_signal(
-        ops_test, ops_test_microk8s, signal, units, True, https=True, verify=True
+        ops_test=ops_test,
+        ops_test_microk8s=ops_test_microk8s,
+        signal=signal,
+        units=units,
+        app_name=app_name,
+        https=test_flags.tls,
+        verify=test_flags.tls,
+        substrate=substrate,
+        test_flags=test_flags,
     )
