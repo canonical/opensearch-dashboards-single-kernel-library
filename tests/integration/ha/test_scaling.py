@@ -89,12 +89,8 @@ async def test_build_and_deploy(
 
     # 2. Deploy Dashboards Charm
     if substrate == "k8s":
-        await ops_test.model.create_offer(
-            "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
-        )
-        await ops_test_microk8s.model.consume(
-            f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}"
-        )
+        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
+        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
         await ops_test.model.create_offer(
             endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
             offer_name="self-signed-certificates",
@@ -108,9 +104,7 @@ async def test_build_and_deploy(
         await ops_test_microk8s.model.deploy(charmvm, **deploy_kwargs)
 
     if traefik:
-        await ops_test_microk8s.model.deploy(
-            TRAEFIK_APP_NAME, channel="latest/stable", trust=True
-        )
+        await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
     await ops_test_microk8s.model.wait_for_idle(
         apps=[app_name], status="blocked", timeout=1000, idle_period=30
     )
@@ -154,9 +148,11 @@ async def test_build_and_deploy(
             apps=[app_name], wait_for_active=True, timeout=1000
         )
 
+
 ##############################################################################
 # Helper functions
 ##############################################################################
+
 
 async def scale_up(
     ops_test: OpsTest,
@@ -204,6 +200,7 @@ async def scale_up(
     logger.info("Checking the functionality of the new units")
     verify = True if https else False
     assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=verify)
+
 
 async def scale_down(
     ops_test: OpsTest,
@@ -254,13 +251,13 @@ async def scale_down(
     logger.info("Checking the functionality of the remaining units")
     if expected > 0:
         verify = True if https else False
-        assert await access_all_dashboards(
-            ops_test, ops_test_microk8s, https=https, verify=verify
-        )
+        assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=verify)
+
 
 ##############################################################################
 # Tests
 ##############################################################################
+
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_up(
@@ -278,6 +275,7 @@ async def test_horizontal_scale_up(
         test_flags=test_flags,
     )
 
+
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_down(
     ops_test: OpsTest,
@@ -294,6 +292,7 @@ async def test_horizontal_scale_down(
         test_flags=test_flags,
     )
 
+
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_down_to_zero(
     ops_test: OpsTest,
@@ -309,6 +308,7 @@ async def test_horizontal_scale_down_to_zero(
         substrate=substrate,
         test_flags=test_flags,
     )
+
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_up_from_zero(
