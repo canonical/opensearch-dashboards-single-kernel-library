@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import Flags
+from .conftest import Flags
 from pytest_operator.plugin import OpsTest
 
 from .helpers import (
