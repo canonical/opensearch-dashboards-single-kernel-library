@@ -46,7 +46,7 @@ def charmvm(charm_base):
     # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./tests/charms/vm/opensearch-dashboards_{charm_base}-amd64.charm"
+    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
 
 
 @pytest.fixture
@@ -55,19 +55,19 @@ def charmk8s(charm_base):
     # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./tests/charms/k8s/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
+    return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
 
 
 @pytest.fixture
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/integration/application_charm/application_ubuntu@22.04-amd64.charm"
+    return "./tests/integration/dashboards_application_charm/application_ubuntu@22.04-amd64.charm"
 
 
 @pytest.fixture
 def dashboard_tester_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/charms/dashboard_tester/dashboard-tester_amd64.charm"
+    return "./tests/integration/dashboards_tester_charm/dashboard-tester_amd64.charm"
 
 
 def pytest_addoption(parser):
