@@ -70,9 +70,7 @@ class RequirerEvents(Object):
         """
         if (
             not self.charm.unit.is_leader()
-            or relation_departure_reason(
-                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
-            )
+            or relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
             == RelDepartureReason.APP_REMOVAL
         ):
             return
