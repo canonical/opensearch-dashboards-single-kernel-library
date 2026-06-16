@@ -170,6 +170,15 @@ class TLSManager(BaseManager):
         """Compute the tls manager's statuses."""
         if not recompute:
             statuses = self.state.statuses.get(scope, self.name).root
+            no_tls = not self.state.unit_server.tls_enabled and self.state.oauth_relation
+            status_val = ServerStatuses.NO_TLS.value
+            if no_tls and status_val not in statuses:
+                statuses.append(status_val)
+                logger.error(
+                    "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
+                )
+            elif not no_tls and status_val in statuses:
+                statuses.remove(status_val)
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []

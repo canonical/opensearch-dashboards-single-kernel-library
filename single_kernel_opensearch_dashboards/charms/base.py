@@ -9,6 +9,7 @@ from typing import Any, cast
 
 from data_platform_helpers.advanced_statuses import StatusHandler
 from ops import EventBase
+from ops.model import SecretNotFoundError
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import (
@@ -184,12 +185,6 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component_name=self.health_manager.name,
             scope="unit",
         )
-        self.state.add_status_to_both(
-            self.cluster_manager.get_statuses("app", False)[0], self.cluster_manager.name
-        )
-        self.state.add_status_to_both(
-            self.ingress_manager.get_statuses("app", False)[0], self.ingress_manager.name
-        )
         self.health_manager.check_osd_health()
 
     def emit_restart(self, event: EventBase) -> None:
@@ -201,7 +196,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         # base_manager, otherwise it will create circular dependency, so we do that here.
         try:
             self.tls_manager.write_tls_files()
-        except OSDFileOperationError as e:
+        except (OSDFileOperationError, SecretNotFoundError) as e:
             logger.error("%s", e)
             event.defer()
             return

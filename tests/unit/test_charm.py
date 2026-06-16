@@ -469,7 +469,6 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add"),
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         harness.charm.restart_on_lock_acquired(mock_event)
@@ -508,7 +507,6 @@ def test_init_server_calls_necessary_methods_leader(harness):
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         harness.charm.restart_on_lock_acquired(mock_event)
@@ -516,24 +514,11 @@ def test_init_server_calls_necessary_methods_leader(harness):
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
         restart_server.assert_called_once()
-        expected_calls = [
-            call(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                scope="unit",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-            call(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                scope="app",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-        ]
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
             component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
-        add.assert_has_calls(expected_calls, any_order=False)
         assert harness.charm.state.unit_server.started
 
 
@@ -934,29 +919,7 @@ def test_service_available(harness):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
         harness.charm.restart_on_lock_acquired(mock_event)
-        expected_calls = [
-            call(
-                status=CharmStatuses.ACTIVE_IDLE.value,
-                scope="unit",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-            call(
-                status=CharmStatuses.ACTIVE_IDLE.value,
-                scope="app",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-            call(
-                status=CharmStatuses.ACTIVE_IDLE.value,
-                scope="app",
-                component=INGRESS_MANAGER_NAME,
-            ),
-            call(
-                status=CharmStatuses.ACTIVE_IDLE.value,
-                scope="unit",
-                component=INGRESS_MANAGER_NAME,
-            ),
-        ]
-        add.assert_has_calls(expected_calls, any_order=True)
+        add.assert_not_called()
 
 
 @pytest.mark.parametrize("harness", [{"add_opensearch": True}], indirect=True)

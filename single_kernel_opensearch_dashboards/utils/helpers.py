@@ -47,7 +47,9 @@ def relation_departure_reason(
     """Compute the reason behind a relation departed event."""
     # fetch relation info
     goal_state = charm.model._backend._run("goal-state", return_output=True, use_json=True)
-    rel_info = goal_state["relations"][relation_name]
+    rel_info = goal_state["relations"].get(relation_name)
+    if rel_info is None:
+        return RelDepartureReason.APP_REMOVAL
 
     # check dying units
     dying_units = [

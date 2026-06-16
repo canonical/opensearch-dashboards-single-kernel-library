@@ -62,23 +62,6 @@ class OAuthEvents(Object):
             component=CLUSTER_MANAGER_NAME,
         )
 
-        if not self.state.unit_server.tls_enabled:
-            logger.error(
-                "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
-            )
-            self.state.add_status_to_both(
-                status=ServerStatuses.NO_TLS.value,
-                component=TLS_MANAGER_NAME,
-            )
-            event.defer()
-            return
-
-        self.state.delete_status_if_present(
-            status=ServerStatuses.NO_TLS.value,
-            scope="both",
-            component=TLS_MANAGER_NAME,
-        )
-
         try:
             provider_info = self.state.oauth_require.get_provider_info()
         except ModelError as e:

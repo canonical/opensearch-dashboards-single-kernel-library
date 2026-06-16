@@ -372,15 +372,18 @@ class ClusterState(Object, StatusesStateProtocol):
             status (StatusObject): The status object to remove.
             component (str): The name of the component holding the status.
         """
-
-        self.statuses.add(
-            status=status,
-            scope="unit",
-            component=component,
-        )
-        if self.unit.is_leader():
+        statuses = self.statuses.get("unit", component=component)
+        if status not in statuses:
             self.statuses.add(
                 status=status,
-                scope="app",
+                scope="unit",
                 component=component,
             )
+        if self.unit.is_leader():
+            statuses = self.statuses.get("app", component=component)
+            if status not in statuses:
+                self.statuses.add(
+                    status=status,
+                    scope="app",
+                    component=component,
+                )

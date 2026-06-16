@@ -33,6 +33,7 @@ from ops import (
     Object,
     RelationChangedEvent,
     RelationDepartedEvent,
+    RelationJoinedEvent,
     SecretChangedEvent,
 )
 
@@ -171,9 +172,13 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
-        if event.app and (
-            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
-            == RelDepartureReason.APP_REMOVAL
+        if (
+            not isinstance(event, RelationJoinedEvent)
+            and event.app
+            and (
+                relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+                == RelDepartureReason.APP_REMOVAL
+            )
         ):
             return
 
