@@ -21,7 +21,7 @@ on:
 jobs:
   lint:
     name: Lint
-    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v32.1.0
+    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v49.0.3
 
   lib-check:
     name: Check libraries
@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - run: |
@@ -49,11 +49,11 @@ jobs:
 
   unit-test:
     name: Unit test charm
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Install tox & poetry
         run: |
           pipx install tox
@@ -62,10 +62,10 @@ jobs:
         run: tox run -e unit
 
   promtool:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # prometheus snap includes promtool
       - name: Install prometheus snap
@@ -81,11 +81,11 @@ jobs:
 
   terraform-test:
     name: Terraform - Lint and Simple Deployment
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -136,7 +136,7 @@ jobs:
       - name: Install CLI
         run: pipx install git+https://github.com/canonical/data-platform-workflows@v31.1.1#subdirectory=python/cli
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Install tox & poetry
@@ -160,7 +160,7 @@ jobs:
           sudo snap install charmcraft --classic
           pipx install charmcraftcache
       - name: Set up python environment
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: 'poetry'
@@ -175,7 +175,7 @@ jobs:
         id: path-in-artifact
         run: compute-path-in-artifact '${{ matrix.path }}'
       - name: Upload charm
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: packed-charm-${{ steps.path-in-artifact.outputs.path }}
           path: |
