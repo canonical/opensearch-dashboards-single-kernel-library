@@ -184,8 +184,12 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component_name=self.health_manager.name,
             scope="unit",
         )
-        self.state.add_status_to_both(self.cluster_manager.get_statuses("app", False)[0],self.cluster_manager.name)
-        self.state.add_status_to_both(self.ingress_manager.get_statuses("app", False)[0],self.ingress_manager.name)
+        self.state.add_status_to_both(
+            self.cluster_manager.get_statuses("app", False)[0], self.cluster_manager.name
+        )
+        self.state.add_status_to_both(
+            self.ingress_manager.get_statuses("app", False)[0], self.ingress_manager.name
+        )
         self.health_manager.check_osd_health()
 
     def emit_restart(self, event: EventBase) -> None:
