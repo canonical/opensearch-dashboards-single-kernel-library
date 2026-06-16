@@ -184,38 +184,8 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component_name=self.health_manager.name,
             scope="unit",
         )
-        self._check_osd_status()
-
-    def _check_osd_status(self) -> None:
-        """Verify the OpenSearch connection and trigger a health check.
-        Returns true if OSD server is healthy otherwise false
-        """
-        # OPENSEARCH CONNECTION
-        self.state.delete_status_if_present(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            component=self.cluster_manager.name,
-            scope="both",
-        )
-
-        if not self.state.opensearch_server or not self.state.opensearch_server.password:
-            self.state.add_status_to_both(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                component=self.cluster_manager.name,
-            )
-
-        self.state.delete_status_if_present(
-            status=ServerStatuses.INGRESS_RELATION_MISSING.value,
-            component=self.ingress_manager.name,
-            scope="both",
-        )
-
-        if self.substrate == Substrates.K8S and not self.state.ingress.relation:
-            self.state.add_status_to_both(
-                status=ServerStatuses.INGRESS_RELATION_MISSING.value,
-                component=self.ingress_manager.name,
-            )
-
-        # HEALTH
+        self.state.add_status_to_both(self.cluster_manager.get_statuses("app", False)[0],self.cluster_manager.name)
+        self.state.add_status_to_both(self.ingress_manager.get_statuses("app", False)[0],self.ingress_manager.name)
         self.health_manager.check_osd_health()
 
     def emit_restart(self, event: EventBase) -> None:

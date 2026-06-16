@@ -23,7 +23,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.core.statuses import (
     HealthStatuses,
     ServerStatuses,
-    UpgradeStatuses,
+    UpgradeStatuses, CharmStatuses,
 )
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
@@ -212,14 +212,14 @@ def test_restart_initializes_unstarted_server(harness):
         ) as mock_restart_server,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
         patch(
-            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm._check_osd_status"
-        ) as mock_check_status,
+            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
+        ) as check_health,
     ):
         handler.restart_on_lock_acquired(mock_event)
 
         mock_set_props.assert_called_once()
         mock_restart_server.assert_called_once()
-        mock_check_status.assert_called_once()
+        check_health.assert_called_once()
 
         assert handler.state.unit_server.started is True
 
@@ -468,7 +468,7 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add"),
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         harness.charm.restart_on_lock_acquired(mock_event)
@@ -476,11 +476,6 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
             status=HealthStatuses.AFTER_RESTART.value,
             component_name=HEALTH_MANAGER_NAME,
             scope="unit",
-        )
-        add.assert_called_with(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            scope="unit",
-            component=CLUSTER_MANAGER_NAME,
         )
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
@@ -938,7 +933,29 @@ def test_service_available(harness):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
         harness.charm.restart_on_lock_acquired(mock_event)
-        add.assert_not_called()
+        expected_calls = [
+            call(
+                status=CharmStatuses.ACTIVE_IDLE.value,
+                scope="unit",
+                component=CLUSTER_MANAGER_NAME,
+            ),
+            call(
+                status=CharmStatuses.ACTIVE_IDLE.value,
+                scope="app",
+                component=CLUSTER_MANAGER_NAME,
+            ),
+            call(
+                status=CharmStatuses.ACTIVE_IDLE.value,
+                scope="app",
+                component=INGRESS_MANAGER_NAME,
+            ),
+            call(
+                status=CharmStatuses.ACTIVE_IDLE.value,
+                scope="unit",
+                component=INGRESS_MANAGER_NAME,
+            ),
+        ]
+        add.assert_has_calls(expected_calls, any_order=True)
 
 
 @pytest.mark.parametrize("harness", [{"add_opensearch": True}], indirect=True)

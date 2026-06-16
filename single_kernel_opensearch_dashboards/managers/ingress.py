@@ -40,6 +40,8 @@ class IngressManager(BaseManager):
         """Compute the ingress manager's statuses."""
         if not recompute:
             statuses = self.state.statuses.get(scope, self.name).root
+            if self.state.substrate != Substrates.VM and not self.state.ingress.relation:
+                statuses.append(ServerStatuses.INGRESS_RELATION_MISSING.value)
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         if self.state.substrate == Substrates.VM:
