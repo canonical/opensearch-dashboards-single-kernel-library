@@ -12,7 +12,6 @@ import ops
 import yaml
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
-from ops.pebble import PathError
 from tenacity import retry, retry_if_not_result, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
@@ -218,9 +217,7 @@ class K8sWorkload(WorkloadBase):
     @override
     def ready(self) -> bool:
         """Checks if workload is ready."""
-        if not self.container.can_connect():
-            return False
-        return True
+        return self.container.can_connect()
 
     def write_certs(self, ca: str | None) -> str | None:
         """Copies certs to another container and returns the local path"""

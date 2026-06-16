@@ -16,7 +16,6 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDNotTrusted,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
-    CERTS_REL_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
@@ -72,21 +71,21 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         self.name = DASHBOARDS_NAME
 
         # --- State ---
+        self.state = ClusterState(self, self.substrate)
+
+        # --- Managers ---
+        self.tls_manager = TLSManager(self.state, self.workload)
+        self.health_manager = HealthManager(self.state, self.workload)
         self.ingress = None
         if self.substrate == Substrates.K8S:
             self.ingress = IngressPerAppRequirer(
                 self,
                 port=SERVER_PORT,
-                scheme="https" if self.model.get_relation(CERTS_REL_NAME) else "http",
+                scheme="https" if self.state.unit_server.tls_enabled else "http",
                 strip_prefix=False,
                 # for the time being, while we support full load balancing
             )
-        self.state = ClusterState(self, self.substrate, self.ingress)
-
-        # --- Managers ---
-        self.tls_manager = TLSManager(self.state, self.workload)
-        self.health_manager = HealthManager(self.state, self.workload)
-        self.ingress_manager = IngressManager(self.state, self.workload)
+        self.ingress_manager = IngressManager(self.state, self.workload, self.ingress)
         self.config_manager = ConfigManager(self.state, self.workload)
         self.upgrade_manager = UpgradeManager(self.state, self.workload)
         self.cluster_manager = ClusterManager(self.state, self.workload)
@@ -98,13 +97,11 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         # --- Event Handlers ---
         protocol_self = cast(StatusHandlingCharm, cast(Any, self))
         self.opensearch_dashboards_events = OpenSearchDashboardsEvents(
-            protocol_self, self.state, self.workload, self.cluster_manager, self.tls_manager
+            protocol_self, self.state, self.workload
         )
         self.jwt_events = JwtEvents(protocol_self, self.state)
-        self.tls_events = TLSEvents(
-            protocol_self, self.state, self.tls_manager, self.ingress_manager
-        )
-        self.requirer_events = RequirerEvents(protocol_self, self.state, self.tls_manager)
+        self.tls_events = TLSEvents(protocol_self, self.state)
+        self.requirer_events = RequirerEvents(protocol_self, self.state)
         self.oauth = OAuthEvents(protocol_self, self.state)
         self.ingress_events = IngressEvents(protocol_self, self.state)
 
@@ -116,9 +113,10 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
                 self.upgrade_manager,
                 self.health_manager,
             )
-        except OSDNotTrusted:
+        except OSDNotTrusted as e:
             logger.error(
-                "OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible"
+                "OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, %s",
+                e,
             )
 
         self.status_handler = StatusHandler(
@@ -131,6 +129,11 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             self.tls_manager,
             self.cos_manager,
         )
+
+    @property
+    def base(self) -> "OpenSearchDashboardsBaseCharm":
+        """Return self to satisfy the StatusHandlingCharm protocol."""
+        return self
 
     @property
     @abstractmethod
@@ -225,7 +228,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         try:
             self.tls_manager.write_tls_files()
         except OSDFileOperationError as e:
-            logger.error(f"{e}")
+            logger.error("%s", e)
             event.defer()
             return
         try:

@@ -5,15 +5,17 @@
 
 import logging
 
-from ops import Object, RelationBrokenEvent, RelationChangedEvent, RelationDepartedEvent
+from ops import Object, RelationBrokenEvent, RelationChangedEvent
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     JWT_REL_NAME,
+    RelDepartureReason,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import ConfigStatuses
+from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +36,6 @@ class JwtEvents(Object):
         )
         self.framework.observe(
             self.charm.on[JWT_REL_NAME].relation_broken, self._on_jwt_relation_broken
-        )
-        self.framework.observe(
-            self.charm.on[JWT_REL_NAME].relation_departed, self._on_jwt_departed
         )
 
     def _on_jwt_relation_changed(self, event: RelationChangedEvent) -> None:
@@ -59,7 +58,10 @@ class JwtEvents(Object):
 
     def _on_jwt_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle broken relation data."""
-        if self.state.unit_server.unit_dying:
+        if (
+            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
         self.state.delete_status_if_present(
             status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
@@ -67,8 +69,3 @@ class JwtEvents(Object):
             component=CONFIG_MANAGER_NAME,
         )
         self.charm.emit_restart(event)
-
-    def _on_jwt_departed(self, event: RelationDepartedEvent) -> None:
-        """Handle unit dying."""
-        if event.departing_unit == self.charm.unit:
-            self.state.unit_server.unit_dying = True

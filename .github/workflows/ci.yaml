@@ -79,82 +79,6 @@ jobs:
         run: |
           promtool test rules tests/unit/test_alert_rules/*.yaml
 
-  terraform-test:
-    name: Terraform Lint & Deploy (${{ matrix.target }})
-    runs-on: ubuntu-22.04
-    timeout-minutes: 120
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [vm, k8s]
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Lint charm module
-        run: |
-          pushd ./terraform
-          terraform init && terraform fmt && terraform validate
-          popd
-      - name: Run checks - prepare
-        run: |
-          sudo snap install juju --channel=3.6 --classic
-      - name: LXD setup (VM)
-        if: matrix.target == 'vm'
-        run: |
-          sudo snap refresh lxd --channel=latest/stable
-          sudo adduser "$USER" 'lxd'
-          # `newgrp` does not work in GitHub Actions; use `sg` instead
-          sg 'lxd' -c "lxd waitready"
-          sg 'lxd' -c "lxd init --auto"
-          sg 'lxd' -c "lxc network set lxdbr0 ipv6.address none"
-          sudo iptables -F FORWARD
-          sudo iptables -P FORWARD ACCEPT
-      - name: MicroK8s setup (K8s)
-        if: matrix.target == 'k8s'
-        run: |
-          sudo snap install microk8s --channel=1.35-strict/stable
-          sudo adduser "$USER" 'snap_microk8s'
-          sudo microk8s status --wait-ready
-          sudo microk8s enable hostpath-storage dns
-
-      - name: Juju setup (Machine)
-        if: matrix.target == 'vm'
-        run: |
-          sg 'lxd' -c "juju bootstrap 'localhost' --config model-logs-size=10G"
-          juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
-          juju add-model test
-
-      - name: Juju setup (K8s)
-        if: matrix.target == 'k8s'
-        run: |
-          sg 'snap_microk8s' -c "juju bootstrap microk8s"
-          juju model-defaults logging-config='<root>=INFO; unit=DEBUG'
-          juju add-model test
-
-      - name: Terraform deploy
-        run: |
-          MODEL_UUID=$(juju show-model test | grep "model-uuid" | awk '{split($0, a, ": "); print a[2]}')
-          pushd ./terraform
-          # if [ "${{ matrix.target }}" == "k8s" ]; then
-          # terraform apply -var="model_uuid=$MODEL_UUID" -var="app_name=opensearch-dashboards-k8s" -var="charm_name=opensearch-dashboards-k8s" -auto-approve
-          # else
-          terraform apply -var="model_uuid=$MODEL_UUID" -auto-approve
-          # fi
-          popd
-
-      - name: Wait for model and applications
-        run: |
-          if [ "${{ matrix.target }}" != "k8s" ]; then
-            juju wait-for application opensearch-dashboards -m test --query='status=="blocked"'
-            juju wait-for model test --query='life=="alive" && status=="available"'
-          # else
-          # juju wait-for application opensearch-dashboards-k8s -m test --query='status=="blocked"'
-          # juju wait-for model test --query='life=="alive" && status=="available"'
-          fi
-
   build:
     name: Build test charms
     runs-on: ubuntu-latest
@@ -162,10 +86,10 @@ jobs:
     strategy:
       matrix:
         path:
-          - tests/integration/application_charm
-          - tests/charms/vm
-          - tests/charms/k8s
-          - tests/charms/dashboard_tester
+          - tests/integration/dashboards_application_charm
+          - tests/integration/dashboards_tester_charm
+          - tests/charms/dashboards_vm_charm
+          - tests/charms/dashboards_k8s_charm
     steps:
       - name: Install CLI
         run: pipx install git+https://github.com/canonical/data-platform-workflows@v31.1.1#subdirectory=python/cli

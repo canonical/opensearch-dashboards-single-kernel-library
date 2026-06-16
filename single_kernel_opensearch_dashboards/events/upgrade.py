@@ -67,7 +67,7 @@ class UpgradeEvents(DataUpgrade):
 
     def _on_k8s_upgrade_charm(self, event) -> None:
         """Handle the K8s-specific upgrade flow."""
-        if self.substrate == Substrates.VM.value:
+        if self.osd_state.substrate == Substrates.VM:
             return
 
         if self.osd_state.upgrade_idle:

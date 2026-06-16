@@ -6,7 +6,7 @@
 
 import logging
 
-from ops import EventBase, ModelError, Object, RelationDepartedEvent
+from ops import EventBase, ModelError, Object, RelationBrokenEvent
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -14,13 +14,14 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
     TLS_MANAGER_NAME,
+    RelDepartureReason,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
-    OauthStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +43,10 @@ class OAuthEvents(Object):
         self.framework.observe(
             self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
         )
-        self.framework.observe(
-            self.charm.on[OAUTH_REL_NAME].relation_departed, self._on_oauth_departed
-        )
         self.state.oauth_require.update_client_config(self.state.oauth_client_config())
 
     def _on_oauth_relation_changed(self, event: EventBase) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
-        if self.state.unit_server.unit_dying:
-            return
-
         if not self.state.servers:
             self.state.statuses.add(
                 status=ServerStatuses.SERVERS_IS_DOWN.value,
@@ -72,14 +67,14 @@ class OAuthEvents(Object):
                 "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
             )
             self.state.add_status_to_both(
-                status=OauthStatuses.NO_TLS.value,
+                status=ServerStatuses.NO_TLS.value,
                 component=TLS_MANAGER_NAME,
             )
             event.defer()
             return
 
         self.state.delete_status_if_present(
-            status=OauthStatuses.NO_TLS.value,
+            status=ServerStatuses.NO_TLS.value,
             scope="both",
             component=TLS_MANAGER_NAME,
         )
@@ -112,7 +107,11 @@ class OAuthEvents(Object):
 
         self.charm.emit_restart(event)
 
-    def _on_oauth_departed(self, event: RelationDepartedEvent) -> None:
-        """Handle unit dying."""
-        if event.departing_unit == self.charm.unit:
-            self.state.unit_server.unit_dying = True
+    def _on_oauth_relation_broken(self, event: RelationBrokenEvent) -> None:
+        """Handler for `_on_oauth_relation_changed` event."""
+        if (
+            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            == RelDepartureReason.APP_REMOVAL
+        ):
+            return
+        self._on_oauth_relation_changed(event)

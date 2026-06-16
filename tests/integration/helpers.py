@@ -29,8 +29,8 @@ from tenacity import (
 
 from .conftest import Flags
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
 APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 K8s_APP_NAME = METADATA_K8S["name"]

@@ -136,17 +136,27 @@ def test_relation_changed_emitted_for_config_changed(harness):
 
 
 def test_relation_changed_emitted_for_relation_changed(harness):
-    with patch(
-        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    with (
+        patch(
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+        ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
+        ),
+    ):
         harness.charm.on.dashboard_peers_relation_changed.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 
 
 def test_relation_changed_emitted_for_relation_joined(harness):
-    with patch(
-        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    with (
+        patch(
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+        ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
+        ),
+    ):
         harness.charm.on.dashboard_peers_relation_joined.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 

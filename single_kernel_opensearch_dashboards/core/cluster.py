@@ -9,7 +9,7 @@ from typing import Literal
 
 from data_platform_helpers.advanced_statuses import StatusesState, StatusObject
 from data_platform_helpers.advanced_statuses.protocol import StatusesStateProtocol
-from ops import StoredState
+from ops import CharmBase, StoredState
 from ops.framework import Object
 from ops.model import Relation, Unit
 
@@ -27,6 +27,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     SERVER_PORT,
     STATUS_PEERS_REL_NAME,
     UPGRADE_REL_NAME,
+    RelDepartureReason,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
@@ -51,9 +52,6 @@ from single_kernel_opensearch_dashboards.lib.charms.hydra.v0.oauth import (
     ClientConfig,
     OAuthRequirer,
 )
-from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
-    IngressPerAppRequirer,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -67,13 +65,10 @@ class ClusterState(Object, StatusesStateProtocol):
         self,
         charm: TypedCharmBase[CharmConfig],
         substrate: Substrates,
-        ingress_requirer: IngressPerAppRequirer | None,
     ):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
         self.charm = charm
-        self.ingress_requirer = ingress_requirer
-        self._stored_state.set_default(unit_dying=False)
         self._servers_data = {}
 
         self.peer_app_data = DataPeerData(
@@ -152,7 +147,6 @@ class ClusterState(Object, StatusesStateProtocol):
             data_interface=self.peer_unit_data,
             component=self.model.unit,
             substrate=self.substrate,
-            _stored_state=self._stored_state,
             bind_address=self.bind_address,
         )
 
@@ -198,7 +192,6 @@ class ClusterState(Object, StatusesStateProtocol):
                     data_interface=data_interface,
                     component=unit,
                     substrate=self.substrate,
-                    _stored_state=self._stored_state,
                     bind_address=self.bind_address,
                 )
             )
@@ -292,26 +285,21 @@ class ClusterState(Object, StatusesStateProtocol):
     def url(self) -> str:
         """Service URL."""
         scheme = "https" if self.unit_server.tls_enabled else "http"
-        if self.substrate != Substrates.K8S:
+        if self.substrate == Substrates.VM:
             return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
-        else:
-            if self.ingress_relation and self.ingress.url:
-                return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}{self.ingress.base_path}"
 
-            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
+        if self.ingress_relation and self.ingress.url:
+            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}{self.ingress.base_path}"
+
+        return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
 
     @property
     def oauth_url(self) -> str:
+        """Oauth URL for redirection"""
         if self.ingress_relation and self.ingress.url:
             return self.ingress.url
-        elif self.substrate == Substrates.VM:
-            return self.url
-        else:
-            return (
-                f"https://{bind}:{SERVER_PORT}"
-                if (bind := self.bind_address)
-                else f"https://127.0.0.1:{SERVER_PORT}"
-            )
+
+        return self.url
 
     # --- UPGRADE RELATED ---
     @property
@@ -363,15 +351,15 @@ class ClusterState(Object, StatusesStateProtocol):
             ["unit", "app"] if scope == "both" else [scope]
         )
 
-        for s in target_scopes:
-            if s == "app" and not self.unit.is_leader():
+        for scope in target_scopes:
+            if scope == "app" and not self.unit.is_leader():
                 continue
 
-            current_statuses = self.statuses.get(scope=s, component=component)
+            current_statuses = self.statuses.get(scope=scope, component=component)
             if status in current_statuses:
                 self.statuses.delete(
                     status=status,
-                    scope=s,
+                    scope=scope,
                     component=component,
                 )
 

@@ -155,6 +155,12 @@ class ServerStatuses(Enum):
         message="OpenSearch Dashboards container in not accessible",
         short_message="Container is not accessible",
     )
+    NO_TLS = StatusObject(
+        status="blocked",
+        action="Add TLS relation",
+        message="TLS connection is missing, OAUTH requires TLS",
+        short_message="TLS connection is missing",
+    )
 
 
 class UpgradeStatuses(Enum):
@@ -165,12 +171,3 @@ class UpgradeStatuses(Enum):
     )
 
     WAITING_FOR_UPGRADE = StatusObject(status="waiting", message="Waiting for upgrade to be idle")
-
-
-class OauthStatuses(Enum):
-    NO_TLS = StatusObject(
-        status="blocked",
-        action="Add TLS relation",
-        message="TLS connection is missing, OAUTH requires TLS",
-        short_message="TLS connection is missing",
-    )

@@ -22,6 +22,14 @@ class OpenSearchDashboardsPaths:
     BIN = "opt/opensearch-dashboards"
 
 
+class RelDepartureReason(Enum):
+    """Enum depicting the 3 various causes of a Relation Departed event."""
+
+    APP_REMOVAL = "app-removal"
+    SCALE_DOWN = "scale-down"
+    REL_BROKEN = "rel-broken"
+
+
 # Snap
 OPENSEARCH_DASHBOARDS_SNAP_REVISION = "54"
 CHARM_KEY = "opensearch-dashboards"

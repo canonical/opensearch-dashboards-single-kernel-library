@@ -10,7 +10,7 @@ from subprocess import CalledProcessError
 from typing import Any, cast
 
 from ops import Object
-from ops.charm import ActionEvent, CharmBase, RelationDepartedEvent
+from ops.charm import ActionEvent, CharmBase
 from ops.framework import EventBase
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
@@ -22,18 +22,21 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     SERVER_PORT,
     TLS_MANAGER_NAME,
+    RelDepartureReason,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import OauthStatuses, TLSStatuses
+from single_kernel_opensearch_dashboards.core.statuses import (
+    ServerStatuses,
+    TLSStatuses,
+)
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +48,12 @@ class TLSEvents(Object):
         self,
         charm: StatusHandlingCharm,
         state: ClusterState,
-        tls_manager: TLSManager,
-        ingress_manager: IngressManager,
     ) -> None:
         super().__init__(charm, "tls")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
-        self.tls_manager = tls_manager
-        self.ingress_manager = ingress_manager
+        self.tls_manager = self.charm.tls_manager
+        self.ingress_manager = self.charm.ingress_manager
         self.certificates = TLSCertificatesRequiresV3(
             cast(CharmBase, cast(Any, charm)), CERTS_REL_NAME
         )
@@ -62,9 +63,6 @@ class TLSEvents(Object):
         )
         self.framework.observe(
             self.charm.on[CERTS_REL_NAME].relation_broken, self._on_certs_relation_broken
-        )
-        self.framework.observe(
-            self.charm.on[CERTS_REL_NAME].relation_departed, self._on_client_departed
         )
         self.framework.observe(
             self.certificates.on.certificate_available, self._on_certificate_available
@@ -131,7 +129,7 @@ class TLSEvents(Object):
 
         self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
         if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
-            self.state.ingress_requirer.provide_ingress_requirements(
+            self.charm.ingress_manager.ingress_requirer.provide_ingress_requirements(
                 scheme="https", port=SERVER_PORT
             )
             logger.info("Updated ingress relation to use HTTPS scheme.")
@@ -140,11 +138,11 @@ class TLSEvents(Object):
             self.tls_manager.set_ca()
             self.tls_manager.set_certificate()
         except OSDTLSMissingDataError as e:
-            logger.warning(f"TLS data incomplete: {e}. Deferring event.")
+            logger.warning("TLS data incomplete: %s. Deferring event.", e)
             event.defer()
             return
         except OSDFileOperationError as e:
-            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            logger.error("Operation with files is failed: %s. Deferring event.", e)
             event.defer()
             return
 
@@ -185,7 +183,12 @@ class TLSEvents(Object):
     def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
-        if self.state.unit_server.unit_dying:
+        if (
+            relation_departure_reason(
+                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
+            )
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
 
         if self.state.oauth_relation:
@@ -193,12 +196,12 @@ class TLSEvents(Object):
                 "OAuth requires TLS to be enabled, if you using ingress it should also use TLS"
             )
             self.state.add_status_to_both(
-                status=OauthStatuses.NO_TLS.value,
+                status=ServerStatuses.NO_TLS.value,
                 component=TLS_MANAGER_NAME,
             )
 
         if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
-            self.state.ingress_requirer.provide_ingress_requirements(
+            self.charm.ingress_manager.ingress_requirer.provide_ingress_requirements(
                 scheme="http", port=SERVER_PORT
             )
             logger.info("Updated ingress relation to use HTTP scheme.")
@@ -215,8 +218,3 @@ class TLSEvents(Object):
 
         self.state.unit_server.update({"private-key": private_key})
         self._on_certificate_expiring(event)
-
-    def _on_client_departed(self, event: RelationDepartedEvent) -> None:
-        """Handle unit dying."""
-        if event.departing_unit == self.charm.unit:
-            self.state.unit_server.unit_dying = True

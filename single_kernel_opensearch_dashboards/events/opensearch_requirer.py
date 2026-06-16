@@ -7,7 +7,7 @@ import logging
 from typing import cast
 
 from ops import CharmBase, Object
-from ops.charm import RelationBrokenEvent, RelationDepartedEvent, RelationEvent
+from ops.charm import RelationBrokenEvent, RelationEvent
 from typing_extensions import Any
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
@@ -15,13 +15,14 @@ from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperati
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
+    RelDepartureReason,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,11 @@ class RequirerEvents(Object):
         self,
         charm: StatusHandlingCharm,
         state: ClusterState,
-        tls_manager: TLSManager,
     ) -> None:
         super().__init__(charm, "provider")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
-        self.tls_manager = tls_manager
+        self.tls_manager = self.charm.tls_manager
         self.requirer_events = OpenSearchRequiresEventHandlers(
             cast(CharmBase, cast(Any, charm)), self.state.client_requires_data
         )
@@ -47,9 +47,6 @@ class RequirerEvents(Object):
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_broken, self._on_client_relation_broken
-        )
-        self.framework.observe(
-            self.charm.on[OPENSEARCH_REL_NAME].relation_departed, self._on_client_departed
         )
 
     def _on_client_relation_changed(self, event: RelationEvent) -> None:
@@ -71,7 +68,13 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
-        if self.state.unit_server.unit_dying:
+        if (
+            not self.charm.unit.is_leader()
+            or relation_departure_reason(
+                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
+            )
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
 
         self.state.add_status_to_both(
@@ -81,8 +84,3 @@ class RequirerEvents(Object):
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)
-
-    def _on_client_departed(self, event: RelationDepartedEvent) -> None:
-        """Handle unit dying."""
-        if event.departing_unit == self.charm.unit:
-            self.state.unit_server.unit_dying = True

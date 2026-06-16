@@ -53,6 +53,8 @@ class ClusterManager(BaseManager):
         """Compute the server manager's statuses."""
         if not recompute:
             statuses = self.state.statuses.get(scope, self.name).root
+            if not self.state.opensearch_server or not self.state.opensearch_server.password:
+                statuses.append(ServerStatuses.DB_CONNECTION_MISSING.value)
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         status_list: list[StatusObject] = []

@@ -18,7 +18,7 @@ from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
-    OauthStatuses,
+    ServerStatuses,
 )
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     generate_csr,
@@ -175,6 +175,6 @@ class TLSManager(BaseManager):
         status_list: list[StatusObject] = []
 
         if not self.state.unit_server.tls_enabled and self.state.oauth_relation:
-            status_list.append(OauthStatuses.NO_TLS.value)
+            status_list.append(ServerStatuses.NO_TLS.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

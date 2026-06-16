@@ -124,6 +124,9 @@ def test_certificates_broken(harness):
         patch(
             "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"
         ),
+        patch(
+            "single_kernel_opensearch_dashboards.events.tls.relation_departure_reason"
+        ),
     ):
 
         harness.remove_relation(certs_rel_id)

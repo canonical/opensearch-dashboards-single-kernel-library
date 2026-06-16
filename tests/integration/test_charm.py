@@ -36,8 +36,8 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 PROMETHEUS_APP = "prometheus-k8s"
 LOKI_APP = "loki-k8s"
 GRAFANA_APP = "grafana-k8s"

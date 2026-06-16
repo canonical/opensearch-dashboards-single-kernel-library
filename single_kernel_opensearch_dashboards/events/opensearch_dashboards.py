@@ -13,6 +13,7 @@ from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandli
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     UPGRADE_MANAGER_NAME,
+    RelDepartureReason,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -21,8 +22,6 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     ServerStatuses,
     UpgradeStatuses,
 )
-from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -32,6 +31,7 @@ from ops import (
     EventBase,
     InstallEvent,
     Object,
+    RelationChangedEvent,
     RelationDepartedEvent,
     SecretChangedEvent,
 )
@@ -40,6 +40,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     PEERS_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.utils.helpers import (
+    relation_departure_reason,
     update_grafana_dashboards_title,
 )
 
@@ -52,16 +53,14 @@ class OpenSearchDashboardsEvents(Object):
         charm: StatusHandlingCharm,
         state: ClusterState,
         workload: WorkloadBase,
-        cluster_manager: ClusterManager,
-        tls_manager: TLSManager,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
         super().__init__(charm, "opensearch-dashboards-events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
         self.workload = workload
-        self.cluster_manager = cluster_manager
-        self.tls_manager = tls_manager
+        self.cluster_manager = self.charm.cluster_manager
+        self.tls_manager = self.charm.tls_manager
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
@@ -170,9 +169,12 @@ class OpenSearchDashboardsEvents(Object):
 
         self.charm.emit_restart(event)
 
-    def _on_relation_changed(self, event: EventBase) -> None:
+    def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
-        if self.state.unit_server.unit_dying:
+        if event.app and (
+            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
 
         if not self.pre_restart_check():
@@ -183,7 +185,12 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         """Handle the `secret-changed` event."""
-        if self.state.unit_server.unit_dying:
+        if (
+            relation_departure_reason(
+                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
+            )
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
 
         if not self.pre_restart_check():

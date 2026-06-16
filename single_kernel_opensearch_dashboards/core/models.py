@@ -9,7 +9,6 @@ import socket
 from typing import MutableMapping
 
 import requests
-from ops import StoredState
 from ops.model import Application, Relation, Unit
 from typing_extensions import override
 from urllib3.util import url
@@ -153,13 +152,11 @@ class OSDServer(StateBase):
         data_interface: Data,
         component: Unit,
         substrate: Substrates,
-        _stored_state: StoredState,
         bind_address: str | None = None,
     ):
         super().__init__(relation, data_interface, component, substrate)
         self.unit = component
         self.bind_address = bind_address
-        self._stored_state = _stored_state
 
     @property
     def unit_id(self) -> int:
@@ -291,19 +288,6 @@ class OSDServer(StateBase):
         """Set log level value."""
         self.update({"log_level": value})
 
-    @property
-    def unit_dying(self) -> bool:
-        """Return whether relation broken event should be skipped."""
-        try:
-            return self._stored_state.unit_dying
-        except AttributeError:
-            return False
-
-    @unit_dying.setter
-    def unit_dying(self, value: bool) -> None:
-        """Set whether relation broken event should be skipped."""
-        self._stored_state.unit_dying = value
-
 
 class OAuth:
     """State collection metadata for the oauth relation."""
@@ -382,7 +366,7 @@ class JWT(RequirerData):
         if not self.jwt_relation:
             return ""
         relation_data = self.fetch_relation_data([self.jwt_relation.id])
-        return relation_data[self.jwt_relation.id].get("jwt-url-parameter") or ""
+        return relation_data[self.jwt_relation.id].get("jwt-url-parameter", "")
 
 
 class Ingress:

@@ -17,11 +17,13 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
 )
-from tests.charms.vm.src.charm import OpenSearchDashboardsVMCharm as TestCharm
+from tests.charms.dashboards_vm_charm.src.charm import (
+    OpenSearchDashboardsVMCharm as TestCharm,
+)
 
-CONFIG = str(yaml.safe_load(Path("tests/charms/vm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/charms/vm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text()))
 
 
 @pytest.fixture(autouse=True)

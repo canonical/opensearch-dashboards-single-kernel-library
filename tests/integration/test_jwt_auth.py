@@ -23,8 +23,8 @@ from .helpers_jwt import generate_json_web_token
 
 logger = logging.getLogger(__name__)
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/k8s/metadata.yaml").read_text())
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
 OPENSEARCH_APP_NAME = "opensearch"
