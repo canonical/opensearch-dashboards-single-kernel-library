@@ -266,7 +266,11 @@ async def access_all_prometheus_exporters(ops_test: OpsTest, substrate: str = "v
 
 
 async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
-    """Returns (host, port, path) dynamically based on Traefik endpoints."""
+    """Returns (host, port, path, scheme) dynamically based on Traefik endpoints.
+
+    scheme is the actual scheme from the Traefik endpoint URL when Traefik is in use,
+    or None when connecting directly (callers determine the scheme from TLS flags).
+    """
     if TRAEFIK_APP_NAME in ops_test.model.applications:
         traefik_app = ops_test.model.applications[TRAEFIK_APP_NAME]
 
@@ -287,10 +291,11 @@ async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
             parsed_url = urlparse(url)
 
             host = parsed_url.hostname
-            port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
+            scheme = parsed_url.scheme
+            port = parsed_url.port or (443 if scheme == "https" else 80)
             path = parsed_url.path
 
-            return host, port, path
+            return host, port, path, scheme
         else:
             raise RuntimeError(
                 f"Endpoint for {APP_NAME} not found in Traefik's proxied-endpoints."
@@ -303,7 +308,7 @@ async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
     else:
         host = get_bind_address(ops_test.model.name, unit_name)
 
-    return host, 5601, ""
+    return host, 5601, "", None
 
 
 async def access_dashboard(
@@ -447,7 +452,7 @@ async def access_all_dashboards(
         if unit.name in skip:
             continue
 
-        host, port, path = await get_dashboard_routing(
+        host, port, path, _ = await get_dashboard_routing(
             ops_test,
             unit.name,
         )
@@ -487,7 +492,7 @@ async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> 
                 logger.info(f"Couldn't retrieve host certificate for unit {unit}")
                 continue
 
-        host, port, path = await get_dashboard_routing(ops_test, unit.name)
+        host, port, path, _ = await get_dashboard_routing(ops_test, unit.name)
 
         # We should retry until a host could be retrieved
         if not host:
@@ -832,7 +837,7 @@ async def client_run_all_dashboards_request(
             logger.warning("ca.pem not found locally.")
 
     for dashboards_unit in ops_test.model.applications[APP_NAME].units:
-        host, port, path = await get_dashboard_routing(ops_test, dashboards_unit.name)
+        host, port, path, _ = await get_dashboard_routing(ops_test, dashboards_unit.name)
 
         if not host:
             logger.debug(f"No hostname found for {dashboards_unit.name}, can't check connection.")
@@ -906,7 +911,7 @@ async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME, consumer_ops
     await ops_test.juju("remove-relation", DB_CLIENT_APP_NAME, app, check=False)
     if consumer_ops_test:
         await consumer_ops_test.juju("remove-saas", app, check=False)
-        await consumer_ops_test.juju("remove-offer", f"admin/testing-vm.{app}", check=False)
+        await ops_test.juju("remove-offer", f"admin/testing-vm.{app}", "--force", check=False)
     await asyncio.sleep(30)
     n_apps_before = len(ops_test.model.applications)
     await ops_test.model.applications[app].destroy(destroy_storage=True, force=True, no_wait=False)

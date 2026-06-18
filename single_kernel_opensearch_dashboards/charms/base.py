@@ -151,6 +151,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     def restart_on_lock_acquired(self, event: EventBase):
         """Restart method for RollingOpsManager"""
         logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
+        config_changed = self.config_manager.config_changed()
         self.config_manager.set_dashboard_properties()
 
         self.state.delete_status_if_present(
@@ -159,25 +160,25 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component=self.cluster_manager.name,
         )
 
-        if not self.state.unit_server.started:
-            self.status_handler.set_running_status(
-                status=ServerStatuses.STARTING_SERVER.value,
-                component_name=self.cluster_manager.name,
-                scope="unit",
-            )
+        if config_changed or not self.workload.healthy():
+            if not self.state.unit_server.started:
+                self.status_handler.set_running_status(
+                    status=ServerStatuses.STARTING_SERVER.value,
+                    component_name=self.cluster_manager.name,
+                    scope="unit",
+                )
+            else:
+                self.status_handler.set_running_status(
+                    status=ServerStatuses.RESTARTING_SERVER.value,
+                    component_name=self.cluster_manager.name,
+                    scope="unit",
+                )
 
-        else:
-            self.status_handler.set_running_status(
-                status=ServerStatuses.RESTARTING_SERVER.value,
-                component_name=self.cluster_manager.name,
-                scope="unit",
-            )
+            self.cluster_manager.restart_server()
+            self.state.unit_server.update({"state": "started"})
 
-        self.cluster_manager.restart_server()
-        self.state.unit_server.update({"state": "started"})
-
-        # open the port
-        self.unit.open_port(protocol="tcp", port=SERVER_PORT)
+            # open the port
+            self.unit.open_port(protocol="tcp", port=SERVER_PORT)
 
         # Checking health after restart
         self.status_handler.set_running_status(

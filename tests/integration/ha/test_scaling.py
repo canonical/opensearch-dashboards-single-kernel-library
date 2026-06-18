@@ -162,14 +162,13 @@ async def scale_down(
         )
 
     logger.info(f"Waiting for units {unit_ids} to be removed safely")
-    if substrate == "k8s" and not traefik:
+    if substrate == "k8s" and not traefik and expected > 0:
         await wait_for_ingress_blocked(
             ops_test, app_name, timeout=1000, idle_period=30, wait_for_exact_units=expected
         )
     else:
         await ops_test.model.wait_for_idle(
             apps=[app_name],
-            status="active",
             wait_for_exact_units=expected,
             timeout=1000,
             idle_period=30,

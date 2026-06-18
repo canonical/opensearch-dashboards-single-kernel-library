@@ -214,8 +214,8 @@ async def _recover_from_signal(
     await ops_test_vm.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
-    if is_dashboards:
-        await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=1000)
+    # Always wait for dashboards to reconnect, not just when we were testing dashboards directly.
+    await ops_test.model.wait_for_idle(apps=[dash_name], wait_for_active=True, timeout=1000)
 
     logger.info("Checking OSD access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https, verify=verify)

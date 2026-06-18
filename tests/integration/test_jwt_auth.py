@@ -133,7 +133,7 @@ async def test_dashboard_access(
     # Calculate protocol depending on tls/traefik state
     protocol = "https" if is_https_enabled(test_flags) else "http"
     unit = ops_test.model.applications[app_name].units[0]
-    host, port, path = await get_dashboard_routing(
+    host, port, path, _ = await get_dashboard_routing(
         ops_test,
         unit.name,
     )

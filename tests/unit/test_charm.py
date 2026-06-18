@@ -206,6 +206,10 @@ def test_restart_initializes_unstarted_server(harness):
 
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as mock_set_props,
         patch(
@@ -330,6 +334,10 @@ def test_restart_sleep_no_wait_once_service_up(harness):
     # to reduce the scope of the test to the service availability delay
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
@@ -386,6 +394,10 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
     patched_timeout = 5
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=False,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
             return_value=False,
         ),
@@ -432,6 +444,10 @@ def test_restart_restarts_with_sleep(harness):
         patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=False,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
         patch(
@@ -457,6 +473,10 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
     mock_event.framework.model.unit.name = "unit/0"
 
     with (
+        patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
@@ -495,6 +515,10 @@ def test_init_server_calls_necessary_methods_leader(harness):
     mock_event.framework.model.unit.name = "unit/0"
 
     with (
+        patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,

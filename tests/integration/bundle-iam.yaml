@@ -53,13 +53,13 @@ applications:
       plugin_btree_gin_enable: true
   self-signed-certificates:
     charm: self-signed-certificates
-    revision: 586
+    revision: 588
     channel: 1/stable
     scale: 1
   traefik-admin:
     charm: traefik-k8s
     channel: latest/stable
-    revision: 176
+    revision: 315
     resources:
       traefik-image: docker.io/ubuntu/traefik:2-22.04
     series: focal
@@ -68,7 +68,7 @@ applications:
   traefik-public:
     charm: traefik-k8s
     channel: latest/stable
-    revision: 176
+    revision: 315
     resources:
       traefik-image: docker.io/ubuntu/traefik:2-22.04
     series: focal

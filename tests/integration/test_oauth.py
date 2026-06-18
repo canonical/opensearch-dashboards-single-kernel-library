@@ -200,14 +200,11 @@ async def test_oauth(
     ops_test_dashboards = ops_test if dashboard_substrate == "k8s" else ops_test_vm
 
     unit = ops_test_dashboards.model.applications[app_name].units[0]
-    host, port, path = await get_dashboard_routing(
+    host, port, path, _ = await get_dashboard_routing(
         ops_test_dashboards,
         unit.name,
     )
-    if not traefik:
-        url = f"https://{host}:{port}{path}"
-    else:
-        url = f"https://{host}{path}"
+    url = f"https://{host}:{port}{path}"
     await access_application_login_page(
         page=page,
         url=url,

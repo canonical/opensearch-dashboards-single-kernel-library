@@ -22,7 +22,9 @@ METADATA = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml")
 APP_NAME = METADATA["name"]
 PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"
-SERVICE_DEFAULT_PATH = "/etc/systemd/system/snap.charmed-zookeeper.daemon.service"
+SERVICE_DEFAULT_PATH = (
+    "/etc/systemd/system/snap.opensearch-dashboards.opensearch-dashboards-daemon.service"
+)
 PEER = "cluster"
 
 
