@@ -56,8 +56,8 @@ RESOURCE = {
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_deploy(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     charmvm: str,
     charmk8s: str,
     charm_base: str,
@@ -65,9 +65,9 @@ async def test_deploy(
     test_flags: Flags,
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
-    await ops_test.model.set_config(OPENSEARCH_CONFIG)
+    await ops_test_vm.model.set_config(OPENSEARCH_CONFIG)
 
-    await ops_test.model.deploy(
+    await ops_test_vm.model.deploy(
         OPENSEARCH_APP_NAME,
         channel="2/edge",
         num_units=2,
@@ -77,44 +77,39 @@ async def test_deploy(
     traefik = test_flags.traefik
 
     if substrate == "k8s":
-        await ops_test_microk8s.model.deploy(
+        await ops_test.model.deploy(
             charmk8s, application_name=app_name, base=charm_base, resources=RESOURCE
         )
         if traefik:
-            await ops_test_microk8s.model.deploy(
-                TRAEFIK_APP_NAME, channel="latest/stable", trust=True
-            )
+            await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
     else:
-        await ops_test_microk8s.model.deploy(charmvm, application_name=app_name, base=charm_base)
+        await ops_test.model.deploy(charmvm, application_name=app_name, base=charm_base)
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_deploy_identity_bundle(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
-    ops_test_oauth: OpsTest,
     ext_idp_service: ExternalIdpService,
 ):
-    """Deploy identity platform on K8s and wait for both models to complete deployments."""
+    """Deploy identity platform and wait for all models to complete deployments."""
     await deploy_identity_bundle(
-        ops_test=ops_test_oauth,
+        ops_test=ops_test,
         bundle_url="./tests/integration/bundle-iam.yaml",
         ext_idp_service=ext_idp_service,
     )
     await gather(
-        ops_test.model.wait_for_idle(),
-        ops_test_microk8s.model.wait_for_idle(),
-        ops_test_oauth.model.wait_for_idle(raise_on_error=False),
+        ops_test_vm.model.wait_for_idle(),
+        ops_test.model.wait_for_idle(raise_on_error=False),
     )
 
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_setup_relations(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
-    ops_test_oauth: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
@@ -123,55 +118,63 @@ async def test_setup_relations(
     traefik = test_flags.traefik
 
     if traefik:
-        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
-        await ops_test_microk8s.model.wait_for_idle(timeout=1000)
-
-    await ops_test_oauth.model.create_offer(
-        "certificates", "certificates", "self-signed-certificates"
-    )
-    await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.certificates")
-    await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
+        await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
+        await ops_test.model.wait_for_idle(timeout=1000)
 
     if substrate == "k8s":
-        await ops_test_microk8s.model.consume(f"admin/{ops_test_oauth.model_name}.certificates")
-    await ops_test_microk8s.model.integrate(f"{app_name}:certificates", "certificates")
-    if traefik:
-        await ops_test_microk8s.model.integrate(f"{TRAEFIK_APP_NAME}:certificates", "certificates")
-    await ops_test_microk8s.model.wait_for_idle(timeout=1000)
-    if substrate == "k8s":
-        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
-        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
+        # Identity bundle (including self-signed-certificates) is in ops_test (k8s).
+        # OpenSearch is in ops_test_vm (vm) and needs to consume the certificates offer.
+        await ops_test.model.create_offer(
+            "certificates", "certificates", "self-signed-certificates"
+        )
+        await ops_test_vm.model.consume(f"admin/{ops_test.model_name}.certificates")
+        await ops_test_vm.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
+        # Dashboards are in the same model as the identity bundle, integrate directly.
+        await ops_test.model.integrate(f"{app_name}:certificates", "certificates")
+        if traefik:
+            await ops_test.model.integrate(f"{TRAEFIK_APP_NAME}:certificates", "certificates")
+        await ops_test.model.wait_for_idle(timeout=1000)
 
-    await ops_test_microk8s.model.integrate(
+        # OpenSearch offer for the cross-model relation to dashboards.
+        await ops_test_vm.model.create_offer(
+            "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
+        )
+        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
+    else:
+        # vm: everything in the same model, integrate directly.
+        await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", "certificates")
+        await ops_test.model.integrate(f"{app_name}:certificates", "certificates")
+        await ops_test.model.wait_for_idle(timeout=1000)
+
+    await ops_test.model.integrate(
         f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{app_name}:opensearch-client"
     )
 
     await gather(
-        ops_test.model.wait_for_idle(status="active", timeout=1000),
-        ops_test_microk8s.model.wait_for_idle(timeout=1000),
-        ops_test_oauth.model.wait_for_idle(raise_on_error=False),
+        ops_test_vm.model.wait_for_idle(status="active", timeout=1000),
+        ops_test.model.wait_for_idle(timeout=1000),
     )
 
-    await ops_test_oauth.model.create_offer("oauth", "oauth", "hydra")
-    await ops_test.model.consume(f"admin/{ops_test_oauth.model_name}.oauth")
-
     if substrate == "k8s":
-        await ops_test_microk8s.model.consume(f"admin/{ops_test_oauth.model_name}.oauth")
-
-    await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "oauth")
-    await ops_test_microk8s.model.integrate(f"{app_name}:oauth", "oauth")
+        # hydra (oauth) is in ops_test (k8s); opensearch is in ops_test_vm (vm).
+        await ops_test.model.create_offer("oauth", "oauth", "hydra")
+        await ops_test_vm.model.consume(f"admin/{ops_test.model_name}.oauth")
+        await ops_test_vm.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "oauth")
+        # Dashboards: same model as hydra, integrate directly.
+        await ops_test.model.integrate(f"{app_name}:oauth", "oauth")
+    else:
+        await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "oauth")
+        await ops_test.model.integrate(f"{app_name}:oauth", "oauth")
 
     await gather(
-        ops_test.model.wait_for_idle(status="active"),
-        ops_test_microk8s.model.wait_for_idle(),
-        ops_test_oauth.model.wait_for_idle(raise_on_error=False),
+        ops_test_vm.model.wait_for_idle(status="active"),
+        ops_test.model.wait_for_idle(),
     )
 
 
 @pytest.mark.abort_on_fail
 async def test_oauth(
-    ops_test_microk8s: OpsTest,
-    ops_test_oauth: OpsTest,
+    ops_test: OpsTest,
     page: Page,
     ext_idp_service: ExternalIdpService,
     substrate: str,
@@ -181,9 +184,9 @@ async def test_oauth(
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
 
-    unit = ops_test_microk8s.model.applications[app_name].units[0]
+    unit = ops_test.model.applications[app_name].units[0]
     host, port, path = await get_dashboard_routing(
-        ops_test_microk8s,
+        ops_test,
         unit.name,
     )
     if not traefik:
@@ -196,6 +199,4 @@ async def test_oauth(
         redirect_login_url=f"{url}/app/login",
     )
     await click_on_sign_in_button_by_text(page=page, text="Log in with single sign-on")
-    await complete_auth_code_login(
-        page=page, ops_test=ops_test_oauth, ext_idp_service=ext_idp_service
-    )
+    await complete_auth_code_login(page=page, ops_test=ops_test, ext_idp_service=ext_idp_service)

@@ -12,6 +12,7 @@ import time
 
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
+from ops.model import ModelError, SecretNotFoundError
 
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
@@ -53,7 +54,12 @@ class ClusterManager(BaseManager):
         """Compute the server manager's statuses."""
         if not recompute:
             statuses = self.state.statuses.get(scope, self.name).root
-            missing = not self.state.opensearch_server or not self.state.opensearch_server.password
+            try:
+                missing = (
+                    not self.state.opensearch_server or not self.state.opensearch_server.password
+                )
+            except (SecretNotFoundError, ModelError):
+                missing = True
             status_val = ServerStatuses.DB_CONNECTION_MISSING.value
             if missing and status_val not in statuses:
                 statuses.append(status_val)
@@ -69,7 +75,13 @@ class ClusterManager(BaseManager):
         if scope == "unit" and not self.workload.ready():
             status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
 
-        if not self.state.opensearch_server or not self.state.opensearch_server.password:
+        try:
+            no_password = (
+                not self.state.opensearch_server or not self.state.opensearch_server.password
+            )
+        except SecretNotFoundError:
+            no_password = True
+        if no_password:
             status_list.append(
                 ServerStatuses.DB_CONNECTION_MISSING.value,
             )

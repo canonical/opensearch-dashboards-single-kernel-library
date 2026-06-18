@@ -12,6 +12,7 @@ from subprocess import PIPE, CalledProcessError, check_output
 from typing import Dict
 from urllib.parse import urlparse
 
+import pytest
 import requests
 import yaml
 from juju.relation import Relation
@@ -55,6 +56,11 @@ COS_AGENT_APP_NAME = "grafana-agent"
 COS_AGENT_RELATION_NAME = "cos-agent"
 DB_CLIENT_APP_NAME = "application"
 TRAEFIK_APP_NAME = "traefik-k8s"
+RESOURCE = {
+    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+        "upstream-source"
+    ]
+}
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +92,7 @@ DASHBOARD_QUERY_PARAMS = {
 
 def is_https_enabled(flags: Flags) -> bool:
     """Centralized logic to determine if HTTPS is expected based on matrix and substrate."""
-    tls = flags.tls
+    tls = flags.test_tls
     traefik = flags.traefik
     transfer_traefik_ca = flags.transfer_traefik_ca
 
@@ -95,16 +101,108 @@ def is_https_enabled(flags: Flags) -> bool:
     return tls
 
 
-async def wait_for_dashboard_idle(
-    ops_test_microk8s: OpsTest, traefik: bool, idle_period: int = 30
+INGRESS_BLOCKED_MSG = "Ingress relation missing"
+
+
+async def wait_for_ingress_blocked(
+    ops_test: OpsTest,
+    app_name: str = APP_NAME,
+    timeout: int = 1000,
+    idle_period: int = 30,
+    wait_for_exact_units: int | None = None,
 ):
+    """Wait for the app to be blocked specifically due to missing Ingress relation."""
+    kwargs: dict = {
+        "apps": [app_name],
+        "status": "blocked",
+        "timeout": timeout,
+        "idle_period": idle_period,
+    }
+    if wait_for_exact_units is not None:
+        kwargs["wait_for_exact_units"] = wait_for_exact_units
+    await ops_test.model.wait_for_idle(**kwargs)
+    status_data = await ops_test.model.get_status()
+    app_status_info = status_data.applications[app_name].status.info
+    assert (
+        app_status_info == INGRESS_BLOCKED_MSG
+    ), f"Expected app blocked status '{INGRESS_BLOCKED_MSG}', got '{app_status_info}'"
+    for unit_name, unit_data in status_data.applications[app_name].units.items():
+        unit_msg = unit_data.workload_status.info
+        assert (
+            unit_msg == INGRESS_BLOCKED_MSG
+        ), f"Expected unit {unit_name} blocked status '{INGRESS_BLOCKED_MSG}', got '{unit_msg}'"
+
+
+async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period: int = 30):
     """Standardized wait block for Dashboard app based on substrate and routing."""
-    expected_status = "active" if (not SUBSTRATE == "k8s" or traefik) else "blocked"
     apps = [APP_NAME, TRAEFIK_APP_NAME] if (SUBSTRATE == "k8s" and traefik) else [APP_NAME]
 
-    await ops_test_microk8s.model.wait_for_idle(
-        apps=apps, status=expected_status, timeout=1000, idle_period=idle_period
+    if not SUBSTRATE == "k8s" or traefik:
+        await ops_test.model.wait_for_idle(
+            apps=apps, status="active", timeout=1000, idle_period=idle_period
+        )
+    else:
+        await wait_for_ingress_blocked(ops_test, idle_period=idle_period)
+
+
+async def deploy_base(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    charm_base: str,
+    substrate: str,
+    num_units_app: int = 1,
+    num_units_db: int = 2,
+    opensearch_channel: str = "2/stable",
+    trust_charm: bool = False,
+    opensearch_config: dict | None = None,
+) -> str:
+    """Deploy OpenSearch+TLS on the VM model and dashboards on ops_test, wired together.
+
+    Returns app_name. Callers are responsible for traefik, TLS for dashboards,
+    cross-model TLS offers, and the final wait_for_idle on the dashboards app.
+    """
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    model_config = opensearch_config if opensearch_config is not None else OPENSEARCH_CONFIG
+
+    await ops_test_vm.model.set_config(model_config)
+    await ops_test_vm.model.deploy(
+        OPENSEARCH_APP_NAME,
+        channel=opensearch_channel,
+        num_units=num_units_db,
+        config=CONFIG_OPTS,
     )
+    await ops_test_vm.model.deploy(
+        TLS_CERTIFICATES_APP_NAME,
+        channel=TLS_STABLE_CHANNEL,
+        config={"ca-common-name": "CN_CA"},
+    )
+    await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+
+    deploy_kwargs: dict = {
+        "application_name": app_name,
+        "num_units": num_units_app,
+        "base": charm_base,
+    }
+    if substrate == "k8s":
+        deploy_kwargs["resources"] = RESOURCE
+        if trust_charm:
+            deploy_kwargs["trust"] = True
+        await ops_test.model.deploy(charmk8s, **deploy_kwargs)
+        await ops_test_vm.model.create_offer(
+            "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
+        )
+        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
+    else:
+        await ops_test.model.deploy(charmvm, **deploy_kwargs)
+
+    await ops_test_vm.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
+    )
+    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, app_name)
+
+    return app_name
 
 
 def get_relations(ops_test: OpsTest, name: str, app_name: str = "remote-") -> list[Relation]:
@@ -156,11 +254,11 @@ def access_prometheus_exporter(host: str) -> bool:
     return response.status_code == 200 and "opensearch_dashboards_status" in response.text
 
 
-async def access_all_prometheus_exporters(ops_test: OpsTest) -> bool:
+async def access_all_prometheus_exporters(ops_test: OpsTest, substrate: str = "vm") -> bool:
     """Check if a given unit has 'dashboard-exporter' service available and publishing."""
     result = True
     for unit in ops_test.model.applications[APP_NAME].units:
-        unit_ip = await get_address(ops_test, unit.name, APP_NAME)
+        unit_ip = await get_address(ops_test, unit.name, APP_NAME, substrate)
         logger.info(f"Accessing prometheus exporter with {unit_ip} ip")
         result = result and access_prometheus_exporter(unit_ip)
     return result
@@ -208,7 +306,7 @@ async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
 
 
 async def access_dashboard(
-    ops_test_microk8s: OpsTest,
+    ops_test: OpsTest,
     host: str,
     password: str,
     username: str = "kibanaserver",
@@ -224,7 +322,7 @@ async def access_dashboard(
     # Only route through dummy charm for internal K8s hostnames
     if host.endswith("-endpoints"):
         logger.info(f"Routing request through {DUMMY_CHARM} to {url}")
-        tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
+        tester_unit = ops_test.model.applications[DUMMY_CHARM].units[0]
 
         action_kwargs = {
             "url": url,
@@ -273,7 +371,7 @@ async def access_dashboard(
     retry=lambda x: x is False,
 )
 async def dashboard_unavailable(
-    ops_test_microk8s: OpsTest, host: str, https: bool = False, port: int = 5601, path: str = None
+    ops_test: OpsTest, host: str, https: bool = False, port: int = 5601, path: str = None
 ) -> bool:
     protocol = "https" if https else "http"
     path_str = path if path else ""
@@ -281,7 +379,7 @@ async def dashboard_unavailable(
 
     # Only route through dummy charm for internal K8s hostnames
     if host.endswith("-endpoints"):
-        tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
+        tester_unit = ops_test.model.applications[DUMMY_CHARM].units[0]
         action_kwargs = {"url": url, "method": "GET"}
 
         if https:
@@ -315,41 +413,41 @@ async def dashboard_unavailable(
     retry=retry_if_result(lambda x: x is False),
 )
 async def access_all_dashboards(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     https: bool = False,
     verify: bool = True,
     skip: list[str] = None,
 ):
     skip = skip or []
     if SUBSTRATE == "k8s":
-        relation_id = get_relations(ops_test, "opensearch-client")[0].id
+        relation_id = get_relations(ops_test_vm, "opensearch-client")[0].id
     else:
-        relation_id = get_relations(ops_test, "opensearch-client", APP_NAME)[0].id
+        relation_id = get_relations(ops_test_vm, "opensearch-client", APP_NAME)[0].id
 
-    if not ops_test_microk8s.model.applications[APP_NAME].units:
+    if not ops_test.model.applications[APP_NAME].units:
         logger.error(f"No units for application {APP_NAME}")
         return False
 
     dashboard_credentials = await get_secret_by_label(
-        ops_test, f"opensearch-client.{relation_id}.user.secret"
+        ops_test_vm, f"opensearch-client.{relation_id}.user.secret"
     )
     dashboard_password = dashboard_credentials["password"]
     result = True
     # Copying the Dashboard's CA cert locally to use it for SSL verification
     # We only get it once for pipeline efficiency, as it's the same on all units
     if verify:
-        unit = ops_test_microk8s.model.applications[APP_NAME].units[0].name
-        if unit not in skip and not get_dashboard_ca_cert(ops_test_microk8s.model.name, unit):
+        unit = ops_test.model.applications[APP_NAME].units[0].name
+        if unit not in skip and not get_dashboard_ca_cert(ops_test.model.name, unit):
             logger.error(f"Couldn't retrieve host certificate for unit {unit}")
             return False
 
-    for unit in ops_test_microk8s.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[APP_NAME].units:
         if unit.name in skip:
             continue
 
         host, port, path = await get_dashboard_routing(
-            ops_test_microk8s,
+            ops_test,
             unit.name,
         )
 
@@ -361,7 +459,7 @@ async def access_all_dashboards(
             f"Attempting to login to {host}:{port} with password {dashboard_password} and path: {path}"
         )
         result &= await access_dashboard(
-            ops_test_microk8s=ops_test_microk8s,
+            ops_test=ops_test,
             host=host,
             password=dashboard_password,
             ssl=https,
@@ -447,12 +545,14 @@ def get_file_contents(model_name: str, unit_name: str, filename: str) -> str:
     return output
 
 
-async def get_address(ops_test: OpsTest, unit_name: str, app_name: str = APP_NAME) -> str:
+async def get_address(
+    ops_test: OpsTest, unit_name: str, app_name: str = APP_NAME, substrate: str = "vm"
+) -> str:
     """Get the address for a unit."""
     status = await ops_test.model.get_status()  # noqa: F821
-    address = status["applications"][app_name]["units"][f"{unit_name}"].get("public-address")
-    if not address:
-        # If k8s
+    if substrate == "vm":
+        address = status["applications"][app_name]["units"][f"{unit_name}"].get("public-address")
+    else:
         address = status["applications"][app_name]["units"][f"{unit_name}"]["address"]
 
     return address
@@ -701,8 +801,8 @@ async def client_run_dashboards_request(
 
 
 async def client_run_all_dashboards_request(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     unit_name: str,
     relation: Relation,
     method: str,
@@ -712,12 +812,12 @@ async def client_run_all_dashboards_request(
 ):
     """Check if all dashboard instances are accessible."""
     result = []
-    if not ops_test_microk8s.model.applications[APP_NAME].units:
+    if not ops_test.model.applications[APP_NAME].units:
         logger.debug(f"No units for application {APP_NAME}")
         return False
 
     dashboard_credentials = await get_secret_by_label(
-        ops_test, f"opensearch-client.{relation.id}.user.secret"
+        ops_test_vm, f"opensearch-client.{relation.id}.user.secret"
     )
     username = dashboard_credentials.get("username")
     password = dashboard_credentials.get("password")
@@ -730,16 +830,16 @@ async def client_run_all_dashboards_request(
         except FileNotFoundError:
             logger.warning("ca.pem not found locally.")
 
-    for dashboards_unit in ops_test_microk8s.model.applications[APP_NAME].units:
-        host, port, path = await get_dashboard_routing(ops_test_microk8s, dashboards_unit.name)
+    for dashboards_unit in ops_test.model.applications[APP_NAME].units:
+        host, port, path = await get_dashboard_routing(ops_test, dashboards_unit.name)
 
         if not host:
             logger.debug(f"No hostname found for {dashboards_unit.name}, can't check connection.")
             return False
 
-        if host.endswith("-endpoints") and DUMMY_CHARM in ops_test_microk8s.model.applications:
+        if host.endswith("-endpoints") and DUMMY_CHARM in ops_test.model.applications:
             logger.info(f"Routing client data request through dashboard-tester to {host}")
-            tester_unit = ops_test_microk8s.model.applications[DUMMY_CHARM].units[0]
+            tester_unit = ops_test.model.applications[DUMMY_CHARM].units[0]
 
             protocol = "https" if https else "http"
             path_str = path if path else ""
@@ -775,7 +875,16 @@ async def client_run_all_dashboards_request(
             logger.info(f"Proxy Response from {host}: {res.results.get('status')}")
         else:
             response = await client_run_dashboards_request(
-                ops_test, unit_name, relation, method, host, endpoint, payload, https, port, path
+                ops_test_vm,
+                unit_name,
+                relation,
+                method,
+                host,
+                endpoint,
+                payload,
+                https,
+                port,
+                path,
             )
             if "results" in response:
                 result.append(json.loads(response["results"])["rawResponse"])
@@ -786,8 +895,15 @@ async def client_run_all_dashboards_request(
     return result
 
 
-async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME):
+async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME, consumer_ops_test=None):
     """Destroy cluster in a forceful way."""
+    if consumer_ops_test:
+        await consumer_ops_test.juju("remove-saas", app, "--no-wait", check=False)
+        # wait for consumer removal before destroying the provider
+        for attempt in Retrying(stop=stop_after_attempt(30), wait=wait_fixed(10), reraise=True):
+            with attempt:
+                status = await consumer_ops_test.model.get_status()
+                assert app not in (status.remote_applications or {})
     n_apps_before = len(ops_test.model.applications)
     await ops_test.model.applications[app].destroy(destroy_storage=True, force=True, no_wait=False)
 

@@ -81,9 +81,16 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    if os.environ.get("SUBSTRATE", "vm").lower() == "k8s":
+        k8s_cloud = os.environ.get("K8S_CLOUD", "uk8s")
+        if not getattr(config.option, "cloud", None):
+            config.option.cloud = k8s_cloud
+
+
 class Flags:
     def __init__(self):
-        self.tls = os.environ.get("TEST_TLS", "false").lower() == "true"
+        self.test_tls = os.environ.get("TEST_TLS", "false").lower() == "true"
         self.traefik = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
         self.transfer_traefik_ca = os.environ.get("TRANSFER_TRAEFIK_CA", "false").lower() == "true"
 
@@ -95,23 +102,27 @@ def test_flags() -> Flags:
 
 
 @pytest.fixture(scope="module")
-async def ops_test_microk8s(
+async def ops_test_vm(
     request, tmp_path_factory, ops_test: OpsTest
 ) -> AsyncGenerator[OpsTest, Any]:
-    """Conditionally returns a MicroK8s OpsTest, or the primary VM OpsTest."""
+    """Returns a VM OpsTest.
 
+    When the primary substrate is k8s (ops_test points to k8s), this fixture creates and
+    manages a secondary VM model for OpenSearch. When the primary substrate is vm, this
+    fixture simply yields the same ops_test.
+    """
     if os.environ.get("SUBSTRATE", "vm").lower() != "k8s":
         yield ops_test
         return
 
-    model_name = f"{ops_test.model_name}-uk8s"
+    model_name = f"{ops_test.model_name}-vm"
 
     orig_cloud = getattr(request.config.option, "cloud", None)
     orig_model = getattr(request.config.option, "model", None)
     orig_alias = getattr(request.config.option, "model_alias", None)
 
     request.config.option.controller = ops_test.controller_name
-    request.config.option.cloud = "uk8s"
+    request.config.option.cloud = "localhost"
     request.config.option.model = model_name
     request.config.option.model_alias = model_name
 
@@ -124,33 +135,6 @@ async def ops_test_microk8s(
 
     yield ops_res
 
-    if not ops_test.keep_model:
-        await ops_res.forget_model(alias=model_name)
-        await ops_res._controller.destroy_model(model_name, destroy_storage=True, force=True)
-        while model_name in await ops_res._controller.list_models():
-            await sleep(5)
-    await ops_res._cleanup_models()
-
-
-@pytest.fixture(scope="module")
-async def ops_test_oauth(
-    request, tmp_path_factory, ops_test: OpsTest
-) -> AsyncGenerator[OpsTest, Any]:
-    """Create second OpsTest object, that is connected to the MicroK8s cloud for oauth testing
-
-    Automatically creates and destroys (unless keep models parameter is used) corresponding Juju model.
-
-    Returns:
-        OpsTest object with MicroK8s connection and Juju model.
-    """
-    model_name = f"{ops_test.model_name}-oauth"
-    request.config.option.controller = ops_test.controller_name
-    request.config.option.cloud = "uk8s"
-    request.config.option.model = model_name
-    request.config.option.model_alias = model_name
-    ops_res = OpsTest(request, tmp_path_factory)
-    await ops_res._setup_model()
-    yield ops_res
     if not ops_test.keep_model:
         await ops_res.forget_model(alias=model_name)
         await ops_res._controller.destroy_model(model_name, destroy_storage=True, force=True)

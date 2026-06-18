@@ -16,8 +16,10 @@ from .conftest import Flags
 from .helpers import (
     CONFIG_OPTS,
     DASHBOARD_QUERY_PARAMS,
+    DUMMY_CHARM,
+    OPENSEARCH_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
-    TLS_STABLE_CHANNEL,
+    TRAEFIK_APP_NAME,
     access_all_dashboards,
     access_all_prometheus_exporters,
     all_dashboards_unavailable,
@@ -25,6 +27,7 @@ from .helpers import (
     client_run_all_dashboards_request,
     client_run_db_request,
     count_lines_with,
+    deploy_base,
     destroy_cluster,
     get_address,
     get_file_contents,
@@ -32,6 +35,7 @@ from .helpers import (
     get_unit_relation_data,
     is_https_enabled,
     wait_for_dashboard_idle,
+    wait_for_ingress_blocked,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,19 +46,7 @@ PROMETHEUS_APP = "prometheus-k8s"
 LOKI_APP = "loki-k8s"
 GRAFANA_APP = "grafana-k8s"
 COS_PORT = "9684"
-OPENSEARCH_APP_NAME = "opensearch"
-DUMMY_CHARM = "dummy-charm"
-TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
-OPENSEARCH_CONFIG = {
-    "logging-config": "<root>=INFO;unit=DEBUG",
-    "cloudinit-userdata": """postruncmd:
-        - [ 'sysctl', '-w', 'vm.max_map_count=262144' ]
-        - [ 'sysctl', '-w', 'fs.file-max=1048576' ]
-        - [ 'sysctl', '-w', 'vm.swappiness=0' ]
-        - [ 'sysctl', '-w', 'net.ipv4.tcp_retries2=5' ]
-    """,
-}
 COS_AGENT_APP_NAME = "grafana-agent"
 COS_CHANNEL = "1/stable"
 COS_AGENT_RELATION_NAME = "cos-agent"
@@ -62,17 +54,12 @@ DB_CLIENT_APP_NAME = "application"
 
 NUM_UNITS_APP = 3
 NUM_UNITS_DB = 3
-RESOURCE = {
-    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
-        "upstream-source"
-    ]
-}
 
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     charmvm: str,
     charmk8s: str,
     application_charm: str,
@@ -82,136 +69,99 @@ async def test_build_and_deploy(
     test_flags: Flags,
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
-    charm = charmk8s if substrate == "k8s" else charmvm
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    tls = test_flags.tls
+    tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
 
-    await ops_test.model.set_config(OPENSEARCH_CONFIG)
-
-    await ops_test.model.deploy(
-        OPENSEARCH_APP_NAME, channel="2/stable", num_units=NUM_UNITS_DB, config=CONFIG_OPTS
+    app_name = await deploy_base(
+        ops_test_vm,
+        ops_test,
+        charmvm,
+        charmk8s,
+        charm_base,
+        substrate,
+        num_units_app=NUM_UNITS_APP,
+        num_units_db=NUM_UNITS_DB,
     )
-    await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
-    await ops_test.model.deploy(
-        TLS_CERTIFICATES_APP_NAME,
-        channel=TLS_STABLE_CHANNEL,
-        config={"ca-common-name": "CN_CA"},
-    )
 
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test_vm.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
+    await ops_test_vm.model.integrate(DB_CLIENT_APP_NAME, OPENSEARCH_APP_NAME)
 
     if substrate == "vm":
         # Base does not work with grafana-agent charm so continuing using series
         series = "jammy" if charm_base == "ubuntu@22.04" else "noble"
-        await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
+        await ops_test_vm.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
     else:
         for app in [PROMETHEUS_APP, LOKI_APP, GRAFANA_APP]:
-            await ops_test_microk8s.model.deploy(
-                app, application_name=app, channel="2/stable", trust=True
-            )
-
-        await ops_test.model.create_offer("opensearch-client", OPENSEARCH_APP_NAME, "opensearch")
-        await ops_test_microk8s.model.consume(f"admin/{ops_test.model.name}.{OPENSEARCH_APP_NAME}")
-        await ops_test.model.create_offer(
+            await ops_test.model.deploy(app, application_name=app, channel="2/stable", trust=True)
+        await ops_test_vm.model.create_offer(
             endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
             offer_name="self-signed-certificates",
         )
-        await ops_test_microk8s.model.consume(
-            f"admin/{ops_test.model.name}.{TLS_CERTIFICATES_APP_NAME}"
-        )
-
-    deploy_kwargs = {
-        "application_name": app_name,
-        "num_units": NUM_UNITS_APP,
-        "base": charm_base,
-    }
-    if substrate == "k8s":
-        deploy_kwargs["resources"] = RESOURCE
-
-    await ops_test_microk8s.model.deploy(charm, **deploy_kwargs)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
-    await ops_test_microk8s.model.integrate(OPENSEARCH_APP_NAME, app_name)
+        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{TLS_CERTIFICATES_APP_NAME}")
 
     if substrate == "k8s":
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="blocked", timeout=1000
-        )
+        await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
     else:
-        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
-    await ops_test.model.wait_for_idle(apps=[DB_CLIENT_APP_NAME], status="active", timeout=1000)
+    await ops_test_vm.model.wait_for_idle(apps=[DB_CLIENT_APP_NAME], status="active", timeout=1000)
 
     if traefik:
-        await ops_test_microk8s.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[TRAEFIK_APP_NAME], status="active", timeout=1000
-        )
-        await ops_test_microk8s.model.integrate(app_name, TRAEFIK_APP_NAME)
-        await ops_test_microk8s.model.wait_for_idle(
+        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+        await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
+        await ops_test.model.wait_for_idle(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
         )
     if transfer_traefik_ca:
-        await ops_test_microk8s.model.integrate(
+        await ops_test.model.integrate(
             f"{TLS_CERTIFICATES_APP_NAME}:send-ca-cert", TRAEFIK_APP_NAME
         )
-        await ops_test_microk8s.model.wait_for_idle(
+        await ops_test.model.wait_for_idle(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
         )
     if tls:
-        await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
         if not transfer_traefik_ca and traefik:
-            await ops_test_microk8s.model.integrate(
+            await ops_test.model.integrate(
                 TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
             )
-            await ops_test_microk8s.model.wait_for_idle(
+            await ops_test.model.wait_for_idle(
                 apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
             )
         elif not substrate == "k8s" or traefik:
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="active", timeout=1000
-            )
+            await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
         else:
-            await ops_test_microk8s.model.deploy(
-                dashboard_tester_charm, application_name=DUMMY_CHARM
-            )
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name], status="blocked", timeout=1000
-            )
+            await ops_test.model.deploy(dashboard_tester_charm, application_name=DUMMY_CHARM)
+            await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
 
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_access(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     """Test HTTP/HTTPS access based on the group configuration."""
-    tls = test_flags.tls
+    tls = test_flags.test_tls
     https_enabled = is_https_enabled(test_flags)
 
-    assert await access_all_dashboards(
-        ops_test, ops_test_microk8s, https=https_enabled, verify=tls
-    )
-    assert await access_all_prometheus_exporters(ops_test_microk8s)
+    assert await access_all_dashboards(ops_test_vm, ops_test, https=https_enabled, verify=tls)
+    assert await access_all_prometheus_exporters(ops_test, substrate)
 
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_tls_lifecycle(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     """Test HTTPS relation lifecycle (breaking and restoring)."""
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    tls = test_flags.tls
+    tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
 
@@ -224,36 +174,36 @@ async def test_dashboard_tls_lifecycle(
         else "/var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/server.pem"
     )
 
-    unit = ops_test_microk8s.model.applications[app_name].units[0]
-    host_cert = get_file_contents(ops_test_microk8s.model.name, unit.name, server_cert)
+    unit = ops_test.model.applications[app_name].units[0]
+    host_cert = get_file_contents(ops_test.model.name, unit.name, server_cert)
 
     # Breaking the relation shouldn't impact service availability
     # A new certificate is requested when the relation is joined again
-    await ops_test_microk8s.juju("remove-relation", app_name, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
+    await ops_test.juju("remove-relation", app_name, TLS_CERTIFICATES_APP_NAME)
+    await ops_test_vm.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
 
-    await wait_for_dashboard_idle(ops_test_microk8s, traefik)
+    await wait_for_dashboard_idle(ops_test, traefik)
     # TLS Broken on relation removal; we check the connection on HTTP (https=False)
 
     # If traefik enabled it's related to TLS. Breaking TLS relation breaks the traefik charm, so we do not do that
-    https = True if not transfer_traefik_ca and traefik and tls else False
-    assert await access_all_dashboards(ops_test, ops_test_microk8s, https=https, verify=tls)
+    https = not transfer_traefik_ca and traefik and tls
+    assert await access_all_dashboards(ops_test_vm, ops_test, https=https, verify=tls)
 
     # Restore relation for further tests
-    await ops_test_microk8s.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
+    await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+    await ops_test_vm.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000, idle_period=20
     )
-    await wait_for_dashboard_idle(ops_test_microk8s, traefik)
-    new_host_cert = get_file_contents(ops_test_microk8s.model.name, unit.name, server_cert)
+    await wait_for_dashboard_idle(ops_test, traefik)
+    new_host_cert = get_file_contents(ops_test.model.name, unit.name, server_cert)
     assert host_cert != new_host_cert
 
     # Verify HTTPS is restored
     assert await access_all_dashboards(
+        ops_test_vm,
         ops_test,
-        ops_test_microk8s,
         https=is_https_enabled(test_flags),
         verify=tls,
     )
@@ -261,13 +211,13 @@ async def test_dashboard_tls_lifecycle(
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_client_data_access(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     """Test API access to each dashboard unit."""
-    client_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME, DB_CLIENT_APP_NAME)[0]
+    client_relation = get_relations(ops_test_vm, OPENSEARCH_RELATION_NAME, DB_CLIENT_APP_NAME)[0]
 
     # Loading data to Opensearch
     dicts = [
@@ -286,9 +236,9 @@ async def test_dashboard_client_data_access(
 
     payload = "\n".join([json.dumps(d) for d in dicts]) + "\n"
 
-    unit_name = ops_test.model.applications[DB_CLIENT_APP_NAME].units[0].name
+    unit_name = ops_test_vm.model.applications[DB_CLIENT_APP_NAME].units[0].name
     await client_run_db_request(
-        ops_test,
+        ops_test_vm,
         unit_name,
         client_relation,
         "POST",
@@ -298,7 +248,7 @@ async def test_dashboard_client_data_access(
 
     # Checking if data got to the DB indeed
     read_db_data = await client_run_db_request(
-        ops_test, unit_name, client_relation, "GET", "/albums/_search"
+        ops_test_vm, unit_name, client_relation, "GET", "/albums/_search"
     )
     results = json.loads(read_db_data["results"])
     logging.info(f"Loaded into the database: {results}")
@@ -308,8 +258,8 @@ async def test_dashboard_client_data_access(
     assert all([hit["_source"] in data_dicts for hit in results["hits"]["hits"]])
 
     result = await client_run_all_dashboards_request(
+        ops_test_vm,
         ops_test,
-        ops_test_microk8s,
         unit_name,
         client_relation,
         "POST",
@@ -325,19 +275,19 @@ async def test_dashboard_client_data_access(
 
 @pytest.mark.abort_on_fail
 async def test_cos_relations(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
     if substrate == "k8s":
-        await ops_test_microk8s.model.integrate(f"{app_name}:metrics-endpoint", PROMETHEUS_APP)
-        await ops_test_microk8s.model.integrate(f"{app_name}:logging", LOKI_APP)
-        await ops_test_microk8s.model.integrate(f"{app_name}:grafana-dashboard", GRAFANA_APP)
+        await ops_test.model.integrate(f"{app_name}:metrics-endpoint", PROMETHEUS_APP)
+        await ops_test.model.integrate(f"{app_name}:logging", LOKI_APP)
+        await ops_test.model.integrate(f"{app_name}:grafana-dashboard", GRAFANA_APP)
 
-        await ops_test_microk8s.model.wait_for_idle(
+        await ops_test.model.wait_for_idle(
             apps=[PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
             status="active",
             timeout=1000,
@@ -345,19 +295,14 @@ async def test_cos_relations(
         )
 
         if traefik:
-            await ops_test_microk8s.model.wait_for_idle(
+            await ops_test.model.wait_for_idle(
                 apps=[PROMETHEUS_APP, LOKI_APP, GRAFANA_APP],
                 status="active",
                 timeout=1000,
                 idle_period=30,
             )
         else:
-            await ops_test_microk8s.model.wait_for_idle(
-                apps=[app_name],
-                status="blocked",
-                timeout=1000,
-                idle_period=30,
-            )
+            await wait_for_ingress_blocked(ops_test, app_name, timeout=1000, idle_period=30)
 
         expected_results = {
             "metrics_path": "/metrics",
@@ -365,11 +310,9 @@ async def test_cos_relations(
             "scheme": "http",
         }
 
-        prom_unit = ops_test_microk8s.model.applications[PROMETHEUS_APP].units[0]
+        prom_unit = ops_test.model.applications[PROMETHEUS_APP].units[0]
 
-        rc, stdout, stderr = await ops_test_microk8s.juju(
-            "show-unit", prom_unit.name, "--format=yaml"
-        )
+        rc, stdout, stderr = await ops_test.juju("show-unit", prom_unit.name, "--format=yaml")
         assert rc == 0, f"Failed to get unit data: {stderr}"
 
         unit_data = yaml.safe_load(stdout)[prom_unit.name]
@@ -393,11 +336,11 @@ async def test_cos_relations(
             assert unit_cos_config[key] == value
 
     else:
-        await ops_test.model.integrate(COS_AGENT_APP_NAME, app_name)
-        await ops_test.model.wait_for_idle(
+        await ops_test_vm.model.integrate(COS_AGENT_APP_NAME, app_name)
+        await ops_test_vm.model.wait_for_idle(
             apps=[app_name], status="active", timeout=1000, idle_period=30
         )
-        await ops_test.model.wait_for_idle(
+        await ops_test_vm.model.wait_for_idle(
             apps=[COS_AGENT_APP_NAME], status="blocked", timeout=1000, idle_period=30
         )
 
@@ -407,11 +350,11 @@ async def test_cos_relations(
                 "scheme": "http",
             }
         ]
-        agent_unit = ops_test.model.applications[COS_AGENT_APP_NAME].units[0]
-        for unit in ops_test.model.applications[app_name].units:
-            unit_ip = await get_address(ops_test, unit.name, app_name)
+        agent_unit = ops_test_vm.model.applications[COS_AGENT_APP_NAME].units[0]
+        for unit in ops_test_vm.model.applications[app_name].units:
+            unit_ip = await get_address(ops_test_vm, unit.name, app_name, substrate)
             relation_data = get_unit_relation_data(
-                ops_test.model.name, agent_unit.name, COS_AGENT_RELATION_NAME
+                ops_test_vm.model.name, agent_unit.name, COS_AGENT_RELATION_NAME
             )
             expected_results[0]["static_configs"] = [{"targets": [f"{unit_ip}:9684"]}]
             unit_data = relation_data[unit.name]
@@ -422,8 +365,8 @@ async def test_cos_relations(
 
 @pytest.mark.abort_on_fail
 async def test_log_level_change(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
@@ -436,56 +379,54 @@ async def test_log_level_change(
         log_path = "/var/log/opensearch-dashboards/opensearch_dashboards.log"
         container = "opensearch-dashboards"
 
-    for unit in ops_test_microk8s.model.applications[app_name].units:
-        assert count_lines_with(
-            ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
-        )
+    for unit in ops_test.model.applications[app_name].units:
+        assert count_lines_with(ops_test.model_full_name, unit.name, log_path, "debug", container)
 
-        await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "ERROR"})
+        await ops_test.model.applications[app_name].set_config({"log_level": "ERROR"})
 
-        await wait_for_dashboard_idle(ops_test_microk8s, traefik)
+        await wait_for_dashboard_idle(ops_test, traefik)
         debug_lines = count_lines_with(
-            ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
+            ops_test.model_full_name, unit.name, log_path, "debug", container
         )
 
         assert (
-            count_lines_with(
-                ops_test_microk8s.model_full_name, unit.name, log_path, "debug", container
-            )
+            count_lines_with(ops_test.model_full_name, unit.name, log_path, "debug", container)
             == debug_lines
         )
 
-    await ops_test_microk8s.model.applications[app_name].set_config({"log_level": "INFO"})
-    await wait_for_dashboard_idle(ops_test_microk8s, traefik)
+    await ops_test.model.applications[app_name].set_config({"log_level": "INFO"})
+    await wait_for_dashboard_idle(ops_test, traefik)
 
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_status_changes(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     """Test status changes based on backend failures."""
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    tls = test_flags.tls
+    tls = test_flags.test_tls
     traefik = test_flags.traefik
     logger.info("Breaking opensearch connection")
-    await ops_test_microk8s.juju("remove-relation", "opensearch", app_name)
-    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    await ops_test.juju("remove-relation", "opensearch", app_name)
+    await ops_test_vm.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
+    )
 
-    async with ops_test_microk8s.fast_forward("30s"):
-        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="blocked")
+    async with ops_test.fast_forward("30s"):
+        await ops_test.model.wait_for_idle(apps=[app_name], status="blocked")
 
     logger.info("Waiting up to 600s for status OpenSearch connection is missing")
-    async with ops_test_microk8s.fast_forward("30s"):
+    async with ops_test.fast_forward("30s"):
         timeout = 600
         start_time = time.time()
         status_matched = False
 
         while time.time() - start_time < timeout:
             status_matched = await check_full_status(
-                ops_test_microk8s,
+                ops_test,
                 app_name=app_name,
                 status="blocked",
                 status_msg="OpenSearch connection is missing",
@@ -498,32 +439,27 @@ async def test_dashboard_status_changes(
         assert status_matched
 
     logger.info("Checking if Dashboards have become unavailable")
-    assert await all_dashboards_unavailable(ops_test_microk8s, https=tls)
+    assert await all_dashboards_unavailable(ops_test, https=tls)
 
     logger.info("Restoring Opensearch connection")
-    await ops_test_microk8s.model.integrate(app_name, OPENSEARCH_APP_NAME)
-    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    await ops_test.model.integrate(app_name, OPENSEARCH_APP_NAME)
+    await ops_test_vm.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
+    )
     if not substrate == "k8s" or traefik:
-        await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
-        assert ops_test_microk8s.model.applications[app_name].status == "active"
+        await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+        assert ops_test.model.applications[app_name].status == "active"
         assert all(
             unit.workload_status == "active"
-            for unit in ops_test_microk8s.model.applications[app_name].units
+            for unit in ops_test.model.applications[app_name].units
         )
     else:
-        await ops_test_microk8s.model.wait_for_idle(
-            apps=[app_name], status="blocked", timeout=1000
-        )
-        assert ops_test_microk8s.model.applications[app_name].status == "blocked"
-        assert all(
-            unit.workload_status == "blocked"
-            for unit in ops_test_microk8s.model.applications[app_name].units
-        )
+        await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
 
     logger.info("Checking if Dashboards is available again")
     assert await access_all_dashboards(
+        ops_test_vm,
         ops_test,
-        ops_test_microk8s,
         https=is_https_enabled(test_flags),
         verify=tls,
     )
@@ -531,7 +467,7 @@ async def test_dashboard_status_changes(
     logger.info(
         "Adding a new index with shards allocated to a non-existent node to make cluster health red"
     )
-    client_relation = get_relations(ops_test, OPENSEARCH_RELATION_NAME, DB_CLIENT_APP_NAME)[0]
+    client_relation = get_relations(ops_test_vm, OPENSEARCH_RELATION_NAME, DB_CLIENT_APP_NAME)[0]
 
     payload = {
         "settings": {
@@ -543,9 +479,9 @@ async def test_dashboard_status_changes(
 
     payload = json.dumps(payload)
 
-    unit_name = ops_test.model.applications[DB_CLIENT_APP_NAME].units[0].name
+    unit_name = ops_test_vm.model.applications[DB_CLIENT_APP_NAME].units[0].name
     await client_run_db_request(
-        ops_test,
+        ops_test_vm,
         unit_name,
         client_relation,
         "PUT",
@@ -553,14 +489,14 @@ async def test_dashboard_status_changes(
         re.escape(payload),
     )
     logger.info("Waiting up to 600s for OpenSearch service health to become red...")
-    async with ops_test_microk8s.fast_forward("30s"):
+    async with ops_test.fast_forward("30s"):
         timeout = 600
         start_time = time.time()
         status_matched = False
 
         while time.time() - start_time < timeout:
             status_matched = await check_full_status(
-                ops_test_microk8s,
+                ops_test,
                 app_name=app_name,
                 status="blocked",
                 status_msg="The OpenSearch service health is red",
@@ -573,39 +509,47 @@ async def test_dashboard_status_changes(
         assert status_matched
 
 
-@pytest.mark.skip(reason="https://warthogs.atlassian.net/browse/DPE-5073")
 async def test_restore_opensearch_restores_osd(
+    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    ops_test_microk8s: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
     """This test shouldn't be separate but a native continuation of the previous one."""
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    tls = test_flags.tls
+    tls = test_flags.test_tls
     logger.info("Destroying and restoring the Opensearch cluster")
-    await destroy_cluster(ops_test, app=OPENSEARCH_APP_NAME)
+    await destroy_cluster(
+        ops_test_vm,
+        app=OPENSEARCH_APP_NAME,
+        consumer_ops_test=ops_test if substrate == "k8s" else None,
+    )
 
-    await ops_test.model.deploy(
+    await ops_test_vm.model.deploy(
         OPENSEARCH_APP_NAME,
-        channel="2/edge",
+        channel="2/stable",
         num_units=NUM_UNITS_DB,
         config=CONFIG_OPTS,
     )
 
     if tls:
-        await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+        await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
-    async with ops_test.fast_forward("30s"):
-        await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="blocked")
+    async with ops_test_vm.fast_forward("30s"):
+        await ops_test_vm.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="blocked")
 
-    await ops_test_microk8s.model.integrate(app_name, OPENSEARCH_APP_NAME)
+    if substrate == "k8s":
+        await ops_test_vm.model.create_offer(
+            "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
+        )
+        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
+    await ops_test.model.integrate(app_name, OPENSEARCH_APP_NAME)
 
-    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    await ops_test_vm.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
+    )
 
-    await ops_test_microk8s.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     logger.info("Checking if Dashboards is available again")
-    assert await access_all_dashboards(
-        ops_test, ops_test_microk8s, https=is_https_enabled(test_flags)
-    )
+    assert await access_all_dashboards(ops_test_vm, ops_test, https=is_https_enabled(test_flags))

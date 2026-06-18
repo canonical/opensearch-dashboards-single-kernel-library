@@ -9,9 +9,8 @@ from typing import Literal
 
 from data_platform_helpers.advanced_statuses import StatusesState, StatusObject
 from data_platform_helpers.advanced_statuses.protocol import StatusesStateProtocol
-from ops import CharmBase, StoredState
 from ops.framework import Object
-from ops.model import Relation, Unit
+from ops.model import ModelError, Relation, Unit
 
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
@@ -27,7 +26,6 @@ from single_kernel_opensearch_dashboards.common.literals import (
     SERVER_PORT,
     STATUS_PEERS_REL_NAME,
     UPGRADE_REL_NAME,
-    RelDepartureReason,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
@@ -58,8 +56,6 @@ logger = logging.getLogger(__name__)
 
 class ClusterState(Object, StatusesStateProtocol):
     """Collection of global cluster state for Framework/Object."""
-
-    _stored_state = StoredState()
 
     def __init__(
         self,
@@ -268,7 +264,11 @@ class ClusterState(Object, StatusesStateProtocol):
         Returns:
             True if all units are related. Otherwise False
         """
-        return len(self.servers) == self.model.app.planned_units()
+        try:
+            planned = self.model.app.planned_units()
+        except ModelError:
+            return True
+        return len(self.servers) == planned
 
     # --- HEALTH ---
 
@@ -323,7 +323,7 @@ class ClusterState(Object, StatusesStateProtocol):
         Returns:
             True if all application units in idle state. Otherwise False
         """
-        return not (s := self.upgrade_unit_states) or set(s) == {""} or set(s) == {"idle"}
+        return not self.upgrade_unit_states or set(self.upgrade_unit_states) <= {"", "idle"}
 
     @property
     def upgrade_app_units(self) -> set[Unit]:

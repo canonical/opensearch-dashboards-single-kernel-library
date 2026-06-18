@@ -69,16 +69,16 @@ class RequirerEvents(Object):
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
         if (
-            not self.charm.unit.is_leader()
-            or relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
             == RelDepartureReason.APP_REMOVAL
         ):
             return
 
-        self.state.add_status_to_both(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            component=CLUSTER_MANAGER_NAME,
-        )
+        if self.charm.unit.is_leader():
+            self.state.add_status_to_both(
+                status=ServerStatuses.DB_CONNECTION_MISSING.value,
+                component=CLUSTER_MANAGER_NAME,
+            )
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)

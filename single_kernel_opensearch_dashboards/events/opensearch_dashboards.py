@@ -190,14 +190,6 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         """Handle the `secret-changed` event."""
-        if (
-            relation_departure_reason(
-                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
-            )
-            == RelDepartureReason.APP_REMOVAL
-        ):
-            return
-
         if not self.pre_restart_check():
             event.defer()
             return

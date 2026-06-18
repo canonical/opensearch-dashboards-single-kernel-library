@@ -172,8 +172,8 @@ jobs:
 
           # Check if the second model exists and store the list in GITHUB_ENV
           MODELS="testing"
-          if sudo juju models | grep -qw "testing_uk8s"; then
-            MODELS="testing testing_uk8s"
+          if sudo juju models | grep -qw "testing-vm"; then
+            MODELS="testing testing-vm"
           fi
           echo "TARGET_MODELS=$MODELS" >> "$GITHUB_ENV"
       - name: juju status

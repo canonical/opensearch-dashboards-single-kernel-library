@@ -16,6 +16,7 @@ from urllib3.util import url
 from single_kernel_opensearch_dashboards.common.literals import Substrates
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     Data,
+    DataDict,
     RequirerData,
 )
 
@@ -43,7 +44,27 @@ class StateBase:
     @property
     def relation_data(self) -> MutableMapping[str, str]:
         """The raw relation data."""
-        return self._relation_data
+        if not isinstance(self._relation_data, DataDict):
+            return {}
+        di = self._relation_data.relation_data
+        rid = self._relation_data.relation_id
+        app_data: dict[str, str] = {}
+        remote_data: dict[str, str] = {}
+        can_fetch_own = (
+            not hasattr(di.fetch_my_relation_data, "leader_only")
+            or di.component == di.local_app
+            and di.local_unit.is_leader()
+        )
+        if can_fetch_own:
+            result = di.fetch_my_relation_data([rid])
+            if result:
+                app_data = result.get(rid, {})
+        try:
+            result = di.fetch_relation_data([rid])
+            remote_data = result.get(rid, {})
+        except NotImplementedError:
+            pass
+        return {**remote_data, **app_data}
 
     def update(self, items: dict[str, str]) -> None:
         """Writes to relation_data."""
@@ -281,7 +302,7 @@ class OSDServer(StateBase):
     @property
     def log_level(self) -> str | None:
         """Get log level value."""
-        return self.relation_data.get("log_level", None)
+        return self.relation_data.get("log_level")
 
     @log_level.setter
     def log_level(self, value: str) -> None:
@@ -361,10 +382,10 @@ class JWT(RequirerData):
         """Return the jwt relation if present."""
         return self.relations[0] if len(self.relations) else None
 
-    def get_jwt_url(self) -> str:
+    def get_jwt_url(self) -> str | None:
         """Return the jwt urls if jwt relation is present."""
         if not self.jwt_relation:
-            return ""
+            return None
         relation_data = self.fetch_relation_data([self.jwt_relation.id])
         return relation_data[self.jwt_relation.id].get("jwt-url-parameter", "")
 

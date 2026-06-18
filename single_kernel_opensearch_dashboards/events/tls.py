@@ -146,6 +146,8 @@ class TLSEvents(Object):
             event.defer()
             return
 
+        self.charm.emit_restart(event)
+
     def _on_certificate_expiring(self, event: EventBase) -> None:
         """Handler for `certificates_expiring` event when certs need renewing."""
         if not (self.state.unit_server.private_key or self.state.unit_server.csr):
@@ -206,6 +208,7 @@ class TLSEvents(Object):
             )
             logger.info("Updated ingress relation to use HTTP scheme.")
         self._remove_certificates(event)
+        self.charm.emit_restart(event)
 
     def _set_tls_private_key(self, event: "ActionEvent") -> None:
         """Handler for `set-tls-private-key` event when user manually specifies private-keys for a unit."""

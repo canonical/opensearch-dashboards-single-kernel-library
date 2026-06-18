@@ -18,7 +18,7 @@ from single_kernel_opensearch_dashboards.common.literals import SERVER_PORT
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"

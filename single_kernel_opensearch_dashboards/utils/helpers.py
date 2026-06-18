@@ -8,6 +8,7 @@ import json
 import logging
 
 from data_platform_helpers.version_check import get_charm_revision
+from ops.model import ModelError
 
 from single_kernel_opensearch_dashboards.common.literals import RelDepartureReason
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
@@ -45,21 +46,34 @@ def relation_departure_reason(
     charm: CharmBase, relation_name: str, departing_app: str
 ) -> RelDepartureReason:
     """Compute the reason behind a relation departed event."""
-    # fetch relation info
-    goal_state = charm.model._backend._run("goal-state", return_output=True, use_json=True)
+    try:
+        goal_state = charm.model._backend._run("goal-state", return_output=True, use_json=True)
+    except ModelError:
+        # goal-state fails for cross-model (SAAS) relations; treat as plain relation removal
+        return RelDepartureReason.REL_BROKEN
+
+    if departing_app == charm.app.name:
+        dying_units = [
+            unit_data["status"] == "dying" for unit_data in goal_state.get("units", {}).values()
+        ]
+        if dying_units and all(dying_units):
+            return RelDepartureReason.APP_REMOVAL
+        if any(dying_units):
+            return RelDepartureReason.SCALE_DOWN
+        return RelDepartureReason.REL_BROKEN
+
     rel_info = goal_state["relations"].get(relation_name)
     if rel_info is None:
         return RelDepartureReason.APP_REMOVAL
 
-    # check dying units
+    # check dying units of the remote app
     dying_units = [
         unit_data["status"] == "dying"
         for unit, unit_data in rel_info.items()
         if unit != departing_app and unit.split("/")[0] == departing_app
     ]
 
-    # check if app removal
-    if all(dying_units):
+    if dying_units and all(dying_units):
         return RelDepartureReason.APP_REMOVAL
 
     if any(dying_units):
