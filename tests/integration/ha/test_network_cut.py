@@ -107,12 +107,13 @@ async def test_build_and_deploy(
             idle_period=30,
         )
 
-    assert ops_test.model.applications[app_name].status == "blocked"
-
     if substrate == "k8s":
+        assert ops_test.model.applications[app_name].status == "blocked"
         await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
         await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
+    else:
+        assert ops_test.model.applications[app_name].status == "active"
     await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     if tls:

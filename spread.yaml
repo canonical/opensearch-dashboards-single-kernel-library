@@ -188,6 +188,15 @@ prepare-each: |
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
 
+  if [[ $SPREAD_SUITE == *"k8s"* || $SPREAD_TASK == *"oauth"* ]]
+  then
+    # concierge prepare creates the "testing" model on LXD; for k8s tests we need it on k8s.
+    juju destroy-model --force --no-wait --destroy-storage --no-prompt testing 2>/dev/null || true
+    until ! juju models 2>/dev/null | grep -qw "testing$"; do sleep 2; done
+    juju add-model testing uk8s
+    juju switch testing
+  fi
+
   # Unable to set constraint on all models because of Juju bug:
   # https://bugs.launchpad.net/juju/+bug/2065050
   juju set-model-constraints arch="$(dpkg --print-architecture)"

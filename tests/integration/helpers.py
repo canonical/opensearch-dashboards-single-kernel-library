@@ -2,6 +2,7 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import asyncio
 import json
 import logging
 import os
@@ -898,12 +899,15 @@ async def client_run_all_dashboards_request(
 async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME, consumer_ops_test=None):
     """Destroy cluster in a forceful way."""
     if consumer_ops_test:
-        await consumer_ops_test.juju("remove-saas", app, "--no-wait", check=False)
-        # wait for consumer removal before destroying the provider
-        for attempt in Retrying(stop=stop_after_attempt(30), wait=wait_fixed(10), reraise=True):
-            with attempt:
-                status = await consumer_ops_test.model.get_status()
-                assert app not in (status.remote_applications or {})
+        await consumer_ops_test.juju("remove-relation", APP_NAME, app, check=False)
+    else:
+        await ops_test.juju("remove-relation", APP_NAME, app, check=False)
+    await ops_test.juju("remove-relation", TLS_CERTIFICATES_APP_NAME, app, check=False)
+    await ops_test.juju("remove-relation", DB_CLIENT_APP_NAME, app, check=False)
+    if consumer_ops_test:
+        await consumer_ops_test.juju("remove-saas", app, check=False)
+        await consumer_ops_test.juju("remove-offer", f"admin/testing-vm.{app}", check=False)
+    await asyncio.sleep(30)
     n_apps_before = len(ops_test.model.applications)
     await ops_test.model.applications[app].destroy(destroy_storage=True, force=True, no_wait=False)
 

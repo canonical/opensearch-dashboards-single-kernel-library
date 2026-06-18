@@ -518,6 +518,7 @@ async def test_restore_opensearch_restores_osd(
     """This test shouldn't be separate but a native continuation of the previous one."""
     app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     tls = test_flags.test_tls
+    traefik = test_flags.traefik
     logger.info("Destroying and restoring the Opensearch cluster")
     await destroy_cluster(
         ops_test_vm,
@@ -532,24 +533,28 @@ async def test_restore_opensearch_restores_osd(
         config=CONFIG_OPTS,
     )
 
-    if tls:
-        await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
     async with ops_test_vm.fast_forward("30s"):
-        await ops_test_vm.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="blocked")
+        await ops_test_vm.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active")
 
-    if substrate == "k8s":
-        await ops_test_vm.model.create_offer(
-            "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
+        if substrate == "k8s":
+            await ops_test_vm.model.create_offer(
+                "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
+            )
+            await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
+        await ops_test.model.integrate(app_name, OPENSEARCH_APP_NAME)
+
+        await ops_test_vm.model.wait_for_idle(
+            apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
         )
-        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
-    await ops_test.model.integrate(app_name, OPENSEARCH_APP_NAME)
 
-    await ops_test_vm.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
-    )
-
-    await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+    if substrate == "k8s" and not traefik:
+        await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
+    else:
+        await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     logger.info("Checking if Dashboards is available again")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=is_https_enabled(test_flags))
+    assert await access_all_dashboards(
+        ops_test_vm, ops_test, https=is_https_enabled(test_flags), verify=tls
+    )

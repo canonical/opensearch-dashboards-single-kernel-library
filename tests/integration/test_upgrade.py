@@ -67,7 +67,10 @@ async def test_build_and_deploy(
         )
         await ops_test.model.wait_for_idle(apps=[app_name], timeout=1000, idle_period=30)
 
-    assert ops_test.model.applications[app_name].status == "blocked"
+    if substrate == "k8s":
+        assert ops_test.model.applications[app_name].status == "blocked"
+    else:
+        assert ops_test.model.applications[app_name].status == "active"
 
     if tls:
         if substrate == "k8s":

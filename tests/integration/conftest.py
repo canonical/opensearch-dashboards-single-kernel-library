@@ -23,6 +23,22 @@ def opensearch_sysctl_settings():
 
 
 @pytest.fixture(scope="session")
+def dashboard_substrate() -> Literal["k8s", "vm"]:
+    """Returns the substrate for the dashboards charm.
+
+    Normally equals substrate, but for VM OAuth tests the identity bundle runs on K8S
+    (SUBSTRATE=k8s) while the dashboards charm is still the VM variant
+    (DASHBOARD_SUBSTRATE=vm).
+    """
+    sub = os.environ.get("DASHBOARD_SUBSTRATE", "vm")
+    if sub not in ("k8s", "vm"):
+        raise ValueError(
+            f"DASHBOARD_SUBSTRATE has invalid value. Correct values are k8s, vm. Current value {sub}."
+        )
+    return sub
+
+
+@pytest.fixture(scope="session")
 def substrate() -> Literal["k8s", "vm"]:
     """Returns the substrate"""
     sub = os.environ.get("SUBSTRATE", "vm").lower()
