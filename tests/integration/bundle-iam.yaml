@@ -59,7 +59,7 @@ applications:
   traefik-admin:
     charm: traefik-k8s
     channel: latest/stable
-    revision: 315
+    revision: 176
     resources:
       traefik-image: docker.io/ubuntu/traefik:2-22.04
     series: focal
@@ -68,7 +68,7 @@ applications:
   traefik-public:
     charm: traefik-k8s
     channel: latest/stable
-    revision: 315
+    revision: 176
     resources:
       traefik-image: docker.io/ubuntu/traefik:2-22.04
     series: focal

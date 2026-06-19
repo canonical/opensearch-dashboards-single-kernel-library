@@ -41,7 +41,7 @@ class OAuthEvents(Object):
             self.charm.on[OAUTH_REL_NAME].relation_changed, self._on_oauth_relation_changed
         )
         self.framework.observe(
-            self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_changed
+            self.charm.on[OAUTH_REL_NAME].relation_broken, self._on_oauth_relation_broken
         )
         self.state.oauth_require.update_client_config(self.state.oauth_client_config())
 

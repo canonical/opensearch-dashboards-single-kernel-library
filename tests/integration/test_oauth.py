@@ -171,8 +171,8 @@ async def test_setup_relations(
     await ops_test_vm.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "oauth")
 
     if dashboard_substrate == "k8s":
-        # Dashboards in ops_test — integrate oauth directly.
-        await ops_test.model.integrate(f"{app_name}:oauth", "oauth")
+        # Dashboards in ops_test — integrate with hydra directly (same model).
+        await ops_test.model.integrate(f"{app_name}:oauth", "hydra:oauth")
     else:
         # VM dashboards in ops_test_vm — consume the same oauth offer.
         await ops_test_vm.model.integrate(f"{app_name}:oauth", "oauth")
@@ -204,7 +204,7 @@ async def test_oauth(
         ops_test_dashboards,
         unit.name,
     )
-    url = f"https://{host}:{port}{path}"
+    url = f"https://{host}{path}" if traefik else f"https://{host}:{port}{path}"
     await access_application_login_page(
         page=page,
         url=url,

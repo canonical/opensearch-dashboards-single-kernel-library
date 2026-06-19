@@ -912,7 +912,18 @@ async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME, consumer_ops
     if consumer_ops_test:
         await consumer_ops_test.juju("remove-saas", app, check=False)
         await ops_test.juju("remove-offer", f"admin/testing-vm.{app}", "--force", check=False)
-    await asyncio.sleep(30)
+        # Wait until the offer shows 0 connected consumers on the provider side.
+        for attempt in Retrying(stop=stop_after_attempt(30), wait=wait_fixed(10), reraise=True):
+            with attempt:
+                _, stdout, _ = await ops_test.juju(
+                    "status", "--format=json", "--model", ops_test.model.name
+                )
+                status = json.loads(stdout) if stdout.strip() else {}
+                offers = status.get("offers", {})
+                connected = offers.get(app, {}).get("total-connected-count", 0)
+                assert connected == 0, f"offer '{app}' still has {connected} consumer(s)"
+    else:
+        await asyncio.sleep(30)
     n_apps_before = len(ops_test.model.applications)
     await ops_test.model.applications[app].destroy(destroy_storage=True, force=True, no_wait=False)
 

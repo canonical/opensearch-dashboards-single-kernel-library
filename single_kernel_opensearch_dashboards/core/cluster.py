@@ -85,6 +85,19 @@ class ClusterState(Object, StatusesStateProtocol):
             extra_user_roles=DASHBOARD_ROLE,
         )
 
+        # # OAuthRequirer must be stored as an instance attribute to prevent garbage collection.
+        # # If GC'd before relation_created fires, the client config is never written to the
+        # # relation databag, so Hydra never registers the client and dashboards can't authenticate.
+        # # The placeholder redirect_uri is overwritten by update_client_config in OAuthEvents.__init__.
+        # _placeholder_config = ClientConfig(
+        #     redirect_uri="http://placeholder",
+        #     audience=["opensearch"],
+        #     scope="openid profile email phone offline address",
+        #     grant_types=["authorization_code"],
+        #     token_endpoint_auth_method="client_secret_post",
+        # )
+        # self._oauth_require = OAuthRequirer(charm, _placeholder_config, relation_name=OAUTH_REL_NAME)
+
         self.statuses = StatusesState(self, STATUS_PEERS_REL_NAME)
 
     @property
