@@ -148,10 +148,9 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         """Access current substrate."""
         ...
 
-    def restart_on_lock_acquired(self, event: EventBase):
-        """Restart method for RollingOpsManager"""
+    def restart_on_lock_acquired(self, event: EventBase) -> None:
+        """RollingOpsManager callback: apply config, restart, then verify health."""
         logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
-        config_changed = self.config_manager.config_changed()
         self.config_manager.set_dashboard_properties()
 
         self.state.delete_status_if_present(
@@ -160,25 +159,22 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component=self.cluster_manager.name,
         )
 
-        if config_changed or not self.workload.healthy():
-            if not self.state.unit_server.started:
-                self.status_handler.set_running_status(
-                    status=ServerStatuses.STARTING_SERVER.value,
-                    component_name=self.cluster_manager.name,
-                    scope="unit",
-                )
-            else:
-                self.status_handler.set_running_status(
-                    status=ServerStatuses.RESTARTING_SERVER.value,
-                    component_name=self.cluster_manager.name,
-                    scope="unit",
-                )
+        if not self.state.unit_server.started:
+            self.status_handler.set_running_status(
+                status=ServerStatuses.STARTING_SERVER.value,
+                component_name=self.cluster_manager.name,
+                scope="unit",
+            )
+        else:
+            self.status_handler.set_running_status(
+                status=ServerStatuses.RESTARTING_SERVER.value,
+                component_name=self.cluster_manager.name,
+                scope="unit",
+            )
 
-            self.cluster_manager.restart_server()
-            self.state.unit_server.update({"state": "started"})
-
-            # open the port
-            self.unit.open_port(protocol="tcp", port=SERVER_PORT)
+        self.cluster_manager.restart_server()
+        self.state.unit_server.update({"state": "started"})
+        self.unit.open_port(protocol="tcp", port=SERVER_PORT)
 
         # Checking health after restart
         self.status_handler.set_running_status(
@@ -193,8 +189,10 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         lock = Lock(self.restart_manager)
 
         # Restore certs from databag if restarted pod / added new unit
-        # Ideally we want to do that before every request, but we can't use tls_manager in
-        # base_manager, otherwise it will create circular dependency, so we do that here.
+        # Ideally we want to do that before every request because if
+        # container inside pod was deleted juju will not emit any event.
+        # We can't use tls_manager in base_manager,
+        # or it will create circular dependency, so we do that here.
         try:
             self.tls_manager.write_tls_files()
         except (OSDFileOperationError, SecretNotFoundError) as e:
