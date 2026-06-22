@@ -137,7 +137,6 @@ async def test_build_and_deploy(
             await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
 
 
-
 @pytest.mark.abort_on_fail
 async def test_dashboard_access(
     ops_test_vm: OpsTest,
