@@ -43,7 +43,13 @@ class StateBase:
 
     @property
     def relation_data(self) -> MutableMapping[str, str]:
-        """The raw relation data."""
+        """Merges own and remote relation data into a single flat dict (own keys win on collision).
+
+        fetch_my_relation_data is marked leader_only on some Data subclasses, so we check
+        whether we are allowed to call it before doing so — this silences the
+        "This action can be performed only by leader" error on non-leader units.
+        fetch_relation_data raises NotImplementedError on RequirerData, so it is swallowed.
+        """
         if not isinstance(self._relation_data, DataDict):
             return {}
         di = self._relation_data.relation_data
