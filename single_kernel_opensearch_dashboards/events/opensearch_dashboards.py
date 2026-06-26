@@ -10,6 +10,7 @@ import ops
 from pydantic import ValidationError
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     UPGRADE_MANAGER_NAME,
@@ -35,6 +36,7 @@ from ops import (
     RelationDepartedEvent,
     RelationJoinedEvent,
     SecretChangedEvent,
+    SecretNotFoundError,
 )
 
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -93,11 +95,6 @@ class OpenSearchDashboardsEvents(Object):
             )
             event.defer()
             return
-        self.state.delete_status_if_present(
-            status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
-            scope="unit",
-            component=self.cluster_manager.name,
-        )
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -112,6 +109,14 @@ class OpenSearchDashboardsEvents(Object):
     def _on_start(self, event: EventBase) -> None:
         """Handle the `start` event."""
         if not self.pre_restart_check():
+            event.defer()
+            return
+
+        # Restore certs from databag if restarted pod / added new unit
+        try:
+            self.tls_manager.write_tls_files()
+        except (OSDFileOperationError, SecretNotFoundError) as e:
+            logger.error("%s", e)
             event.defer()
             return
 
@@ -164,10 +169,6 @@ class OpenSearchDashboardsEvents(Object):
             # no point in deferring, the hook will be called another time after config update
             return
 
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.INVALID_CONFIG.value, scope="app", component=CONFIG_MANAGER_NAME
-        )
-
         self.charm.emit_restart(event)
 
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
@@ -217,12 +218,6 @@ class OpenSearchDashboardsEvents(Object):
             )
             return False
 
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value,
-            component=CONFIG_MANAGER_NAME,
-            scope="both",
-        )
-
         # UPGRADE IDLE CHECK
         if not self.state.upgrade_idle:
             logger.debug("Waiting for upgrade relations to be idle")
@@ -231,11 +226,5 @@ class OpenSearchDashboardsEvents(Object):
                 component=UPGRADE_MANAGER_NAME,
             )
             return False
-
-        self.state.delete_status_if_present(
-            status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-            component=UPGRADE_MANAGER_NAME,
-            scope="both",
-        )
 
         return True

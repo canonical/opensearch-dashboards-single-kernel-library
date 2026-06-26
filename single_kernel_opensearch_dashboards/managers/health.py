@@ -178,16 +178,16 @@ class HealthManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the health manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
 
         if not self.workload.healthy():
             status_list.append(HealthStatuses.WORKLOAD_IS_DOWN.value)
             # Return immediately because we cannot access the dashboards API if the service is down
             return status_list
+
+        if not recompute:
+            statuses = self.state.statuses.get(scope, self.name).root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         # Do not check opensearch health if it's not connected or missing certificates
         if self.state.opensearch_server and (

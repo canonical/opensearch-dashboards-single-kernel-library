@@ -74,11 +74,10 @@ class RequirerEvents(Object):
         ):
             return
 
-        if self.charm.unit.is_leader():
-            self.state.add_status_to_both(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                component=CLUSTER_MANAGER_NAME,
-            )
+        self.state.add_status_to_both(
+            status=ServerStatuses.DB_CONNECTION_MISSING.value,
+            component=CLUSTER_MANAGER_NAME,
+        )
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)

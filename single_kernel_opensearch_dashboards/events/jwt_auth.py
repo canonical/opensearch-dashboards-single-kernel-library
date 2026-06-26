@@ -49,11 +49,6 @@ class JwtEvents(Object):
             logger.error(f"Cannot access relation data for {JWT_REL_NAME}")
             return
 
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
-            scope="app",
-            component=CONFIG_MANAGER_NAME,
-        )
         self.charm.emit_restart(event)
 
     def _on_jwt_relation_broken(self, event: RelationBrokenEvent) -> None:
@@ -63,9 +58,4 @@ class JwtEvents(Object):
             == RelDepartureReason.APP_REMOVAL
         ):
             return
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value,
-            scope="app",
-            component=CONFIG_MANAGER_NAME,
-        )
         self.charm.emit_restart(event)

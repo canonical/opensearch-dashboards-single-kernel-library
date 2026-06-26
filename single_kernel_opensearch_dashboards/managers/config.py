@@ -172,17 +172,15 @@ class ConfigManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the config manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
 
         if not self.state.peer_relation:
             status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)
+
         if self.state.jwt_relation:
             if self.state.jwt.get_jwt_url() is None:
                 status_list.append(ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value)
+
         try:
             self.state.config.log_level
         except ValidationError:

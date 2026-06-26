@@ -101,13 +101,6 @@ class HealthStatuses(Enum):
         running="blocking",
     )
 
-    WAITING_FOR_GREEN = StatusObject(
-        status="maintenance",
-        message="Waiting for OpenSearch Dashboards health to be green",
-        short_message="Waiting for green health",
-        running="blocking",
-    )
-
     WORKLOAD_IS_DOWN = StatusObject(
         status="blocked",
         message="Service is not alive",

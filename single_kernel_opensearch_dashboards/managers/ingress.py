@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# Copyright 2026 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+"""Manager for handling ingress."""
+
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
@@ -12,7 +18,6 @@ from single_kernel_opensearch_dashboards.core.statuses import (
 )
 from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
     IngressPerAppRequirer,
-    IngressRequirerData,
 )
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
@@ -38,16 +43,6 @@ class IngressManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the ingress manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            missing = self.state.substrate != Substrates.VM and not self.state.ingress.relation
-            status_val = ServerStatuses.INGRESS_RELATION_MISSING.value
-            if missing and status_val not in statuses:
-                statuses.append(status_val)
-            elif not missing and status_val in statuses:
-                statuses.remove(status_val)
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         if self.state.substrate == Substrates.VM:
             return [CharmStatuses.ACTIVE_IDLE.value]
 

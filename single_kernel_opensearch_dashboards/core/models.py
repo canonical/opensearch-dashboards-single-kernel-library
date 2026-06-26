@@ -9,7 +9,7 @@ import socket
 from typing import MutableMapping
 
 import requests
-from ops.model import Application, Relation, Unit
+from ops.model import Application, ModelError, Relation, SecretNotFoundError, Unit
 from typing_extensions import override
 from urllib3.util import url
 
@@ -119,7 +119,10 @@ class OpensearchServer(StateBase):
     @property
     def password(self) -> str | None:
         """The generated password for the client application."""
-        return self.relation_data.get("password")
+        try:
+            return self.relation_data.get("password")
+        except SecretNotFoundError:
+            return None
 
     @property
     def endpoints(self) -> list[str]:

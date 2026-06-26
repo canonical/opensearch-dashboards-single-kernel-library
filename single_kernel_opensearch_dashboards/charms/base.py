@@ -9,7 +9,6 @@ from typing import Any, cast
 
 from data_platform_helpers.advanced_statuses import StatusHandler
 from ops import EventBase
-from ops.model import SecretNotFoundError
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import (
@@ -188,17 +187,6 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         """Evaluate conditions and emit a restart lock request if necessary."""
         lock = Lock(self.restart_manager)
 
-        # Restore certs from databag if restarted pod / added new unit
-        # Ideally we want to do that before every request because if
-        # container inside pod was deleted juju will not emit any event.
-        # We can't use tls_manager in base_manager,
-        # or it will create circular dependency, so we do that here.
-        try:
-            self.tls_manager.write_tls_files()
-        except (OSDFileOperationError, SecretNotFoundError) as e:
-            logger.error("%s", e)
-            event.defer()
-            return
         try:
             if not self.config_manager.config_changed():
                 if lock.is_pending() or lock.is_held():

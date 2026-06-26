@@ -13,7 +13,6 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
-    TLS_MANAGER_NAME,
     RelDepartureReason,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
@@ -56,12 +55,6 @@ class OAuthEvents(Object):
             event.defer()
             return
 
-        self.state.delete_status_if_present(
-            status=ServerStatuses.SERVERS_IS_DOWN.value,
-            scope="app",
-            component=CLUSTER_MANAGER_NAME,
-        )
-
         try:
             provider_info = self.state.oauth_require.get_provider_info()
         except ModelError as e:
@@ -73,6 +66,7 @@ class OAuthEvents(Object):
             )
             event.defer()
             return
+
         self.state.cluster.update(
             {
                 "oauth-client-secret": (
@@ -81,11 +75,6 @@ class OAuthEvents(Object):
                     else ""
                 ),
             }
-        )
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.MISSING_OAUTH_SECRET.value,
-            scope="app",
-            component=CONFIG_MANAGER_NAME,
         )
 
         self.charm.emit_restart(event)
