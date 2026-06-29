@@ -86,4 +86,5 @@ class OAuthEvents(Object):
             == RelDepartureReason.APP_REMOVAL
         ):
             return
-        self._on_oauth_relation_changed(event)
+        self.state.cluster.update({"oauth-client-secret": ""})
+        self.charm.emit_restart(event)

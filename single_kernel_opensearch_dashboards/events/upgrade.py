@@ -26,6 +26,7 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
     DataUpgrade,
     KubernetesClientError,
     UpgradeGrantedEvent,
+    UpgradeState,
 )
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
@@ -73,6 +74,26 @@ class UpgradeEvents(DataUpgrade):
         if self.osd_state.upgrade_idle:
             logger.info("Pod restarted, but no upgrade is in progress. Skipping upgrade logic.")
             return
+
+        if not self.upgrade_stack:
+            logger.info("Upgrade stack is empty, skipping upgrade logic.")
+            return
+
+        unit_id = int(self.charm.unit.name.split("/")[-1])
+        top_unit_id = self.upgrade_stack[-1]
+        if unit_id != top_unit_id:
+            top_unit = self.charm.model.get_unit(f"{self.charm.app.name}/{top_unit_id}")
+            top_state = self._get_unit_state(top_unit)
+            if top_state != UpgradeState.COMPLETED:
+                logger.info(
+                    f"{self.charm.unit.name} is not the next unit to upgrade (top: {top_unit_id}). "
+                    "Pod restarted for a non-upgrade reason, skipping."
+                )
+                return
+            logger.info(
+                f"Top unit {top_unit_id} already completed but stack not yet updated; "
+                f"proceeding with upgrade for {self.charm.unit.name}."
+            )
 
         try:
             logger.debug("Running post-upgrade check...")

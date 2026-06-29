@@ -43,34 +43,8 @@ class StateBase:
 
     @property
     def relation_data(self) -> MutableMapping[str, str]:
-        """Merges own and remote relation data into a single flat dict (own keys win on collision).
-
-        fetch_my_relation_data is marked leader_only on some Data subclasses, so we check
-        whether we are allowed to call it before doing so — this silences the
-        "This action can be performed only by leader" error on non-leader units.
-        fetch_relation_data raises NotImplementedError on RequirerData, so it is swallowed.
-        """
-        if not isinstance(self._relation_data, DataDict):
-            return {}
-        di = self._relation_data.relation_data
-        rid = self._relation_data.relation_id
-        app_data: dict[str, str] = {}
-        remote_data: dict[str, str] = {}
-        can_fetch_own = (
-            not hasattr(di.fetch_my_relation_data, "leader_only")
-            or di.component == di.local_app
-            and di.local_unit.is_leader()
-        )
-        if can_fetch_own:
-            result = di.fetch_my_relation_data([rid])
-            if result:
-                app_data = result.get(rid, {})
-        try:
-            result = di.fetch_relation_data([rid])
-            remote_data = result.get(rid, {})
-        except NotImplementedError:
-            pass
-        return {**remote_data, **app_data}
+        """The raw relation data."""
+        return self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
     def update(self, items: dict[str, str]) -> None:
         """Writes to relation_data."""
@@ -121,7 +95,7 @@ class OpensearchServer(StateBase):
         """The generated password for the client application."""
         try:
             return self.relation_data.get("password")
-        except SecretNotFoundError:
+        except (SecretNotFoundError, ModelError):
             return None
 
     @property
