@@ -75,32 +75,17 @@ class UpgradeEvents(DataUpgrade):
             logger.info("Pod restarted, but no upgrade is in progress. Skipping upgrade logic.")
             return
 
-        if not self.upgrade_stack:
-            logger.info("Upgrade stack is empty, skipping upgrade logic.")
-            return
-
-        unit_id = int(self.charm.unit.name.split("/")[-1])
-        top_unit_id = self.upgrade_stack[-1]
-        if unit_id != top_unit_id:
-            top_unit = self.charm.model.get_unit(f"{self.charm.app.name}/{top_unit_id}")
-            top_state = self._get_unit_state(top_unit)
-            if top_state != UpgradeState.COMPLETED:
-                logger.info(
-                    f"{self.charm.unit.name} is not the next unit to upgrade (top: {top_unit_id}). "
-                    "Pod restarted for a non-upgrade reason, skipping."
-                )
-                return
-            logger.info(
-                f"Top unit {top_unit_id} already completed but stack not yet updated; "
-                f"proceeding with upgrade for {self.charm.unit.name}."
-            )
-
         try:
             logger.debug("Running post-upgrade check...")
             self.post_upgrade_check()
 
             logger.debug("Marking unit completed...")
             self.set_unit_completed()
+
+            # ensures leader gets its own relation-changed when it upgrades
+            if self.charm.unit.is_leader():
+                logger.debug("Re-emitting upgrade-changed on leader...")
+                self.on_upgrade_changed(event)
 
         except ClusterNotReadyError as e:
             logger.error(e.cause)

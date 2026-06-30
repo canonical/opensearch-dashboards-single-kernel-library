@@ -181,7 +181,12 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component_name=self.health_manager.name,
             scope="unit",
         )
-        self.health_manager.check_osd_health()
+        try:
+            self.health_manager.check_osd_health()
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            event.defer()
+            return
 
     def emit_restart(self, event: EventBase) -> None:
         """Evaluate conditions and emit a restart lock request if necessary."""

@@ -53,6 +53,9 @@ class ClusterManager(BaseManager):
         """Compute the server manager's statuses."""
         status_list: list[StatusObject] = []
 
+        if not self.state.upgrade_idle:
+            return status_list
+
         if scope == "unit" and not self.workload.ready():
             status_list.append(ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value)
 

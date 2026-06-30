@@ -37,6 +37,14 @@ def patched_pebble_restart(mocker):
 
 
 @pytest.fixture(autouse=True)
+def patched_snap(mocker):
+    mocker.patch(
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload._load_snap",
+        return_value=MagicMock(),
+    )
+
+
+@pytest.fixture(autouse=True)
 def patched_healthy(mocker):
     mocker.patch(
         "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",

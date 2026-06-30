@@ -87,7 +87,17 @@ class VMWorkload(WorkloadBase):
 
     def __init__(self):
         """Initializes the VM workload instance and loads the snap into the cache."""
-        self.dashboards = snap.SnapCache()[self.SNAP_NAME]
+        self.dashboards = self._load_snap()
+
+    @retry(
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(5),
+        reraise=True,
+        retry=retry_if_exception_type(snap.SnapError),
+    )
+    def _load_snap(self) -> snap.Snap:
+        """Loads the snap from the cache, retrying on SnapError."""
+        return snap.SnapCache()[self.SNAP_NAME]
 
     @property
     @override
@@ -171,7 +181,7 @@ class VMWorkload(WorkloadBase):
 
     @override
     @retry(
-        wait=wait_fixed(3),
+        wait=wait_fixed(1),
         stop=stop_after_attempt(5),
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_if_not_result(lambda result: True if result else False),

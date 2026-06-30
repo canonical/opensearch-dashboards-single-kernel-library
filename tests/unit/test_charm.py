@@ -666,6 +666,10 @@ def test_service_unavailable_blocked_status(harness):
             "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
             return_value="1",
         ),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.exists",
+            return_value=True,
+        ),
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()

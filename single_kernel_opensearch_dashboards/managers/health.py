@@ -104,7 +104,9 @@ class HealthManager(BaseManager):
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server or not self.state.opensearch_server.password:
+        if not self.state.opensearch_server or not self.workload.exists(
+            self.workload.paths.opensearch_ca
+        ):
             return True
 
         logger.info(f"Checking health")
@@ -170,7 +172,9 @@ class HealthManager(BaseManager):
         self.state.statuses.clear(scope="unit", component=self.name)
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server or not self.state.opensearch_server.password:
+        if not self.state.opensearch_server or not self.workload.exists(
+            self.workload.paths.opensearch_ca
+        ):
             return
 
         self.wait_for_unit_health()
@@ -180,7 +184,10 @@ class HealthManager(BaseManager):
         """Compute the health manager's statuses."""
         status_list: list[StatusObject] = []
 
-        if not self.workload.healthy():
+        if not self.state.upgrade_idle:
+            return status_list
+
+        if self.state.unit_server.started and not self.workload.healthy():
             status_list.append(HealthStatuses.WORKLOAD_IS_DOWN.value)
             # Return immediately because we cannot access the dashboards API if the service is down
             return status_list
