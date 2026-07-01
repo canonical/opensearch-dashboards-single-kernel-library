@@ -75,7 +75,7 @@ jubilant = "^1.8.0"
 # data_platform_libs/v0/data_interfaces.py
 ops = "^2.23.2"
 # data_platform_libs/v1/upgrade.py
-lightkube = "0.19.1"
+lightkube = "0.21.0"
 poetry-core = "^2.1.3"
 # tls_certificates_interface/v3/tls_certificates.py
 cryptography = "^45.0.4"
@@ -151,7 +151,7 @@ allure-pytest-default-results = "^0.1.3"
 pytest-playwright = "^0.7.0"
 oauth_tools = { git = "https://github.com/canonical/iam-bundle", rev = "921d113325eed156e5b54f97c42e6c50810180c0" }
 pyjwt = "^2.10.1"
-lightkube = "0.19.1"
+lightkube = "0.21.0"
 
 [tool.pyright]
 include = ["src"]
