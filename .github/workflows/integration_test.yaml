@@ -14,9 +14,13 @@ jobs:
     name: Collect integration test spread jobs
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up environment
         run: |
           sudo snap install charmcraft --classic
@@ -101,6 +105,8 @@ jobs:
       - collect-integration-tests
     runs-on: ${{ matrix.job.runner }}
     timeout-minutes: 217 # Sum of steps `timeout-minutes` + 5
+    permissions:
+      contents: read
     steps:
       - name: Disk usage
         timeout-minutes: 5
@@ -108,6 +114,8 @@ jobs:
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Set up environment
         timeout-minutes: 5
         run: sudo snap install charmcraft --classic
@@ -134,14 +142,6 @@ jobs:
         # https://github.com/canonical/charmcraft/issues/2105 and
         # https://github.com/canonical/charmcraft/issues/2130 fixed
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-          AZURE_SECRET_KEY: ${{ secrets.AZURE_SECRET_KEY }}
-          GCP_ACCESS_KEY: ${{ secrets.GCP_ACCESS_KEY }}
-          GCP_SECRET_KEY: ${{ secrets.GCP_SECRET_KEY }}
-          GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - name: Upload Allure results
         timeout-minutes: 3
         # Only upload results from one spread system & one spread variant
@@ -230,6 +230,8 @@ jobs:
       - integration-test
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - name: Download Allure
         # Following instructions from https://allurereport.org/docs/install-for-linux/#install-from-a-deb-package
@@ -254,6 +256,7 @@ jobs:
         with:
           ref: gh-pages-beta
           path: repo/
+          persist-credentials: false
       - name: Download default test results
         # Default test results in case the integration tests time out or runner set up fails
         # (So that Allure report will show "unknown"/"failed" test result, instead of omitting the test)
@@ -320,14 +323,15 @@ jobs:
         run: |
           # Reverse engineered from https://github.com/simple-elf/allure-report-action/blob/eca283b643d577c69b8e4f048dd6cd8eb8457cfd/entrypoint.sh
           import json
+          import os
 
           DATA = {
               "name": "GitHub Actions",
               "type": "github",
-              "buildOrder": ${{ github.run_number }},  # TODO future improvement: use run ID
-              "buildName": "Run ${{ github.run_id }}",
-              "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-              "reportUrl": "../${{ github.run_number }}/",
+              "buildOrder": int(os.environ["GITHUB_RUN_NUMBER"]),  # TODO future improvement: use run ID
+              "buildName": f"Run {os.environ['GITHUB_RUN_ID']}",
+              "buildUrl": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              "reportUrl": f"../{os.environ['GITHUB_RUN_NUMBER']}/",
           }
           with open("allure-results/executor.json", "w") as file:
               json.dump(DATA, file)
@@ -336,16 +340,20 @@ jobs:
       - name: Create index.html
         shell: python
         run: |
+          import os
+
           DATA = f"""<!DOCTYPE html>
           <meta charset="utf-8">
           <meta http-equiv="cache-control" content="no-cache">
-          <meta http-equiv="refresh" content="0; url=${{ github.run_number }}">
+          <meta http-equiv="refresh" content="0; url={os.environ['GITHUB_RUN_NUMBER']}">
           """
           with open("repo/index.html", "w") as file:
               file.write(DATA)
       - name: Update GitHub pages branch
         working-directory: repo/
         # TODO future improvement: commit message
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mkdir '${{ github.run_number }}'
           rm -f _latest
@@ -355,5 +363,4 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Allure report ${{ github.run_number }}"
-          # Uses token set in checkout step
-          git push origin gh-pages-beta
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages-beta

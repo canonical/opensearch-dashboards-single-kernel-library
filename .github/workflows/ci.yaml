@@ -16,13 +16,17 @@ on:
     - cron: '53 0 * * *' # Daily at 00:53 UTC
   # Triggered on push to branch "main" by .github/workflows/release.yaml
   workflow_call:
+    secrets:
+      CHARMHUB_TOKEN:
   workflow_dispatch:
 
+permissions:
+  contents: read
 
 jobs:
   lint:
     name: Lint
-    uses: canonical/data-platform-workflows/.github/workflows/lint.yaml@v32.1.0
+    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v50.0.0
 
   lib-check:
     name: Check libraries
@@ -33,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Check libs
         uses: canonical/charming-actions/check-libraries@2.7.0
         continue-on-error: true
@@ -43,6 +48,7 @@ jobs:
           use-labels: false
           fail-build: ${{ github.event_name == 'pull_request' }}
     permissions:
+      contents: read
       pull-requests: write
 
   unit-test:
@@ -52,6 +58,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install tox & poetry
         run: |
           pipx install tox
@@ -64,6 +72,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # prometheus snap includes promtool
       - name: Install prometheus snap
@@ -94,7 +104,7 @@ jobs:
           - tests/charms/dashboards_k8s_charm
     steps:
       - name: Install CLI
-        run: pipx install git+https://github.com/canonical/data-platform-workflows@v31.1.1#subdirectory=python/cli
+        run: pipx install git+https://github.com/canonical/data-platform-workflows@v50.0.0#subdirectory=_cli
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -152,6 +162,5 @@ jobs:
     uses: ./.github/workflows/integration_test.yaml
     with:
       artifact-prefix: packed-charm
-    secrets: inherit
     permissions:
       contents: write # Needed for Allure Report
