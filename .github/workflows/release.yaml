@@ -20,9 +20,6 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
-    permissions:
-      pull-requests: write # Needed by lib-check job
-      contents: write # Needed by integration-test job for Allure Report
 
   release-part1:
     needs:
