@@ -1,2 +1,2 @@
-ops==2.23.0
-requests==2.32.4
+ops==3.8.0
+requests==2.34.2

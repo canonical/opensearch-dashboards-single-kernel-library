@@ -8,37 +8,7 @@ description: Placeholder charm for lib refresh.
 type: charm
 
 platforms:
-  ubuntu-22.04-amd64:
-    build-on: [ amd64 ]
-    build-for: [ amd64 ]
-  ubuntu-24.04-amd64:
-    build-on: [ amd64 ]
-    build-for: [ amd64 ]
-
-charm-libs:
-  - lib: charms.data_platform_libs.data_interface
-    version: "0"
-  - lib: charms.data_platform_libs.upgrade
-    version: "1"
-  - lib: charms.opensearch_libs.data_models
-    version: "1"
-  - lib: charms.cos_agent.cos_agent
-    version: "0"
-  - lib: charms.hydra.oauth
-    version: "0"
-  - lib: charms.operator_libs_linux.snap
-    version: "2"
-  - lib: charms.data_platform_libs.rollingops
-    version: "0"
-  - lib: charms.tls_certificates_interface.tls_certificates
-    version: "3"
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
 
 parts:
-  charm:
-    plugin: python
-    source: .
-    python-packages:
-      - ops
-      - cryptography
-    build-packages:
-      - git
