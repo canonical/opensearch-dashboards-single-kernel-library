@@ -108,7 +108,7 @@ path: /root/spread_project
 
 kill-timeout: 3h
 environment:
-  PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
+  PATH: $PATH:/root/.local/bin
   CONCIERGE_JUJU_CHANNEL: 3.6/stable
   CONCIERGE_MICROK8S_CHANNEL: 1.34-strict/stable
   CHARM_UBUNTU_BASE/ubuntu24: 24.04
@@ -185,14 +185,17 @@ prepare: |
     MICROK8S_API_PORT="${MICROK8S_API_SERVER##*:}"
     MICROK8S_LOCAL_API_SERVER="https://${LOCAL_IP}:${MICROK8S_API_PORT}"
     MICROK8S_JUJU_API_SERVER="https://${ROUTABLE_HOST_IP}:${MICROK8S_API_PORT}"
-    if [[ "$MICROK8S_API_SERVER" != "$MICROK8S_LOCAL_API_SERVER" ]]
+    if [[ "$MICROK8S_API_SERVER" == "$MICROK8S_LOCAL_API_SERVER" ]]
     then
-      echo "Unexpected MicroK8s API endpoint: $MICROK8S_API_SERVER"
+      MICROK8S_JUJU_API_SERVER="$MICROK8S_JUJU_API_SERVER" \
+        yq -i '.clusters[0].cluster.server = strenv(MICROK8S_JUJU_API_SERVER)' "$MICROK8S_JUJU_KUBECONFIG"
+    elif [[ "$MICROK8S_API_SERVER" != "$MICROK8S_JUJU_API_SERVER" ]]
+    then
+      echo "Unexpected MicroK8s API endpoint: $MICROK8S_API_SERVER."
+      echo "Expected either ${MICROK8S_LOCAL_API_SERVER} or ${MICROK8S_JUJU_API_SERVER}."
       exit 1
     fi
 
-    MICROK8S_JUJU_API_SERVER="$MICROK8S_JUJU_API_SERVER" \
-      yq -i '.clusters[0].cluster.server = strenv(MICROK8S_JUJU_API_SERVER)' "$MICROK8S_JUJU_KUBECONFIG"
     if ! grep -Fq "server: ${MICROK8S_JUJU_API_SERVER}" "$MICROK8S_JUJU_KUBECONFIG"
     then
       echo "Failed to rewrite MicroK8s kubeconfig endpoint for Juju."
