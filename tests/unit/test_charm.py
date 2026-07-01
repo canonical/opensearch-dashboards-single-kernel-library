@@ -16,10 +16,12 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
     CLUSTER_MANAGER_NAME,
     HEALTH_MANAGER_NAME,
+    INGRESS_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
     UPGRADE_MANAGER_NAME,
 )
 from single_kernel_opensearch_dashboards.core.statuses import (
+    CharmStatuses,
     HealthStatuses,
     ServerStatuses,
     UpgradeStatuses,
@@ -109,14 +111,24 @@ def test_install_sets_ip_hostname_fqdn(harness):
 
 
 def test_relation_changed_emitted_for_leader_elected(harness):
-    with patch(
-        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    with (
+        patch(
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+        ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OSDServer.started", return_value=True
+        ),
+    ):
         harness.set_leader(True)
         patched.assert_called_once()
 
 
 def test_relation_changed_emitted_for_config_changed(harness):
+    with harness.hooks_disabled():
+        harness.update_relation_data(
+            harness.charm.state.peer_relation.id, f"{CHARM_KEY}/0", {"state": "started"}
+        )
+
     with patch(
         "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
     ) as patched:
@@ -125,17 +137,27 @@ def test_relation_changed_emitted_for_config_changed(harness):
 
 
 def test_relation_changed_emitted_for_relation_changed(harness):
-    with patch(
-        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    with (
+        patch(
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+        ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
+        ),
+    ):
         harness.charm.on.dashboard_peers_relation_changed.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 
 
 def test_relation_changed_emitted_for_relation_joined(harness):
-    with patch(
-        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-    ) as patched:
+    with (
+        patch(
+            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+        ) as patched,
+        patch(
+            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
+        ),
+    ):
         harness.charm.on.dashboard_peers_relation_joined.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 
@@ -151,6 +173,9 @@ def test_relation_changed_emitted_for_relation_departed(harness):
 def test_config_changed_event_emits_restart(harness):
     with harness.hooks_disabled():
         harness.set_planned_units(1)
+        harness.update_relation_data(
+            harness.charm.state.peer_relation.id, f"{CHARM_KEY}/0", {"state": "started"}
+        )
 
     with (
         patch(
@@ -181,20 +206,25 @@ def test_restart_initializes_unstarted_server(harness):
 
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as mock_set_props,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as mock_init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as mock_restart_server,
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
         patch(
-            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm._check_osd_status"
-        ) as mock_check_status,
+            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
+        ) as check_health,
     ):
-        handler.restart(mock_event)
+        handler.restart_on_lock_acquired(mock_event)
 
         mock_set_props.assert_called_once()
-        mock_init_server.assert_called_once()
-        mock_check_status.assert_called_once()
+        mock_restart_server.assert_called_once()
+        check_health.assert_called_once()
 
         assert handler.state.unit_server.started is True
 
@@ -219,7 +249,7 @@ def test_relation_changed_does_not_start_units_again(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
         ) as patched,
         patch("single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"),
         patch(
@@ -267,30 +297,6 @@ def test_relation_changed_restarts(harness):
         patched_restart.assert_called_once()
 
 
-def test_restart_fails_not_started(harness):
-    with harness.hooks_disabled():
-        harness.set_planned_units(1)
-
-    mock_event = MagicMock()
-    mock_event.framework.model.unit.name = "unit/0"
-
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
-        ) as patched_restart,
-        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start") as patched_start,
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.load_dashboard_properties"
-        ),
-    ):
-        harness.charm.restart(mock_event)
-        patched_restart.assert_not_called()
-        patched_start.assert_called_once()
-
-
 @pytest.mark.parametrize("harness", [{"add_opensearch": True}], indirect=True)
 @responses.activate
 def test_restart_sleep_no_wait_once_service_up(harness):
@@ -328,7 +334,11 @@ def test_restart_sleep_no_wait_once_service_up(harness):
     # to reduce the scope of the test to the service availability delay
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
@@ -338,7 +348,7 @@ def test_restart_sleep_no_wait_once_service_up(harness):
         ),
         patch("time.sleep") as patched_sleep,
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         patched_restart.assert_called_once()
 
         # sleep() was only called to allow the service to establish
@@ -384,10 +394,19 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
     patched_timeout = 5
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=False,
+        ),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT",
+            patched_timeout,
+        ),
+        patch(
+            "single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT",
             patched_timeout,
         ),
         patch(
@@ -397,9 +416,10 @@ def test_restart_sleep_with_timeout_if_service_down(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
         patch("time.sleep") as patched_sleep,
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         start_time = time.time()
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         end_time = time.time()
         patched_restart.assert_called_once()
 
@@ -424,17 +444,22 @@ def test_restart_restarts_with_sleep(harness):
         patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=False,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"
         ) as patched_restart,
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch("time.sleep") as patched_sleep,
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         patched_restart.assert_called_once()
         assert patched_sleep.call_count >= 1
 
@@ -449,33 +474,32 @@ def test_init_server_calls_necessary_methods_non_leader(harness):
 
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
         patch(
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as restart_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
             component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
-        add.assert_called_with(
-            status=ServerStatuses.DB_CONNECTION_MISSING.value,
-            scope="unit",
-            component=CLUSTER_MANAGER_NAME,
-        )
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
-        init_server.assert_called_once()
+        restart_server.assert_called_once()
 
         assert harness.charm.state.unit_server.started
 
@@ -492,52 +516,46 @@ def test_init_server_calls_necessary_methods_leader(harness):
 
     with (
         patch(
+            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
+            return_value=True,
+        ),
+        patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ) as dashboard_properties,
         patch(
             "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_osd_health"
         ) as check_health,
         patch(
-            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.init_server"
-        ) as init_server,
+            "single_kernel_opensearch_dashboards.managers.cluster.ClusterManager.restart_server"
+        ) as restart_server,
         patch(
             "single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"
         ) as running,
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
 
         check_health.assert_called_once()
         dashboard_properties.assert_called_once()
-        init_server.assert_called_once()
-        expected_calls = [
-            call(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                scope="app",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-            call(
-                status=ServerStatuses.DB_CONNECTION_MISSING.value,
-                scope="unit",
-                component=CLUSTER_MANAGER_NAME,
-            ),
-        ]
+        restart_server.assert_called_once()
         running.assert_called_with(
             status=HealthStatuses.AFTER_RESTART.value,
             component_name=HEALTH_MANAGER_NAME,
             scope="unit",
         )
-        add.assert_has_calls(expected_calls, any_order=False)
         assert harness.charm.state.unit_server.started
 
 
 def test_config_changed_applies_relation_data(harness):
     with harness.hooks_disabled():
         harness.set_leader(True)
+        harness.update_relation_data(
+            harness.charm.state.peer_relation.id, f"{CHARM_KEY}/0", {"state": "started"}
+        )
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"
@@ -553,7 +571,7 @@ def test_config_changed_applies_relation_data(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start"),
+        patch("single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart"),
         patch(
             "single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock"
         ),
@@ -573,14 +591,12 @@ def test_workload_down_blocked_status(harness):
         patch("single_kernel_opensearch_dashboards.managers.cluster.RESTART_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
+            return_value=False,
         ),
         patch(
             "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart",
-            return_value=False,
+            return_value=True,
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -594,19 +610,20 @@ def test_workload_down_blocked_status(harness):
         ),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                scope="app",
+                scope="unit",
                 component=HEALTH_MANAGER_NAME,
             ),
             call(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                scope="unit",
+                scope="app",
                 component=HEALTH_MANAGER_NAME,
             ),
         ]
@@ -630,10 +647,10 @@ def test_service_unavailable_blocked_status(harness):
         harness.set_leader(True)
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -645,10 +662,19 @@ def test_service_unavailable_blocked_status(harness):
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
+            return_value="1",
+        ),
+        patch(
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.exists",
+            return_value=True,
+        ),
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNAVAILABLE.value,
@@ -694,10 +720,10 @@ def test_service_unhealthy(harness):
             return_value=opensearch_ca,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -732,10 +758,15 @@ def test_service_unhealthy(harness):
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
+            return_value="1",
+        ),
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_UNHEALTHY.value,
@@ -776,10 +807,10 @@ def test_service_error(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -819,10 +850,15 @@ def test_service_error(harness):
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
+            return_value="1",
+        ),
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         expected_calls = [
             call(
                 status=HealthStatuses.STATUS_ERROR.value,
@@ -863,10 +899,10 @@ def test_service_available(harness):
     opensearch_ca.exist.return_value = True
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
@@ -902,10 +938,15 @@ def test_service_available(harness):
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch(
+            "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
+            return_value="1",
+        ),
+        patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
         mock_event.framework.model.unit.name = "unit/0"
-        harness.charm.restart(mock_event)
+        harness.charm.restart_on_lock_acquired(mock_event)
         add.assert_not_called()
 
 
@@ -941,10 +982,10 @@ def test_wrong_opensearch_version(harness):
 
     with (
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
         ),
         patch(
-            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.start", return_value=True
+            "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.restart", return_value=True
         ),
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",

@@ -4,19 +4,25 @@
 
 """Event handler for related applications on the `opensearch-client` relation interface."""
 import logging
+from typing import cast
 
-from ops import Object
+from ops import CharmBase, Object
 from ops.charm import RelationBrokenEvent, RelationEvent
+from typing_extensions import Any
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
+from single_kernel_opensearch_dashboards.common.literals import (
+    CLUSTER_MANAGER_NAME,
+    OPENSEARCH_REL_NAME,
+    RelDepartureReason,
 )
-from single_kernel_opensearch_dashboards.common.literals import OPENSEARCH_REL_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.managers.tls import TLSManager
+from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -26,20 +32,15 @@ class RequirerEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
-        tls_manager: TLSManager,
     ) -> None:
-        super().__init__(
-            charm,
-            "provider",
-        )
+        super().__init__(charm, "provider")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
-        self.tls_manager = tls_manager
-
+        self.tls_manager = self.charm.tls_manager
         self.requirer_events = OpenSearchRequiresEventHandlers(
-            self.charm, self.state.client_requires_data
+            cast(CharmBase, cast(Any, charm)), self.state.client_requires_data
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed
@@ -53,9 +54,13 @@ class RequirerEvents(Object):
         if not self.state.stable:
             event.defer()
             return
-
-        self.tls_manager.set_ca_opensearch()
-        self.charm.emit_restart(event)
+        try:
+            self.tls_manager.set_ca_opensearch()
+            self.charm.emit_restart(event)
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            event.defer()
+            return
 
     def _on_client_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Restoring config to defaults if the relation is gone.
@@ -63,9 +68,16 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
-        # Don't remove anything if the service is going down
-        if self.charm.app.planned_units == 0 or not self.charm.unit.is_leader():
+        if (
+            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            == RelDepartureReason.APP_REMOVAL
+        ):
             return
+
+        self.state.add_status_to_both(
+            status=ServerStatuses.DB_CONNECTION_MISSING.value,
+            component=CLUSTER_MANAGER_NAME,
+        )
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)

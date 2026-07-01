@@ -4,15 +4,18 @@
 
 """Handler for General OpenSearch Dashboards charm events."""
 import logging
+from typing import Any, cast
 
+import ops
 from pydantic import ValidationError
 
-from single_kernel_opensearch_dashboards.charms.base import (
-    OpenSearchDashboardsStatusHandler,
-)
+from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     UPGRADE_MANAGER_NAME,
+    RelDepartureReason,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -20,22 +23,27 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     ServerStatuses,
     UpgradeStatuses,
 )
-from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 from ops import (
+    CharmBase,
     ConfigChangedEvent,
     EventBase,
     InstallEvent,
     Object,
+    RelationChangedEvent,
     RelationDepartedEvent,
+    RelationJoinedEvent,
     SecretChangedEvent,
+    SecretNotFoundError,
 )
 
 from single_kernel_opensearch_dashboards.common.literals import (
     PEERS_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.utils.helpers import (
+    relation_departure_reason,
     update_grafana_dashboards_title,
 )
 
@@ -45,19 +53,17 @@ class OpenSearchDashboardsEvents(Object):
 
     def __init__(
         self,
-        charm: OpenSearchDashboardsStatusHandler,
+        charm: StatusHandlingCharm,
         state: ClusterState,
-        cluster_manager: ClusterManager,
+        workload: WorkloadBase,
     ) -> None:
         """Initialize the OpenSearchDashboardsEvents handler."""
-        super().__init__(
-            charm,
-            "opensearch-dashboards-events",
-        )
+        super().__init__(charm, "opensearch-dashboards-events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
-        self.cluster_manager = cluster_manager
-
+        self.workload = workload
+        self.cluster_manager = self.charm.cluster_manager
+        self.tls_manager = self.charm.tls_manager
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
@@ -72,7 +78,23 @@ class OpenSearchDashboardsEvents(Object):
         self.framework.observe(
             self.charm.on[PEERS_REL_NAME].relation_departed, self._on_relation_departed
         )
+
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        if self.state.substrate == Substrates.K8S:
+            self.framework.observe(
+                self.charm.on.opensearch_dashboards_pebble_ready, self._on_pebble_ready
+            )
+
+    def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
+        """Define the initial Pebble layer and start the service."""
+        if not self.workload.ready():
+            self.state.statuses.add(
+                status=ServerStatuses.CONTAINER_IS_NOT_ACCESSIBLE.value,
+                scope="unit",
+                component=self.cluster_manager.name,
+            )
+            event.defer()
+            return
 
     def _on_install(self, event: InstallEvent) -> None:
         """Handle the `install` event."""
@@ -90,13 +112,21 @@ class OpenSearchDashboardsEvents(Object):
             event.defer()
             return
 
+        # Restore certs from databag if restarted pod / added new unit
+        try:
+            self.tls_manager.write_tls_files()
+        except (OSDFileOperationError, SecretNotFoundError) as e:
+            logger.error("%s", e)
+            event.defer()
+            return
+
         # We are doing it through restart because of RollingOps lib
         # and their locks on start/restart operations
         self.charm.emit_restart(event)
 
     def _on_update_status(self, event: EventBase) -> None:
         """Handle the `update-status` event."""
-        update_grafana_dashboards_title(self.charm)
+        update_grafana_dashboards_title(cast(CharmBase, cast(Any, self.charm)))
 
         if not self.pre_restart_check():
             event.defer()
@@ -139,14 +169,20 @@ class OpenSearchDashboardsEvents(Object):
             # no point in deferring, the hook will be called another time after config update
             return
 
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.INVALID_CONFIG.value, scope="app", component=CONFIG_MANAGER_NAME
-        )
-
         self.charm.emit_restart(event)
 
-    def _on_relation_changed(self, event: EventBase) -> None:
+    def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
+        if (
+            not isinstance(event, RelationJoinedEvent)
+            and event.app
+            and (
+                relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+                == RelDepartureReason.APP_REMOVAL
+            )
+        ):
+            return
+
         if not self.pre_restart_check():
             event.defer()
             return
@@ -170,58 +206,25 @@ class OpenSearchDashboardsEvents(Object):
 
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""
+        # CONTAINER CHECK
+        if not self.workload.ready():
+            return False
+
         # PEER RELATION CHECK
         if not self.state.peer_relation:
             logger.debug("Waiting for peer relations")
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=ConfigStatuses.WAITING_FOR_PEER.value,
-                    scope="app",
-                    component=CONFIG_MANAGER_NAME,
-                )
-            self.state.statuses.add(
-                status=ConfigStatuses.WAITING_FOR_PEER.value,
-                scope="unit",
-                component=CONFIG_MANAGER_NAME,
+            self.state.add_status_to_both(
+                status=ConfigStatuses.WAITING_FOR_PEER.value, component=CONFIG_MANAGER_NAME
             )
             return False
-
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value,
-            scope="unit",
-            component=CONFIG_MANAGER_NAME,
-        )
-        self.state.delete_status_if_present(
-            status=ConfigStatuses.WAITING_FOR_PEER.value,
-            scope="app",
-            component=CONFIG_MANAGER_NAME,
-        )
 
         # UPGRADE IDLE CHECK
         if not self.state.upgrade_idle:
             logger.debug("Waiting for upgrade relations to be idle")
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-                    scope="app",
-                    component=UPGRADE_MANAGER_NAME,
-                )
-            self.state.statuses.add(
+            self.state.add_status_to_both(
                 status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-                scope="unit",
                 component=UPGRADE_MANAGER_NAME,
             )
             return False
-
-        self.state.delete_status_if_present(
-            status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-            scope="unit",
-            component=UPGRADE_MANAGER_NAME,
-        )
-        self.state.delete_status_if_present(
-            status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-            scope="app",
-            component=UPGRADE_MANAGER_NAME,
-        )
 
         return True

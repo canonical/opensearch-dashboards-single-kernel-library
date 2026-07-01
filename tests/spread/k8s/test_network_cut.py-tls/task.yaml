@@ -1,0 +1,10 @@
+summary: test_network_cut.py
+environment:
+  TEST_MODULE: ha/test_network_cut.py
+  TEST_TLS: true
+  SUBSTRATE: "k8s"
+
+execute: |
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
+artifacts:
+  - allure-results

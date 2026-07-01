@@ -17,7 +17,6 @@ from ..helpers import (
     access_all_dashboards,
     access_all_prometheus_exporters,
     for_machines,
-    get_relation,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,9 @@ DEFAULT_NUM_UNITS = 3
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, series: str) -> None:
+async def test_build_and_deploy(
+    ops_test: OpsTest, lxd_spaces, charmvm: str, charm_base: str
+) -> None:
     """Build and deploy OpenSearch Dashboards.
 
     For this test, we will create a machine in multiple spaces and inject
@@ -45,7 +46,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, serie
                 "add-machine",
                 f"--model={ops_test.model.name}",
                 "--constraints=spaces=alpha,cluster,backup,client",
-                f"--series={series}",
+                f"--base={charm_base}",
             ]
         )
 
@@ -70,9 +71,9 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, serie
         )
 
     await ops_test.model.deploy(
-        charm,
+        charmvm,
         num_units=DEFAULT_NUM_UNITS,
-        series=series,
+        base=charm_base,
         constraints="spaces=alpha,client,cluster,backup",
         bind={"": "cluster"},
         to=[str(i) for i in range(DEFAULT_NUM_UNITS)],
@@ -107,7 +108,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, charm: str, serie
 @pytest.mark.abort_on_fail
 async def test_dashboard_access_http(ops_test: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, get_relation(ops_test).id)
+    assert await access_all_dashboards(ops_test, ops_test, https=False, verify=False)
     assert await access_all_prometheus_exporters(ops_test)
 
 
@@ -131,5 +132,5 @@ async def test_tls_on(ops_test: OpsTest) -> None:
 @pytest.mark.abort_on_fail
 async def test_dashboard_access_https(ops_test: OpsTest):
     """Test HTTP access to each dashboard unit."""
-    assert await access_all_dashboards(ops_test, get_relation(ops_test).id, https=True)
+    assert await access_all_dashboards(ops_test, ops_test, https=True, verify=True)
     assert await access_all_prometheus_exporters(ops_test)

@@ -22,9 +22,23 @@ class OpenSearchDashboardsPaths:
     BIN = "opt/opensearch-dashboards"
 
 
+class RelDepartureReason(Enum):
+    """Enum depicting the 3 various causes of a Relation Departed event."""
+
+    APP_REMOVAL = "app-removal"
+    SCALE_DOWN = "scale-down"
+    REL_BROKEN = "rel-broken"
+
+
 # Snap
 OPENSEARCH_DASHBOARDS_SNAP_REVISION = "54"
 CHARM_KEY = "opensearch-dashboards"
+
+# K8s
+CONTAINER_NAME = "opensearch-dashboards"
+OSD_SERVICE = "opensearch-dashboards"
+EXPORTER_SERVICE = "prometheus-exporter"
+LAYER_NAME = "rockcraft-opensearch-dashboards"
 
 # Relation names
 PEERS_REL_NAME = "dashboard_peers"
@@ -32,6 +46,7 @@ UPGRADE_REL_NAME = "upgrade"
 OPENSEARCH_REL_NAME = "opensearch-client"
 CERTS_REL_NAME = "certificates"
 OAUTH_REL_NAME = "oauth"
+INGRESS_REL_NAME = "ingress"
 JWT_REL_NAME = "jwt-configuration"
 COS_RELATION_NAME = "cos-agent"
 STATUS_PEERS_REL_NAME = "status-peers"
@@ -40,10 +55,12 @@ RESTART_REL_NAME = "restart"
 # Components names
 CLUSTER_MANAGER_NAME = "cluster_manager"
 CONFIG_MANAGER_NAME = "config_manager"
+COS_MANAGER_NAME = "cos_manager"
+DASHBOARDS_NAME = "dashboards"
 HEALTH_MANAGER_NAME = "health_manager"
 UPGRADE_MANAGER_NAME = "upgrade_manager"
 TLS_MANAGER_NAME = "tls_manager"
-COS_MANAGER_NAME = "cos_manager"
+INGRESS_MANAGER_NAME = "ingress_manager"
 
 # OpenSearch user and role
 DASHBOARD_INDEX = ".opensearch-dashboards"

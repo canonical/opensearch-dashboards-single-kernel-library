@@ -15,6 +15,7 @@ from pydantic import ValidationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     DASHBOARD_USER,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -56,9 +57,7 @@ class ConfigManager(BaseManager):
 
     def config_changed(self) -> bool:
         """Compares expected vs actual config that would require a restart to apply."""
-        if self.load_dashboard_properties() == self.dashboard_properties():
-            return False
-        return True
+        return self.load_dashboard_properties() != self.dashboard_properties()
 
     def set_dashboard_properties(self) -> None:
         """Writes built config file."""
@@ -67,8 +66,14 @@ class ConfigManager(BaseManager):
         )
 
     def load_dashboard_properties(self) -> dict[str, Any]:
-        """Reads built config file."""
-        return yaml.load(self.workload.paths.properties.read_text(), yaml.UnsafeLoader)
+        """
+        Reads built config file.
+        Raises:
+            OSDFileOperationError: If there was an error when reading config.
+        """
+        return yaml.load(
+            self.workload.read_text(self.workload.paths.properties), yaml.UnsafeLoader
+        )
 
     def dashboard_properties(self) -> dict[str, Any]:
         """Build the opensearch_dashboards.yml content.
@@ -95,7 +100,12 @@ class ConfigManager(BaseManager):
         opensearch_ca = self.workload.paths.opensearch_ca if self.state.opensearch_server else None
 
         # We are using the address exposed by Juju as service address
-        properties |= {"server.host": str(self.state.bind_address)}
+        properties |= {
+            "server.host": (
+                self.state.unit_server.host if self.state.substrate == Substrates.VM else "0.0.0.0"
+            )
+        }
+
         if opensearch_user and opensearch_password:
             properties |= {
                 "opensearch.username": opensearch_user,
@@ -113,7 +123,17 @@ class ConfigManager(BaseManager):
                 "server.ssl.key": self.workload.paths.server_key.as_posix(),
             }
 
-        if self.state.oauth_relation:
+        if (
+            self.state.substrate == Substrates.K8S
+            and self.state.ingress_relation
+            and self.state.ingress.url
+        ):
+            properties |= {
+                "server.rewriteBasePath": True,
+                "server.basePath": f"{self.state.ingress.base_path}",
+            }
+
+        if self.state.oauth_relation and self.state.unit_server.tls_enabled:
             properties |= {
                 "opensearch_security.auth.type": ["basicauth", "openid"],
                 "opensearch_security.auth.multiple_auth_enabled": True,
@@ -121,13 +141,13 @@ class ConfigManager(BaseManager):
                 "opensearch_security.openid.client_id": self.state.oauth.client_id,
                 "opensearch_security.openid.client_secret": self.state.oauth.client_secret,
                 "opensearch_security.openid.verify_hostnames": False,
-                "opensearch_security.openid.base_redirect_url": self.state.url,
+                "opensearch_security.openid.base_redirect_url": self.state.oauth_url,
             }
             if opensearch_ca:
                 properties |= {"opensearch_security.openid.root_ca": opensearch_ca.as_posix()}
 
         if self.state.jwt_relation:
-            if self.state.oauth_relation:
+            if self.state.oauth_relation and self.state.unit_server.tls_enabled:
                 properties["opensearch_security.auth.type"] = ["basicauth", "openid", "jwt"]
             else:
                 properties["opensearch_security.auth.type"] = ["basicauth", "jwt"]
@@ -152,17 +172,15 @@ class ConfigManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the config manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
 
         if not self.state.peer_relation:
             status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)
+
         if self.state.jwt_relation:
             if self.state.jwt.get_jwt_url() is None:
                 status_list.append(ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value)
+
         try:
             self.state.config.log_level
         except ValidationError:

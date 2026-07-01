@@ -54,7 +54,7 @@ class UpgradeManager(BaseManager):
         """
 
         # When there's no Opensearch connection, we shouldn't report version mismatch
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             return True
 
         if not (srv_version_actual := self.state.opensearch_server.version):
@@ -98,14 +98,11 @@ class UpgradeManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the upgrade manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
 
         if not self.version_compatible() and scope == "unit":
             status_list.append(UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value)
+
         if not self.state.upgrade_idle:
             status_list.append(UpgradeStatuses.WAITING_FOR_UPGRADE.value)
 

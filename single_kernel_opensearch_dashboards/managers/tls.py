@@ -11,10 +11,15 @@ import ops.pebble
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDTLSMissingDataError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDTLSMissingDataError,
+)
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
+from single_kernel_opensearch_dashboards.core.statuses import (
+    CharmStatuses,
+    ServerStatuses,
+)
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     generate_csr,
     generate_private_key,
@@ -118,31 +123,55 @@ class TLSManager(BaseManager):
         if not self.state.unit_server.private_key:
             self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
 
-        sans_ip = set(
-            self.state.unit_server.sans.get("sans_ip", []) + [str(self.state.bind_address or "")]
-        )
-        sans_dns = set(self.state.unit_server.sans.get("sans_dns", []))
-
-        logger.debug(
-            "Requesting certificate for: "
-            f"host {self.state.unit_server.host}, with IP {sans_ip}, DNS {sans_dns}"
-        )
-
         csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
-            subject=str(self.state.bind_address or self.state.unit_server.private_ip),
-            sans_ip=list(sans_ip or ""),
-            sans_dns=list(sans_dns),
+            subject=self.state.unit_server.host,
+            sans_ip=self.state.unit_server.sans.get("sans_ip"),
+            sans_dns=self.state.unit_server.sans.get("sans_dns"),
+        )
+        logger.debug(
+            "Requesting certificate for: host: %s, with sans_ip: %s, sans_dns: %s",
+            self.state.unit_server.host,
+            self.state.unit_server.sans.get("sans_ip"),
+            self.state.unit_server.sans.get("sans_dns"),
         )
 
         return csr
 
+    def write_tls_files(self) -> None:
+        """Writes necessary data from databag to files.
+        Used for when k8s pod is recreated
+        Or a unit added after relation with OpenSearch was created
+        Raises:
+            OSDFileOperationError: If there was an error when writing/reading files.
+        """
+        if (
+            self.state.opensearch_server
+            and self.state.opensearch_server.password
+            and not self.workload.exists(self.workload.paths.opensearch_ca)
+        ):
+            self.set_ca_opensearch()
+
+        if self.state.unit_server.private_key and not self.workload.exists(
+            self.workload.paths.server_key
+        ):
+            self.set_private_key()
+
+        if self.state.unit_server.ca and not self.workload.exists(self.workload.paths.ca):
+            self.set_ca()
+
+        if self.state.unit_server.certificate and not self.workload.exists(
+            self.workload.paths.certificate
+        ):
+            self.set_certificate()
+        logger.debug("Updated all TLS resources")
+
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the tls manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
+
+        if self.state.unit_server:
+            if not self.state.unit_server.tls_enabled and self.state.oauth_relation:
+                status_list.append(ServerStatuses.NO_TLS.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

@@ -11,7 +11,7 @@ from typing import Optional
 import requests
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, HTTPError, RequestException
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -53,10 +53,10 @@ class HealthManager(BaseManager):
             if err.response.status_code == 503:
                 return False, HealthStatuses.STATUS_UNAVAILABLE.value
             return False, HealthStatuses.STATUS_UNKNOWN.value
-        except (ConnectionError, OSDAPIError):
-            return False, HealthStatuses.STATUS_UNAVAILABLE.value
         except requests.ReadTimeout:
             return False, HealthStatuses.STATUS_HANGING.value
+        except (ConnectionError, OSDAPIError, RequestException):
+            return False, HealthStatuses.STATUS_UNAVAILABLE.value
 
         state = body.get("status", {}).get("overall", {}).get("state")
 
@@ -97,22 +97,16 @@ class HealthManager(BaseManager):
 
         return False, HealthStatuses.DB_DOWN.value
 
-    def service_healthy(self) -> bool:
-        """Perform a unit-level global health check.
-
-        Returns:
-            bool: True if the underlying workload process is alive, False otherwise.
-        """
-        return self.workload.alive()
-
     def check_unit_health(self) -> bool:
         """Returns true if OSD is healthy otherwise false"""
 
-        if not self.service_healthy():
+        if not self.workload.healthy():
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.workload.exists(
+            self.workload.paths.opensearch_ca
+        ):
             return True
 
         logger.info(f"Checking health")
@@ -155,8 +149,7 @@ class HealthManager(BaseManager):
         ):
             opensearch_healthy, status = self.opensearch_status()
             if not opensearch_healthy and status:
-                self.state.statuses.add(status=status, scope="app", component=self.name)
-                self.state.statuses.add(status=status, scope="unit", component=self.name)
+                self.state.add_status_to_both(status=status, component=self.name)
 
     def check_osd_health(self) -> None:
         """Coordinate and execute all comprehensive health checks.
@@ -166,17 +159,9 @@ class HealthManager(BaseManager):
 
         Returns true if OSD is healthy otherwise false
         """
-        if not self.service_healthy():
-            if self.state.unit.is_leader():
-                self.state.statuses.add(
-                    status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                    scope="app",
-                    component=self.name,
-                )
-            self.state.statuses.add(
-                status=HealthStatuses.WORKLOAD_IS_DOWN.value,
-                scope="unit",
-                component=self.name,
+        if not self.workload.healthy():
+            self.state.add_status_to_both(
+                status=HealthStatuses.WORKLOAD_IS_DOWN.value, component=self.name
             )
             return
 
@@ -187,7 +172,9 @@ class HealthManager(BaseManager):
         self.state.statuses.clear(scope="unit", component=self.name)
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.workload.exists(
+            self.workload.paths.opensearch_ca
+        ):
             return
 
         self.wait_for_unit_health()
@@ -195,16 +182,19 @@ class HealthManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the health manager's statuses."""
-        if not recompute:
-            statuses = self.state.statuses.get(scope, self.name).root
-            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
-
         status_list: list[StatusObject] = []
 
-        if not self.service_healthy():
+        if not self.state.upgrade_idle:
+            return status_list
+
+        if self.state.unit_server.started and not self.workload.healthy():
             status_list.append(HealthStatuses.WORKLOAD_IS_DOWN.value)
             # Return immediately because we cannot access the dashboards API if the service is down
             return status_list
+
+        if not recompute:
+            statuses = self.state.statuses.get(scope, self.name).root
+            return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
         # Do not check opensearch health if it's not connected or missing certificates
         if self.state.opensearch_server and (

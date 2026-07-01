@@ -10,32 +10,24 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from .conftest import Flags
 from .helpers import (
-    CONFIG_OPTS,
+    DUMMY_CHARM,
+    OPENSEARCH_APP_NAME,
+    RESOURCE,
     TLS_CERTIFICATES_APP_NAME,
-    TLS_STABLE_CHANNEL,
+    TRAEFIK_APP_NAME,
     access_all_dashboards,
+    deploy_base,
     get_app_relation_data,
+    is_https_enabled,
+    wait_for_dashboard_idle,
 )
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
-
-# FIXME: update this to 'stable' when `pre-upgrade-check` is released to 'stable'
-CHANNEL = "edge"
-
-OPENSEARCH_APP_NAME = "opensearch"
-OPENSEARCH_CONFIG = {
-    "logging-config": "<root>=INFO;unit=DEBUG",
-    "cloudinit-userdata": """postruncmd:
-        - [ 'sysctl', '-w', 'vm.max_map_count=262144' ]
-        - [ 'sysctl', '-w', 'fs.file-max=1048576' ]
-        - [ 'sysctl', '-w', 'vm.swappiness=0' ]
-        - [ 'sysctl', '-w', 'net.ipv4.tcp_retries2=5' ]
-    """,
-}
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 
 NUM_UNITS_APP = 3
 NUM_UNITS_DB = 3
@@ -43,55 +35,85 @@ NUM_UNITS_DB = 3
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
+async def test_build_and_deploy(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    charm_base: str,
+    dashboard_tester_charm: str,
+    substrate: str,
+    test_flags: Flags,
+):
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
+    tls = test_flags.test_tls
+    traefik = test_flags.traefik
 
-    await ops_test.model.deploy(
-        charm, application_name=APP_NAME, num_units=NUM_UNITS_APP, series=series
-    )
-    await ops_test.model.set_config(OPENSEARCH_CONFIG)
-    await ops_test.model.deploy(
-        OPENSEARCH_APP_NAME,
-        channel="2/edge",
-        num_units=NUM_UNITS_DB,
-        config=CONFIG_OPTS,
-    )
-
-    config = {"ca-common-name": "CN_CA"}
-    await ops_test.model.deploy(
-        TLS_CERTIFICATES_APP_NAME, channel=TLS_STABLE_CHANNEL, config=config
-    )
-
-    await ops_test.model.wait_for_idle(
-        apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
-    # Relate it to OpenSearch to set up TLS.
-    await ops_test.model.relate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME],
-        status="active",
-        timeout=1000,
+    app_name = await deploy_base(
+        ops_test_vm,
+        ops_test,
+        charmvm,
+        charmk8s,
+        charm_base,
+        substrate,
+        num_units_app=NUM_UNITS_APP,
+        num_units_db=NUM_UNITS_DB,
+        trust_charm=True,
     )
 
     async with ops_test.fast_forward():
         await ops_test.model.block_until(
-            lambda: len(ops_test.model.applications[APP_NAME].units) == NUM_UNITS_APP
+            lambda: len(ops_test.model.applications[app_name].units) == NUM_UNITS_APP
         )
-        await ops_test.model.wait_for_idle(apps=[APP_NAME], timeout=1000, idle_period=30)
+        await ops_test.model.wait_for_idle(apps=[app_name], timeout=1000, idle_period=30)
 
-    assert ops_test.model.applications[APP_NAME].status == "blocked"
+    if substrate == "k8s":
+        assert ops_test.model.applications[app_name].status == "blocked"
+    else:
+        assert ops_test.model.applications[app_name].status == "active"
 
-    pytest.relation = await ops_test.model.relate(OPENSEARCH_APP_NAME, APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, APP_NAME], status="active", timeout=1000
+    if tls:
+        if substrate == "k8s":
+            await ops_test_vm.model.create_offer(
+                "certificates", TLS_CERTIFICATES_APP_NAME, "self-signed-certificates"
+            )
+            await ops_test.model.consume(
+                f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}"
+            )
+        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        if not traefik and substrate == "k8s":
+            await ops_test.model.deploy(dashboard_tester_charm, application_name=DUMMY_CHARM)
+
+    if traefik:
+        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
+        if tls:
+            await ops_test.model.integrate(
+                TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
+            )
+
+    await wait_for_dashboard_idle(ops_test, traefik)
+    await ops_test_vm.model.wait_for_idle(
+        apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
     )
 
 
 @pytest.mark.abort_on_fail
-async def test_in_place_upgrade_http(ops_test: OpsTest, charm: str):
+async def test_in_place_upgrade(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    substrate: str,
+    test_flags: Flags,
+):
+    """Test the in-place upgrade handling the appropriate protocol (HTTP/HTTPS)."""
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    tls = test_flags.test_tls
+    traefik = test_flags.traefik
+
     leader_unit = None
-    for unit in ops_test.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[app_name].units:
         if await unit.is_leader_from_status():
             leader_unit = unit
     assert leader_unit
@@ -102,60 +124,23 @@ async def test_in_place_upgrade_http(ops_test: OpsTest, charm: str):
     # ensuring that the upgrade stack is correct
     relation_data = get_app_relation_data(
         model_full_name=ops_test.model_full_name,
-        unit=f"{APP_NAME}/0",
+        unit=f"{app_name}/0",
         endpoint="upgrade",
     )
 
     assert "upgrade-stack" in relation_data
 
     assert set(json.loads(relation_data["upgrade-stack"])) == set(
-        [int(unit.machine.id) for unit in ops_test.model.applications[APP_NAME].units]
+        [int(unit.name.split("/")[-1]) for unit in ops_test.model.applications[app_name].units]
     )
 
-    await ops_test.model.applications[APP_NAME].refresh(path=charm)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", timeout=1000, idle_period=120
+    if substrate == "k8s":
+        await ops_test.model.applications[app_name].refresh(path=charmk8s, resources=RESOURCE)
+    else:
+        await ops_test.model.applications[app_name].refresh(path=charmvm)
+
+    await wait_for_dashboard_idle(ops_test, traefik)
+    # Validate access
+    assert await access_all_dashboards(
+        ops_test_vm, ops_test, https=is_https_enabled(test_flags), verify=tls
     )
-
-    assert await access_all_dashboards(ops_test)
-
-
-@pytest.mark.abort_on_fail
-async def test_switch_tls_on(ops_test: OpsTest):
-    """Test HTTPS access to each dashboard unit."""
-    # Relate it to OpenSearch to set up TLS.
-    await ops_test.model.relate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
-
-@pytest.mark.abort_on_fail
-async def test_in_place_upgrade_https(ops_test: OpsTest, charm: str):
-    leader_unit = None
-    for unit in ops_test.model.applications[APP_NAME].units:
-        if await unit.is_leader_from_status():
-            leader_unit = unit
-    assert leader_unit
-
-    action = await leader_unit.run_action("pre-upgrade-check")
-    await action.wait()
-
-    # ensuring that the upgrade stack is correct
-    relation_data = get_app_relation_data(
-        model_full_name=ops_test.model_full_name,
-        unit=f"{APP_NAME}/0",
-        endpoint="upgrade",
-    )
-
-    assert "upgrade-stack" in relation_data
-    assert set(json.loads(relation_data["upgrade-stack"])) == set(
-        [int(unit.machine.id) for unit in ops_test.model.applications[APP_NAME].units]
-    )
-
-    await ops_test.model.applications[APP_NAME].refresh(path=charm)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", timeout=1000, idle_period=120
-    )
-
-    assert await access_all_dashboards(ops_test, https=True)

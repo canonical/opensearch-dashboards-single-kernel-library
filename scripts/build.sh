@@ -3,7 +3,7 @@
 set -e
 
 # Charms for integration tests
-SPECIAL_CHARMS=("tests/integration/application_charm")
+TEST_CHARMS=("tests/integration/dashboards_application_charm" "tests/integration/dashboards_tester_charm")
 LIB_PATH="./single_kernel_opensearch_dashboards"
 CHARMS_PATH="./tests/charms"
 
@@ -21,13 +21,13 @@ pack_charm() {
 }
 
 if [ $# -ge 1 ]; then
-    declare -a TEST_CHARMS=("$1")
+    declare -a CHARMS=("$1")
 else
-    declare -a TEST_CHARMS=("${CHARMS_PATH}/vm" )
+    declare -a CHARMS=("${CHARMS_PATH}/vm" )
 fi
 
-for directory in "${TEST_CHARMS[@]}"; do
-    if [[ " ${SPECIAL_CHARMS[*]} " =~ ${directory} ]]; then
+for directory in "${CHARMS[@]}"; do
+    if [[ " ${TEST_CHARMS[*]} " =~ ${directory} ]]; then
       printf 'Building charm %s \n' "$directory"
       pushd "$directory"
       pack_charm

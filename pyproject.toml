@@ -70,19 +70,20 @@ pyyaml = "^6.0.2"
 requests = "^2.32.4"
 
 # TODO: clean any of the notes below and their deps.
+jubilant = "^1.8.0"
 [tool.poetry.group.charm-libs.dependencies]
 # data_platform_libs/v0/data_interfaces.py
-ops = "^2.23.0"
-# data_platform_libs/v0/upgrade.py
+ops = "^2.23.2"
+# data_platform_libs/v1/upgrade.py
+lightkube = "0.19.1"
 poetry-core = "^2.1.3"
 # tls_certificates_interface/v3/tls_certificates.py
 cryptography = "^45.0.4"
 jsonschema = "^4.24.0"
-# data_platform_libs/v0/upgrade.py requires pydantic ^1.10
 # grafana_agent/v0/cos_agent.py requires pydantic
 pydantic = ">2, <3"
 # grafana_agent/v0/cos_agent.py
-cosl = "^1.0.0"
+cosl = "^1.9.1"
 data-platform-helpers = "^0.1.7"
 
 [tool.poetry.group.fmt]
@@ -121,7 +122,8 @@ codespell = "^2.4.1"
 pyright = "^1.1.402"
 typing-extensions = "^4.12.2"
 requests = "^2.32.4"
-ops = "^2.23.0"
+ops = "^2.23.2"
+
 
 [tool.poetry.group.unit]
 optional = true
@@ -133,6 +135,7 @@ coverage = { extras = ["toml"], version = "^7.9.1" }
 pytest-mock = "^3.14.1"
 pyyaml = "^6.0.2"
 responses = "^0.25.7"
+
 
 [tool.poetry.group.integration.dependencies]
 charmlibs-pathops = "^1.0.1"
@@ -148,6 +151,7 @@ allure-pytest-default-results = "^0.1.3"
 pytest-playwright = "^0.7.0"
 oauth_tools = { git = "https://github.com/canonical/iam-bundle", rev = "921d113325eed156e5b54f97c42e6c50810180c0" }
 pyjwt = "^2.10.1"
+lightkube = "0.19.1"
 
 [tool.pyright]
 include = ["src"]

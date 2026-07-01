@@ -17,11 +17,13 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
 )
-from tests.charms.vm.src.charm import OpenSearchDashboardsVMCharm as TestCharm
+from tests.charms.dashboards_vm_charm.src.charm import (
+    OpenSearchDashboardsVMCharm as TestCharm,
+)
 
-CONFIG = str(yaml.safe_load(Path("tests/charms/vm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/charms/vm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text()))
 
 
 @pytest.fixture(autouse=True)
@@ -35,10 +37,17 @@ def patched_pebble_restart(mocker):
 
 
 @pytest.fixture(autouse=True)
+def patched_snap(mocker):
+    mocker.patch(
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload._load_snap",
+        return_value=MagicMock(),
+    )
+
+
+@pytest.fixture(autouse=True)
 def patched_healthy(mocker):
     mocker.patch(
         "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
-        new_callable=PropertyMock,
         return_value=True,
     )
 
@@ -94,6 +103,7 @@ def harness(request):
     if options["add_opensearch"]:
         opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, "opensearch")
         harness.add_relation_unit(opensearch_rel_id, "opensearch/0")
+        harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
         if options["opensearch_data"]:
             for key, value in options["opensearch_data"].items():
                 harness.update_relation_data(opensearch_rel_id, "opensearch", {key: value})

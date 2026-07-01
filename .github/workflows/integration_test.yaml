@@ -34,35 +34,44 @@ jobs:
 
           spread_jobs = (
               subprocess.run(
-                  [pathlib.Path.home() / "go/bin/spread", "-list", "github-ci"],
-                  capture_output=True,
-                  check=True,
-                  text=True,
+                [pathlib.Path.home() / "go/bin/spread", "-list", "github-ci"],
+                capture_output=True,
+                check=True,
+                text=True,
               )
               .stdout.strip()
               .split("\n")
           )
+
           jobs = []
+
           for job in spread_jobs:
-              # Example `job`: "github-ci:ubuntu-24.04:tests/spread/test_charm.py:juju36"
+              # Example `job`: "github-ci:ubuntu-24.04:tests/spread/vm/test_charm.py:juju36"
+              # or "github-ci:ubuntu-24.04:tests/spread/k8s/test_charm.py:juju36"
               _, runner, task, variant = job.split(":")
-              # Example: "test_charm.py"
+              
+              # Removes the root test directory prefix
+              # This will leave tasks looking like "vm/test_charm.py" or "k8s/test_charm.py"
               task = task.removeprefix("tests/spread/")
+              
               # For IS-hosted runners
               if "arm64" in runner:
                   architecture = "arm64"
               else:
                   architecture = "amd64"
-              # Example: "test_charm.py:juju36 | amd64"
+                  
+              # Example: "vm/test_charm.py:juju36 | amd64"
               name = f"{task}:{variant} | {architecture}"
               # ":" character not valid in GitHub Actions artifact
               name_in_artifact = f"{task.replace('/', '-')}-{variant}-{architecture}"
+              
               jobs.append({
                   "spread_job": job,
                   "name": name,
                   "name_in_artifact": name_in_artifact,
                   "runner": runner,
               })
+
           output = f"jobs={json.dumps(jobs)}"
           print(output)
           with open(os.environ["GITHUB_OUTPUT"], "a") as file:
@@ -147,7 +156,7 @@ jobs:
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: snap list
-      - name: Select model
+      - name: Select and identify models
         timeout-minutes: 1
         # `!contains(matrix.job.spread_job, 'juju29')` workaround for juju 2 error:
         # "ERROR cannot acquire lock file to read controller concierge-microk8s: unable to open
@@ -159,19 +168,47 @@ jobs:
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
           sudo juju switch testing
-          mkdir ~/logs/
+          mkdir -p "$HOME/logs/"
+
+          # Check if the second model exists and store the list in GITHUB_ENV
+          MODELS="testing"
+          if sudo juju models | grep -qw "testing-vm"; then
+            MODELS="testing testing-vm"
+          fi
+          echo "TARGET_MODELS=$MODELS" >> "$GITHUB_ENV"
       - name: juju status
         timeout-minutes: 1
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        run: sudo juju status --color --relations | tee ~/logs/juju-status.txt
+        run: |
+          # shellcheck disable=SC2086
+          for model in $TARGET_MODELS; do
+            echo "::group::juju status -m $model"
+            sudo juju status -m "$model" --color --relations | tee "$HOME/logs/juju-status-${model}.txt"
+            echo "::endgroup::"
+          done
+
       - name: juju debug-log
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        run: sudo juju debug-log --color --replay --no-tail | tee ~/logs/juju-debug-log.txt
+        run: |
+          # shellcheck disable=SC2086
+          for model in $TARGET_MODELS; do
+            echo "::group::juju debug-log -m $model"
+            sudo juju debug-log -m "$model" --color --replay --no-tail | tee "$HOME/logs/juju-debug-log-${model}.txt"
+            echo "::endgroup::"
+          done
+
       - name: jhack tail
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        run: sudo jhack tail --printer raw --replay --no-watch | tee ~/logs/jhack-tail.txt
+        run: |
+          # shellcheck disable=SC2086
+          for model in $TARGET_MODELS; do
+            echo "::group::jhack tail -m $model"
+            sudo jhack tail -m "$model" --printer raw --replay --no-watch | tee "$HOME/logs/jhack-tail-${model}.txt"
+            echo "::endgroup::"
+          done
+
       - name: Upload logs
         timeout-minutes: 5
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
@@ -180,11 +217,11 @@ jobs:
           name: logs-integration-test-${{ matrix.job.name_in_artifact }}
           path: ~/logs/
           if-no-files-found: error
+
       - name: Disk usage
         timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: df --human-readable
-
   allure-report:
     # TODO future improvement: use concurrency group for job
     name: Publish Allure report

@@ -9,62 +9,48 @@ from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
-from single_kernel_opensearch_dashboards.common.literals import (
-    BASE_SNAP_DIR,
-    SNAP,
-    SNAP_COMMON,
-    SNAP_DATA,
-    OpenSearchDashboardsPaths,
-)
 
 
-class Paths:
+class Paths(ABC):
     """Collection of expected paths for the Opensearch Dashboards workload."""
 
     def __init__(self, root: PathProtocol):
         self.root = root
 
+    # DYNAMIC BASE PATHS
     @property
-    def base_snap_dir(self) -> PathProtocol:
-        """Return path to the Base snap directory."""
-        return self.root / BASE_SNAP_DIR
+    @abstractmethod
+    def data(self) -> PathProtocol:
+        """The base directory where Opensearch Dashboards will store data."""
+        ...
 
     @property
-    def snap_current(self) -> PathProtocol:
-        """Return path to the snap data directory."""
-        return self.base_snap_dir / SNAP_DATA
+    @abstractmethod
+    def config_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store configs."""
+        ...
 
     @property
-    def snap_common(self) -> PathProtocol:
-        """Return path to the snap common directory."""
-        return self.base_snap_dir / SNAP_COMMON
+    @abstractmethod
+    def bin_dir(self) -> PathProtocol:
+        """The directory containing Opensearch Dashboards binaries."""
+        ...
 
     @property
-    def snap(self) -> PathProtocol:
-        """Return path to the snap directory."""
-        return self.root / SNAP
+    @abstractmethod
+    def log_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store logs."""
+        ...
 
+    # RELATIVE PATHS
     @property
     def data_dir(self) -> PathProtocol:
         """The directory where Opensearch Dashboards will store the in-memory database snapshots."""
-        return self.snap_common / OpenSearchDashboardsPaths.DATA / "data"
-
-    @property
-    def data(self) -> PathProtocol:
-        """The directory where Opensearch Dashboards will store the in-memory database snapshots."""
-        return self.snap_common / OpenSearchDashboardsPaths.DATA
-
-    @property
-    def config_dir(self) -> PathProtocol:
-        """The directory where Opensearch Dashboards will store configs"""
-        return self.snap_current / OpenSearchDashboardsPaths.CONF
+        return self.data / "data"
 
     @property
     def properties(self) -> PathProtocol:
-        """The main properties filepath.
-
-        Contains all the main configuration for the service.
-        """
+        """The main properties filepath. Contains all the main configuration for the service."""
         return self.config_dir / "opensearch_dashboards.yml"
 
     @property
@@ -89,7 +75,7 @@ class Paths:
 
     @property
     def opensearch_ca(self) -> PathProtocol:
-        """The certificate for the service to identify itself with for TLS auth."""
+        """The certificate for Opensearch to identify itself with for TLS auth."""
         return self.certificate_dir / "opensearch_ca.pem"
 
 
@@ -100,11 +86,6 @@ class WorkloadBase(ABC):
     @abstractmethod
     def paths(self) -> Paths:
         """"""
-        ...
-
-    @abstractmethod
-    def start(self) -> None:
-        """Starts the workload service."""
         ...
 
     @abstractmethod
@@ -128,12 +109,6 @@ class WorkloadBase(ABC):
         ...
 
     @abstractmethod
-    def alive(self) -> bool:
-        """Checks that the workload is alive."""
-        ...
-
-    @property
-    @abstractmethod
     def healthy(self) -> bool:
         """Checks that the workload is healthy."""
         ...
@@ -141,6 +116,11 @@ class WorkloadBase(ABC):
     @abstractmethod
     def install(self) -> None:
         """Install OSD."""
+        ...
+
+    @abstractmethod
+    def ready(self) -> bool:
+        """Checks if workload is ready."""
         ...
 
     def write_text(self, content: str, path: PathProtocol) -> None:
@@ -170,13 +150,82 @@ class WorkloadBase(ABC):
 
         Returns:
             str: The content read from the file.
+
+        Raises:
+            OSDFileOperationError: If there was an error when reading file.
         """
         try:
             return path.read_text()
         except (
             FileNotFoundError,
-            UnicodeError,
+            LookupError,
+            NotADirectoryError,
             PermissionError,
             pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def exists(self, path: pathops.PathProtocol) -> bool:
+        """Checks if folder exists.
+
+        Args:
+            path (str): The file path to read from.
+
+        Returns:
+            bool: File exists.
+
+        Raises:
+            OSDFileOperationError: If there was an error when checking existence of file.
+        """
+        try:
+            return path.exists()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def create_folder(self, path: pathops.PathProtocol) -> None:
+        """Creates folder at path
+
+        Args:
+            path (str): The file path to read from.
+        Raises:
+            OSDFileOperationError: If there was an error creating file.
+        """
+        try:
+            return path.mkdir()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
+
+    def unlink(self, path: pathops.PathProtocol) -> None:
+        """Unlinks file if it's not a directory
+
+        Args:
+            path (str): The file path to read from.\
+        Raises:
+            OSDFileOperationError: If there was an error when deleting file.
+        """
+        try:
+            path.unlink()
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
         ) as e:
             raise OSDFileOperationError(e)

@@ -101,13 +101,6 @@ class HealthStatuses(Enum):
         running="blocking",
     )
 
-    WAITING_FOR_GREEN = StatusObject(
-        status="maintenance",
-        message="Waiting for OpenSearch Dashboards health to be green",
-        short_message="Waiting for green health",
-        running="blocking",
-    )
-
     WORKLOAD_IS_DOWN = StatusObject(
         status="blocked",
         message="Service is not alive",
@@ -137,8 +130,29 @@ class ServerStatuses(Enum):
         action="Integrate OpenSearch and OpenSearch Dashboards charms",
     )
 
+    INGRESS_RELATION_MISSING = StatusObject(
+        status="blocked",
+        message="Ingress relation missing",
+        action="Integrate traefik-k8s with the current application",
+    )
+    INGRESS_RELATION_NOT_READY = StatusObject(
+        status="waiting", message="Ingress relation not ready."
+    )
+
     WAITING_ON_RESTART = StatusObject(
         status="waiting", message="Waiting on lock for server start/restart"
+    )
+
+    CONTAINER_IS_NOT_ACCESSIBLE = StatusObject(
+        status="blocked",
+        message="OpenSearch Dashboards container in not accessible",
+        short_message="Container is not accessible",
+    )
+    NO_TLS = StatusObject(
+        status="blocked",
+        action="Add TLS relation",
+        message="TLS connection is missing, OAUTH requires TLS",
+        short_message="TLS connection is missing",
     )
 
 

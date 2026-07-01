@@ -7,7 +7,10 @@ import logging
 
 from typing_extensions import override
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDInstallError,
+    OSDNotTrusted,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     Substrates,
@@ -21,13 +24,16 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_m
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
     DataUpgrade,
+    KubernetesClientError,
     UpgradeGrantedEvent,
+    UpgradeState,
 )
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
 )
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +44,8 @@ class UpgradeEvents(DataUpgrade):
     def __init__(
         self,
         charm: TypedCharmBase[CharmConfig],
-        state: ClusterState,
-        substrate: Substrates,
+        osd_state: ClusterState,
+        workload: WorkloadBase,
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
     ) -> None:
@@ -48,11 +54,42 @@ class UpgradeEvents(DataUpgrade):
             charm,
             OpensearchDashboardsDependencyModel(**DEPENDENCIES),
             "upgrade",
-            "vm" if substrate == Substrates.VM else "k8s",
+            "vm" if osd_state.substrate == Substrates.VM else "k8s",
         )
-        self.osd_state = state
+        self.osd_state = osd_state
+        self.workload = workload
+        if self.osd_state.substrate == Substrates.K8S and not self.is_charm_trusted(
+            self.charm.model.name
+        ):
+            raise OSDNotTrusted
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
+        self.framework.observe(self.charm.on.upgrade_charm, self._on_k8s_upgrade_charm)
+
+    def _on_k8s_upgrade_charm(self, event) -> None:
+        """Handle the K8s-specific upgrade flow."""
+        if self.osd_state.substrate == Substrates.VM:
+            return
+
+        if self.osd_state.upgrade_idle:
+            logger.info("Pod restarted, but no upgrade is in progress. Skipping upgrade logic.")
+            return
+
+        try:
+            logger.debug("Running post-upgrade check...")
+            self.post_upgrade_check()
+
+            logger.debug("Marking unit completed...")
+            self.set_unit_completed()
+
+            # ensures leader gets its own relation-changed when it upgrades
+            if self.charm.unit.is_leader():
+                logger.debug("Re-emitting upgrade-changed on leader...")
+                self.on_upgrade_changed(event)
+
+        except ClusterNotReadyError as e:
+            logger.error(e.cause)
+            self.set_unit_failed(cause=e.cause)
 
     def post_upgrade_check(self) -> None:
         """Runs necessary checks validating the unit is in a healthy state after upgrade."""
@@ -76,7 +113,7 @@ class UpgradeEvents(DataUpgrade):
         Raises:
             ClusterNotReadyError: If the workload is not running.
         """
-        if not self.health_manager.service_healthy():
+        if not self.workload.healthy():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
                 cause="Unit workload is not running",
@@ -130,3 +167,55 @@ class UpgradeEvents(DataUpgrade):
         except ClusterNotReadyError as e:
             logger.error(e.cause)
             self.set_unit_failed(cause=e.cause)
+
+    @override
+    def _set_rolling_update_partition(self, partition: int) -> None:
+        """Patch the StatefulSet's `spec.updateStrategy.rollingUpdate.partition`."""
+        if self.substrate == Substrates.VM:
+            return
+
+        from lightkube import ApiError, Client
+        from lightkube.resources.apps_v1 import StatefulSet
+
+        try:
+            patch = {"spec": {"updateStrategy": {"rollingUpdate": {"partition": partition}}}}
+            Client().patch(
+                res=StatefulSet,
+                name=self.charm.model.app.name,
+                namespace=self.charm.model.name,
+                obj=patch,
+            )
+            logger.debug(f"Kubernetes StatefulSet partition set to {partition}")
+
+        except ApiError as e:
+            if e.status.code == 403:
+                cause = "`juju trust` needed to patch StatefulSet"
+            else:
+                cause = str(e)
+            raise KubernetesClientError(message="Kubernetes StatefulSet patch failed", cause=cause)
+
+    def is_charm_trusted(self, namespace: str) -> bool:
+        """Checks if the charm has RBAC permissions to patch StatefulSets."""
+        from lightkube import Client
+        from lightkube.models.authorization_v1 import (
+            ResourceAttributes,
+            SelfSubjectAccessReviewSpec,
+        )
+        from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
+
+        client = Client()
+
+        resource_attrs = ResourceAttributes(
+            namespace=namespace, verb="patch", group="apps", resource="statefulsets"
+        )
+
+        review = SelfSubjectAccessReview(
+            spec=SelfSubjectAccessReviewSpec(resourceAttributes=resource_attrs)
+        )
+
+        try:
+            response = client.create(review)
+            return response.status.allowed
+        except Exception as e:
+            logger.error(f"Failed to check permissions: {e}")
+            return False

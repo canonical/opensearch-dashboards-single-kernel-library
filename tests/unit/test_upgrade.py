@@ -37,7 +37,7 @@ OPENSEARCH_APP_NAME = "opensearch"
 def test_pre_upgrade_check_succeeds(harness, mocker):
     """pre_upgrade_check successful on a healthy system."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=True
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=True
     ):
         assert harness.charm.upgrade_events.pre_upgrade_check() is None
 
@@ -55,7 +55,7 @@ def test_pre_upgrade_check_succeeds(harness, mocker):
 def test_pre_upgrade_check_fails_if_workload_down(harness, mocker):
     """Simulate a workflow failure to verify pre_upgrade_check fails then."""
     with patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.alive", return_value=False
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy", return_value=False
     ):
         with pytest.raises(ClusterNotReadyError):
             assert harness.charm.upgrade_events.pre_upgrade_check() is None
@@ -92,6 +92,7 @@ def test_post_upgrade_check_succeeds(version, harness, mocker):
 )
 def test_post_upgrade_check_fails_major(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -116,6 +117,7 @@ def test_post_upgrade_check_fails_major(harness, mocker):
 )
 def test_post_upgrade_check_fails_minor(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -205,6 +207,7 @@ def test_upgrade_granted_sets_failed_if_failed_snap(harness, mocker):
 )
 def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
+    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
     with (
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",

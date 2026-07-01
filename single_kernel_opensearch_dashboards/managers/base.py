@@ -5,21 +5,23 @@
 """Base manager for common methods"""
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 import requests
 from charmlibs.pathops import PathProtocol
 from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
-from tenacity import RetryCallState
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
 from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
     REQUEST_TIMEOUT,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
+from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
 logger = logging.getLogger(__name__)
 HEADERS = {
@@ -70,6 +72,7 @@ class BaseManager(ManagerStatusProtocol):
                 "Accept": "application/json",
                 "Content-Type": "application/json",
             }
+
         return self._request(
             uri,
             method=method,
@@ -111,7 +114,11 @@ class BaseManager(ManagerStatusProtocol):
             }
         uri = f"{self.state.url}{endpoint}"
         return self._request(
-            uri, method=method, headers=headers, payload=payload, cert_path=self.workload.paths.ca
+            uri,
+            method=method,
+            headers=headers,
+            payload=payload,
+            cert_path=self.workload.paths.ca,
         )
 
     def _request(
@@ -147,11 +154,10 @@ class BaseManager(ManagerStatusProtocol):
                 after retries are exhausted.
             requests.exceptions.JSONDecodeError: If the response body is not valid JSON.
         """
-        if not self.state.opensearch_server:
+        if not self.state.opensearch_server or not self.state.opensearch_server.password:
             raise OSDAPIError(
                 "Can't query API, no Opensearch connection (i.e. no OSD credentials)."
             )
-
         request_kwargs = {
             "url": uri,
             "method": method.upper(),
@@ -160,13 +166,16 @@ class BaseManager(ManagerStatusProtocol):
             "timeout": REQUEST_TIMEOUT,
             "data": json.dumps(payload),
         }
-
-        def log_retry(retry_state: RetryCallState) -> None:
-            """Log retry attempts."""
-            logger.debug(
-                f"Retrying... Attempt {retry_state.attempt_number}"
-                f"\tException: {retry_state.outcome.exception()}"
+        path = None
+        if self.state.substrate == Substrates.K8S:
+            workload = cast(K8sWorkload, self.workload)
+            cert = (
+                self.state.unit_server.ca
+                if cert_path == self.workload.paths.ca
+                else self.state.opensearch_server.tls_ca
             )
+            path = workload.write_certs(cert)
+            request_kwargs["verify"] = path
 
         try:
             with requests.Session() as s:
@@ -174,15 +183,25 @@ class BaseManager(ManagerStatusProtocol):
                     DASHBOARD_USER,
                     self.state.opensearch_server.password,
                 )
-                resp = s.request(**request_kwargs)
-                resp.raise_for_status()
+                for attempt in Retrying(
+                    stop=stop_after_attempt(3),
+                    wait=wait_fixed(1),
+                    reraise=True,
+                ):
+                    with attempt:
+                        resp = s.request(**request_kwargs)
+                        resp.raise_for_status()
+
         except requests.ReadTimeout as e:
             logger.error(f"Hanging, no response from {uri}: {e}.")
             raise
         except RequestException as e:
-            logger.error(f"Request {method} to {uri} with payload: {payload} failed. \n{e}")
+            logger.warning(f"Request {method} to {uri} with payload: {payload} failed. \n{e}")
             raise
-
+        finally:
+            if self.state.substrate == Substrates.K8S and path:
+                workload = cast(K8sWorkload, self.workload)
+                workload.remove_certs(path)
         try:
             return resp.status_code, resp.json()
         except requests.exceptions.JSONDecodeError:

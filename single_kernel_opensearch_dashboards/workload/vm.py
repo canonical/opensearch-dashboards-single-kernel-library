@@ -7,6 +7,7 @@ import logging
 import subprocess
 
 from charmlibs import pathops
+from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
@@ -15,12 +16,66 @@ from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
+    BASE_SNAP_DIR,
     OPENSEARCH_DASHBOARDS_SNAP_REVISION,
+    SNAP,
+    SNAP_COMMON,
+    SNAP_DATA,
+    OpenSearchDashboardsPaths,
 )
 from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
-from single_kernel_opensearch_dashboards.workload.base import Paths, WorkloadBase
+from single_kernel_opensearch_dashboards.workload.base import (
+    Paths,
+    WorkloadBase,
+)
 
 logger = logging.getLogger(__name__)
+
+
+class VMPaths(Paths):
+    """VM (Snap) specific paths for Opensearch Dashboards."""
+
+    # SNAP-SPECIFIC PATHS
+    @property
+    def base_snap_dir(self) -> PathProtocol:
+        """Return path to the Base snap directory."""
+        return self.root / BASE_SNAP_DIR
+
+    @property
+    def snap_current(self) -> PathProtocol:
+        """Return path to the snap data directory."""
+        return self.base_snap_dir / SNAP_DATA
+
+    @property
+    def snap_common(self) -> PathProtocol:
+        """Return path to the snap common directory."""
+        return self.base_snap_dir / SNAP_COMMON
+
+    @property
+    def snap(self) -> PathProtocol:
+        """Return path to the snap directory."""
+        return self.root / SNAP
+
+    # DYNAMIC BASE PATHS
+    @property
+    def data(self) -> PathProtocol:
+        """The base directory where Opensearch Dashboards will store data."""
+        return self.snap_common / OpenSearchDashboardsPaths.DATA
+
+    @property
+    def config_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store configs."""
+        return self.snap_current / OpenSearchDashboardsPaths.CONF
+
+    @property
+    def bin_dir(self) -> PathProtocol:
+        """The directory containing Opensearch Dashboards binaries."""
+        return self.snap / OpenSearchDashboardsPaths.BIN
+
+    @property
+    def log_dir(self) -> PathProtocol:
+        """The directory where Opensearch Dashboards will store logs."""
+        return self.snap_common / OpenSearchDashboardsPaths.LOGS
 
 
 class VMWorkload(WorkloadBase):
@@ -32,7 +87,17 @@ class VMWorkload(WorkloadBase):
 
     def __init__(self):
         """Initializes the VM workload instance and loads the snap into the cache."""
-        self.dashboards = snap.SnapCache()[self.SNAP_NAME]
+        self.dashboards = self._load_snap()
+
+    @retry(
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(5),
+        reraise=True,
+        retry=retry_if_exception_type(snap.SnapError),
+    )
+    def _load_snap(self) -> snap.Snap:
+        """Loads the snap from the cache, retrying on SnapError."""
+        return snap.SnapCache()[self.SNAP_NAME]
 
     @property
     @override
@@ -42,16 +107,7 @@ class VMWorkload(WorkloadBase):
         Returns:
             Paths: An object representing the local paths, rooted at '/'.
         """
-        return Paths(pathops.LocalPath("/"))
-
-    @override
-    def start(self) -> None:
-        """Starts the OpenSearch Dashboards and exporter daemon services."""
-        try:
-            self.dashboards.start(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
-        except snap.SnapError as e:
-            logger.exception(str(e))
-            raise
+        return VMPaths(pathops.LocalPath("/"))
 
     @override
     def stop(self) -> None:
@@ -86,7 +142,7 @@ class VMWorkload(WorkloadBase):
         except snap.SnapError as e:
             logger.exception(str(e))
             raise
-        return self.alive()
+        return self.healthy()
 
     @override
     def configure(self, key, value) -> None:
@@ -125,33 +181,23 @@ class VMWorkload(WorkloadBase):
 
     @override
     @retry(
-        wait=wait_fixed(3),
+        wait=wait_fixed(1),
         stop=stop_after_attempt(5),
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_if_not_result(lambda result: True if result else False),
     )
-    def alive(self) -> bool:
-        """Checks if the main application service is active.
+    def healthy(self) -> bool:
+        """Checks if the workload is healthy.
 
         This method retries up to 5 times to confirm the service is running.
 
         Returns:
-            bool: True if the main snap application service is active, False otherwise.
+            bool: True if the workload is alive and functioning as expected, False otherwise.
         """
-        """The main application is alive."""
         try:
             return bool(self.dashboards.services[self.SNAP_APP_SERVICE]["active"])
         except KeyError:
             return False
-
-    @override
-    def healthy(self) -> bool:
-        """Checks if the workload is healthy.
-
-        Returns:
-            bool: True if the workload is alive and functioning as expected, False otherwise.
-        """
-        return self.alive()
 
     @override
     @retry(
@@ -183,3 +229,8 @@ class VMWorkload(WorkloadBase):
             raise OSDInstallError(
                 "failed to install the Opensearch Dashboards snap. check logs for more details"
             )
+
+    @override
+    def ready(self) -> bool:
+        """Checks if workload is ready."""
+        return True

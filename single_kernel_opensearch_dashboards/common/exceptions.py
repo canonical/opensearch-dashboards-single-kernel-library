@@ -23,3 +23,7 @@ class OSDFileOperationError(OSDError):
 
 class OSDTLSMissingDataError(OSDError):
     """Raised when required TLS relation data is missing."""
+
+
+class OSDNotTrusted(OSDError):
+    """Raised when K8s charm is not trusted."""

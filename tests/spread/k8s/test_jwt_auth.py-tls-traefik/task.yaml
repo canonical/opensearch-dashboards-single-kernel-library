@@ -1,0 +1,11 @@
+summary: test_jwt_auth.py
+environment:
+  TEST_MODULE: test_jwt_auth.py
+  TEST_TLS: true
+  TEST_TRAEFIK: true
+  SUBSTRATE: "k8s"
+
+execute: |
+  tox run -e integration -- "tests/integration/$TEST_MODULE" --model testing --alluredir="$SPREAD_TASK/allure-results"
+artifacts:
+  - allure-results

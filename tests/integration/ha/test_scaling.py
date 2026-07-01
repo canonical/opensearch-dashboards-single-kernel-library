@@ -9,74 +9,83 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
+from tests.integration.conftest import Flags
+
 from ..helpers import (
-    CONFIG_OPTS,
+    DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
-    TLS_STABLE_CHANNEL,
+    TRAEFIK_APP_NAME,
     access_all_dashboards,
-    get_relation,
+    deploy_base,
+    is_https_enabled,
+    wait_for_ingress_blocked,
 )
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/vm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
-OPENSEARCH_APP_NAME = "opensearch"
-OPENSEARCH_CONFIG = {
-    "logging-config": "<root>=INFO;unit=DEBUG",
-    "cloudinit-userdata": """postruncmd:
-        - [ 'sysctl', '-w', 'vm.max_map_count=262144' ]
-        - [ 'sysctl', '-w', 'fs.file-max=1048576' ]
-        - [ 'sysctl', '-w', 'vm.swappiness=0' ]
-        - [ 'sysctl', '-w', 'net.ipv4.tcp_retries2=5' ]
-    """,
-}
-
-HTTP_UNITS = [0, 1, 2]
-HTTPS_UNITS = [3, 4, 5]
-
-APP_AND_TLS = [APP_NAME, TLS_CERTIFICATES_APP_NAME]
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 
 
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
-    """Deploying all charms required for the tests, and wait for their complete setup to be done."""
-    await ops_test.model.deploy(charm, application_name=APP_NAME, num_units=1, series=series)
+async def test_build_and_deploy(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    charmvm: str,
+    charmk8s: str,
+    charm_base: str,
+    dashboard_tester_charm: str,
+    substrate: str,
+    test_flags: Flags,
+):
+    """Deploying all charms required for the tests, and wait for complete setup."""
+    tls = test_flags.test_tls
+    traefik = test_flags.traefik
 
-    # Opensearch
-    await ops_test.model.set_config(OPENSEARCH_CONFIG)
-    # NOTE: can't access 2/stable from the tests, only 'edge' available
-    await ops_test.model.deploy(
-        OPENSEARCH_APP_NAME, channel="2/edge", num_units=2, config=CONFIG_OPTS
+    app_name = await deploy_base(
+        ops_test_vm,
+        ops_test,
+        charmvm,
+        charmk8s,
+        charm_base,
+        substrate,
+        num_units_app=1,
+        num_units_db=2,
     )
 
-    config = {"ca-common-name": "CN_CA"}
-    await ops_test.model.deploy(
-        TLS_CERTIFICATES_APP_NAME, channel=TLS_STABLE_CHANNEL, config=config
-    )
+    if substrate == "k8s":
+        await ops_test_vm.model.create_offer(
+            endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
+            offer_name="self-signed-certificates",
+        )
+        await ops_test.model.consume(f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}")
 
-    await ops_test.model.wait_for_idle(
-        apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
-    # Relate it to OpenSearch to set up TLS.
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
-    )
-
-    async with ops_test.fast_forward():
+    if traefik:
+        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
         await ops_test.model.wait_for_idle(
-            apps=[APP_NAME], wait_for_exact_units=1, timeout=1000, idle_period=30
+            apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
         )
 
-    assert ops_test.model.applications[APP_NAME].status == "blocked"
-
-    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
-    await ops_test.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, APP_NAME], status="active", timeout=1000
-    )
+    if tls:
+        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        if traefik:
+            await ops_test.model.integrate(
+                TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
+            )
+            await ops_test.model.wait_for_idle(
+                apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
+            )
+        elif not substrate == "k8s" or traefik:
+            await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+        else:
+            await ops_test.model.deploy(dashboard_tester_charm, application_name=DUMMY_CHARM)
+            await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
+    elif substrate == "k8s" and not traefik:
+        await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
+    else:
+        await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=1000)
 
 
 ##############################################################################
@@ -84,58 +93,93 @@ async def test_build_and_deploy(ops_test: OpsTest, charm: str, series: str):
 ##############################################################################
 
 
-async def scale_up(ops_test: OpsTest, amount: int, https: bool = False) -> None:
+async def scale_up(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    amount: int,
+    substrate: str,
+    test_flags: Flags,
+) -> None:
     """Testing that newly added units are functional."""
-    init_units_count = len(ops_test.model.applications[APP_NAME].units)
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    traefik = test_flags.traefik
+    init_units_count = len(ops_test.model.applications[app_name].units)
     expected = init_units_count + amount
+    https = is_https_enabled(test_flags)
 
     # scale up
-    logger.info(f"Adding {amount} units")
-    await ops_test.model.applications[APP_NAME].add_unit(count=amount)
+    if substrate == "k8s":
+        logger.info(f"Adding units to {expected}")
+        await ops_test.model.applications[app_name].scale(expected)
+    else:
+        logger.info(f"Adding {amount} units")
+        await ops_test.model.applications[app_name].add_unit(count=amount)
 
     logger.info(f"Waiting for {amount} units to be added and stable")
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME],
-        status="active",
-        wait_for_exact_units=expected,
-        timeout=1000,
-        idle_period=30,
-    )
+    if substrate == "k8s" and not traefik:
+        await wait_for_ingress_blocked(
+            ops_test, app_name, timeout=1000, idle_period=30, wait_for_exact_units=expected
+        )
+    else:
+        await ops_test.model.wait_for_idle(
+            apps=[app_name],
+            status="active",
+            wait_for_exact_units=expected,
+            timeout=1000,
+            idle_period=30,
+        )
 
-    num_units = len(ops_test.model.applications[APP_NAME].units)
+    num_units = len(ops_test.model.applications[app_name].units)
     assert num_units == expected
 
     logger.info("Checking the functionality of the new units")
-    assert await access_all_dashboards(ops_test, pytest.relation.id, https)
+    assert await access_all_dashboards(ops_test_vm, ops_test, https=https, verify=https)
 
 
-async def scale_down(ops_test: OpsTest, unit_ids: list[str], https: bool = False) -> None:
+async def scale_down(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    unit_ids: list[int],
+    substrate: str,
+    test_flags: Flags,
+) -> None:
     """Testing that decreasing units keeps functionality."""
-    init_units_count = len(ops_test.model.applications[APP_NAME].units)
+    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    traefik = test_flags.traefik
+    https = is_https_enabled(test_flags)
+    init_units_count = len(ops_test.model.applications[app_name].units)
     amount = len(unit_ids)
     expected = init_units_count - amount
 
     # scale down
-    logger.info(f"Removing units {unit_ids}")
-    await ops_test.model.applications[APP_NAME].destroy_unit(
-        *[f"{APP_NAME}/{cnt}" for cnt in unit_ids]
-    )
+    if substrate == "k8s":
+        logger.info(f"Removing units to {expected}")
+        await ops_test.model.applications[app_name].scale(expected)
+    else:
+        logger.info(f"Removing units {unit_ids}")
+        await ops_test.model.applications[app_name].destroy_unit(
+            *[f"{app_name}/{cnt}" for cnt in unit_ids]
+        )
 
     logger.info(f"Waiting for units {unit_ids} to be removed safely")
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME],
-        status="active",
-        wait_for_exact_units=expected,
-        timeout=1000,
-        idle_period=30,
-    )
+    if substrate == "k8s" and not traefik and expected > 0:
+        await wait_for_ingress_blocked(
+            ops_test, app_name, timeout=1000, idle_period=30, wait_for_exact_units=expected
+        )
+    else:
+        await ops_test.model.wait_for_idle(
+            apps=[app_name],
+            wait_for_exact_units=expected,
+            timeout=1000,
+            idle_period=30,
+        )
 
-    num_units = len(ops_test.model.applications[APP_NAME].units)
+    num_units = len(ops_test.model.applications[app_name].units)
     assert num_units == expected
 
     logger.info("Checking the functionality of the remaining units")
     if expected > 0:
-        assert await access_all_dashboards(ops_test, pytest.relation.id, https)
+        assert await access_all_dashboards(ops_test_vm, ops_test, https=https, verify=https)
 
 
 ##############################################################################
@@ -144,71 +188,68 @@ async def scale_down(ops_test: OpsTest, unit_ids: list[str], https: bool = False
 
 
 @pytest.mark.abort_on_fail
-async def test_horizontal_scale_up_http(ops_test: OpsTest) -> None:
+async def test_horizontal_scale_up(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    substrate: str,
+    test_flags: Flags,
+) -> None:
     """Testing that newly added units are functional."""
-    await scale_up(ops_test, amount=len(HTTP_UNITS) - 1)
+    await scale_up(
+        ops_test_vm=ops_test_vm,
+        ops_test=ops_test,
+        amount=2,
+        substrate=substrate,
+        test_flags=test_flags,
+    )
 
 
 @pytest.mark.abort_on_fail
-async def test_horizontal_scale_down_http(ops_test: OpsTest) -> None:
+async def test_horizontal_scale_down(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    substrate: str,
+    test_flags: Flags,
+) -> None:
     """Testing that decreasing units keeps functionality."""
-    await scale_down(ops_test, unit_ids=HTTP_UNITS[1:])
-
-
-@pytest.mark.abort_on_fail
-async def test_horizontal_scale_down_to_zero_http(ops_test: OpsTest) -> None:
-    """Testing that scaling down to 0 units is possible."""
-    await scale_down(ops_test, unit_ids=HTTP_UNITS[0:1])
-
-
-##############################################################################
-
-
-@pytest.mark.abort_on_fail
-async def test_tls_on(ops_test: OpsTest) -> None:
-    """Not a real test, but only switching on TLS"""
-    await ops_test.model.applications[APP_NAME].add_unit(count=1)
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", timeout=1000, wait_for_exact_units=1
+    await scale_down(
+        ops_test_vm=ops_test_vm,
+        ops_test=ops_test,
+        unit_ids=[1, 2],
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
-    # Relate Dashboards to OpenSearch to set up TLS.
-    await ops_test.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=3000, idle_period=30
+@pytest.mark.abort_on_fail
+async def test_horizontal_scale_down_to_zero(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    substrate: str,
+    test_flags: Flags,
+) -> None:
+    """Testing that scaling down to 0 units is possible."""
+    await scale_down(
+        ops_test_vm=ops_test_vm,
+        ops_test=ops_test,
+        unit_ids=[0],
+        substrate=substrate,
+        test_flags=test_flags,
     )
 
-    # Note: due to https://bugs.launchpad.net/juju/+bug/2064876 we have a workaround for >1 units
-    # However, a single unit would only pick up config changes on 'update-status'
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=3000)
-
-    assert await access_all_dashboards(ops_test, get_relation(ops_test).id, https=True)
-
-
-##############################################################################
-
 
 @pytest.mark.abort_on_fail
-async def test_horizontal_scale_up_https(ops_test: OpsTest) -> None:
-    """Testing that newly added units are functional with TLS on."""
-    await scale_up(ops_test, amount=len(HTTPS_UNITS) - 1, https=True)
-
-
-@pytest.mark.abort_on_fail
-async def test_horizontal_scale_down_https(ops_test: OpsTest) -> None:
-    """Testing that decreasing units keeps functionality with TLS on."""
-    await scale_down(ops_test, unit_ids=HTTPS_UNITS[1:], https=True)
-
-
-@pytest.mark.abort_on_fail
-async def test_horizontal_scale_down_to_zero_https(ops_test: OpsTest) -> None:
-    """Testing that scaling down to 0 units is possible."""
-    await scale_down(ops_test, unit_ids=HTTPS_UNITS[0:1], https=True)
-
-
-@pytest.mark.abort_on_fail
-async def test_horizontal_scale_up_from_zero_https(ops_test: OpsTest) -> None:
-    """Testing that scaling up from zero units using TLS works."""
-    await scale_up(ops_test, amount=len(HTTPS_UNITS), https=True)
+async def test_horizontal_scale_up_from_zero(
+    ops_test_vm: OpsTest,
+    ops_test: OpsTest,
+    substrate: str,
+    test_flags: Flags,
+) -> None:
+    """Testing that scaling up from zero units works."""
+    await scale_up(
+        ops_test_vm=ops_test_vm,
+        ops_test=ops_test,
+        amount=3,
+        substrate=substrate,
+        test_flags=test_flags,
+    )
