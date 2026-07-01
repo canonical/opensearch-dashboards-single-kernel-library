@@ -102,3 +102,6 @@ jobs:
       version: ${{ needs.release-part1.outputs.git-tag }}
       base_branch: ${{ github.ref_name }}
     secrets: inherit
+    permissions: # Needed to create PRs in dependent charm repos
+      contents: write
+      pull-requests: write
