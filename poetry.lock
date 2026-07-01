@@ -968,14 +968,14 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "httpx-ws"
-version = "0.9.0"
+version = "0.8.2"
 description = "WebSockets support for HTTPX"
 optional = false
 python-versions = ">=3.10"
 groups = ["charm-libs", "integration"]
 files = [
-    {file = "httpx_ws-0.9.0-py3-none-any.whl", hash = "sha256:71640d2fb1bf9a225775015b33cd755cfd4c5f7e21c885192fe3adc4c387b248"},
-    {file = "httpx_ws-0.9.0.tar.gz", hash = "sha256:797373326f70eec1ae96f6e43ae9f12002fd7d73aee139a4985eaab964338a08"},
+    {file = "httpx_ws-0.8.2-py3-none-any.whl", hash = "sha256:f8898ddb84cbf98c562e8e796675bc68c215fa1d453d54a7fcd935aca8198cc8"},
+    {file = "httpx_ws-0.8.2.tar.gz", hash = "sha256:ba0d4aa76e1c8a27bd5e88984ecdcdc28f7bf30b40cb0989a4c1438d07fa52c7"},
 ]
 
 [package.dependencies]
@@ -2863,4 +2863,4 @@ h11 = ">=0.16.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "f730af3539a5fb3c650e9cfcbb451c0fd030cf5b425ef0a292bc9c7a34f0b7a5"
+content-hash = "67f8a3b1da75ace9a79f0eccd72826e4c7fc04cf5adf6010cef4da0efb779566"

@@ -110,6 +110,7 @@ kill-timeout: 3h
 environment:
   PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL: 3.6/stable
+  CONCIERGE_MICROK8S_CHANNEL: 1.34-strict/stable
   CHARM_UBUNTU_BASE/ubuntu24: 24.04
   CHARM_UBUNTU_BASE/ubuntu22: 22.04
 prepare: |
@@ -117,14 +118,34 @@ prepare: |
   chown -R root:root "$SPREAD_PATH"
   cd "$SPREAD_PATH"
   snap install --classic concierge
+
+  wait_for_microk8s_juju_api() {
+    # Check the endpoint Juju will use, not just the local kubectl one.
+    echo "Waiting for MicroK8s API to be reachable at ${MICROK8S_JUJU_API_SERVER}..."
+    for attempt in {1..12}
+    do
+      if kubectl --kubeconfig "$MICROK8S_JUJU_KUBECONFIG" --request-timeout=5s get --raw=/readyz >/dev/null 2>&1
+      then
+        break
+      fi
+      if [[ "$attempt" -eq 12 ]]
+      then
+        echo "MicroK8s API is not reachable at ${MICROK8S_JUJU_API_SERVER}."
+        kubectl --kubeconfig "$MICROK8S_JUJU_KUBECONFIG" --request-timeout=5s get --raw=/readyz || true
+        exit 1
+      fi
+      sleep 5
+    done
+  }
+
   if [[ $SPREAD_SUITE == *"k8s"* || $SPREAD_TASK == *"oauth"* ]]
   then
     # Running on IS-hosted runner; configure microk8s to use Docker Hub mirror
     # Run before concierge prepare because of https://github.com/canonical/concierge/issues/75
-    sudo snap install microk8s --classic --channel 1.35-strict/stable
-    sudo snap install kubectl --classic 
+    sudo snap install microk8s --classic --channel "$CONCIERGE_MICROK8S_CHANNEL"
+    sudo snap install kubectl --classic
     sudo snap install yq
-    
+
     if [[ -n "$DOCKERHUB_MIRROR" ]]
     then
       # Wait for microk8s to populate iptables
@@ -144,9 +165,42 @@ prepare: |
     microk8s enable dns
     microk8s enable hostpath-storage
     microk8s enable metallb:10.64.140.43-10.64.140.49
+    microk8s status --wait-ready
     mkdir -p ~/.kube
+    # Keep the normal kubeconfig for local kubectl calls.
     microk8s config > ~/.kube/config
-  
+
+    # The LXD controller cannot reach host MicroK8s through 127.0.0.1.
+    # Use the host address selected for outbound routing so the controller can reach the API.
+    ROUTABLE_HOST_IP=$(ip -4 route get 2.2.2.2 | awk '{for (i=1; i<=NF; i++) if ($i == "src") {print $(i+1); exit}}')
+    if [[ -z "$ROUTABLE_HOST_IP" ]]
+    then
+      echo "Unable to determine routable host IP for MicroK8s kubeconfig."
+      exit 1
+    fi
+    MICROK8S_JUJU_KUBECONFIG="$HOME/.kube/microk8s-juju-config"
+    cp ~/.kube/config "$MICROK8S_JUJU_KUBECONFIG"
+    LOCAL_IP="127.0.0.1"
+    MICROK8S_API_SERVER=$(yq '.clusters[0].cluster.server' "$MICROK8S_JUJU_KUBECONFIG")
+    MICROK8S_API_PORT="${MICROK8S_API_SERVER##*:}"
+    MICROK8S_LOCAL_API_SERVER="https://${LOCAL_IP}:${MICROK8S_API_PORT}"
+    MICROK8S_JUJU_API_SERVER="https://${ROUTABLE_HOST_IP}:${MICROK8S_API_PORT}"
+    if [[ "$MICROK8S_API_SERVER" != "$MICROK8S_LOCAL_API_SERVER" ]]
+    then
+      echo "Unexpected MicroK8s API endpoint: $MICROK8S_API_SERVER"
+      exit 1
+    fi
+
+    MICROK8S_JUJU_API_SERVER="$MICROK8S_JUJU_API_SERVER" \
+      yq -i '.clusters[0].cluster.server = strenv(MICROK8S_JUJU_API_SERVER)' "$MICROK8S_JUJU_KUBECONFIG"
+    if ! grep -Fq "server: ${MICROK8S_JUJU_API_SERVER}" "$MICROK8S_JUJU_KUBECONFIG"
+    then
+      echo "Failed to rewrite MicroK8s kubeconfig endpoint for Juju."
+      exit 1
+    fi
+
+    wait_for_microk8s_juju_api
+
     if [[ $SPREAD_TASK == *"network_cut"* ]]
     then
       export KUBECONFIG="$HOME/.kube/config"
@@ -165,7 +219,11 @@ prepare: |
 
   if [[ $SPREAD_SUITE == *"k8s"* || $SPREAD_TASK == *"oauth"* ]]
   then
-    /snap/bin/juju add-k8s uk8s --client --controller $(/snap/bin/juju show-controller | yq "keys | .[0]")
+    # Recheck after concierge prepare, just before handing MicroK8s to Juju.
+    wait_for_microk8s_juju_api
+    JUJU_CONTROLLER=$(/snap/bin/juju show-controller | yq "keys | .[0]")
+    cat "$MICROK8S_JUJU_KUBECONFIG" | /snap/bin/juju add-k8s uk8s --client \
+      --controller "$JUJU_CONTROLLER"
   fi
 
 
