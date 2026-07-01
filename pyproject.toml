@@ -66,7 +66,7 @@ poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
 charmlibs-pathops = "^1.0.1"
 python = "^3.10"
 tenacity = "^9.1.2"
-pyyaml = "^6.0.2"
+pyyaml = "^6.0.3"
 requests = "^2.32.4"
 
 # TODO: clean any of the notes below and their deps.
@@ -133,7 +133,7 @@ charmlibs-pathops = "^1.0.1"
 pytest = "^8.4.1"
 coverage = { extras = ["toml"], version = "^7.9.1" }
 pytest-mock = "^3.14.1"
-pyyaml = "^6.0.2"
+pyyaml = "^6.0.3"
 responses = "^0.25.7"
 
 
