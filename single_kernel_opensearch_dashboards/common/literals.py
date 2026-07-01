@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Collection of global literals for the charm."""
+
 from enum import Enum
 
 

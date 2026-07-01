@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Event handler for related applications on the `certificates` relation interface."""
+
 import base64
 import logging
 import re

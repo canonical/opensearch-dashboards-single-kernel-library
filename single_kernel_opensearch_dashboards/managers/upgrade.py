@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Manager for building necessary files for TLS auth."""
+
 import logging
 
 from data_platform_helpers.advanced_statuses import StatusObject

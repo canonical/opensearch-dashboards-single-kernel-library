@@ -7,6 +7,7 @@
 This class is purely there for separation of purposes, it will just include the
 right observability stack.
 """
+
 import logging
 import time
 

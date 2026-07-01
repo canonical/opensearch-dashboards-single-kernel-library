@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Handler for General OpenSearch Dashboards charm events."""
+
 import logging
 from typing import Any, cast
 

@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """OpenSearch Dashboards Status Handler"""
+
 from abc import abstractmethod
 from typing import Protocol
 

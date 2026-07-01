@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Event handler for handling OpensearchDashboards in-place upgrades."""
+
 import logging
 
 from typing_extensions import override

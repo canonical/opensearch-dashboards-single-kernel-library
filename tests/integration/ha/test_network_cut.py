@@ -197,8 +197,10 @@ async def test_network_cut_ip_change_leader_http(
 
         logger.info(f"Waiting until unit {old_leader_name} is 'lost'")
         await ops_test_vm.model.block_until(
-            lambda: ["unknown", "lost"]
-            == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name),
+            lambda: (
+                ["unknown", "lost"]
+                == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name)
+            ),
             timeout=LONG_TIMEOUT,
             wait_period=LONG_WAIT,
         )
@@ -285,8 +287,10 @@ async def test_network_cut_no_ip_change_leader_http(
 
     logger.info(f"Waiting until unit {old_leader_name} is 'lost'")
     await ops_test.model.block_until(
-        lambda: ["unknown", "lost"]
-        == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name=app_name),
+        lambda: (
+            ["unknown", "lost"]
+            == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name=app_name)
+        ),
         timeout=LONG_TIMEOUT,
         wait_period=LONG_WAIT,
     )

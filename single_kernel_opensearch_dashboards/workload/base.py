@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Base objects for workload operations across VM + K8s charms."""
+
 from abc import ABC, abstractmethod
 
 from charmlibs import pathops

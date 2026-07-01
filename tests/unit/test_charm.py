@@ -190,7 +190,6 @@ def test_config_changed_event_emits_restart(harness):
             "single_kernel_opensearch_dashboards.lib.charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock"
         ) as patched,
     ):
-
         harness.charm.on.config_changed.emit()
         patched.assert_called_once()
 
