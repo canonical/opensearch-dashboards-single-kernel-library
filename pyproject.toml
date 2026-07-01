@@ -130,7 +130,7 @@ optional = true
 
 [tool.poetry.group.unit.dependencies]
 charmlibs-pathops = "^1.0.1"
-pytest = "^8.4.1"
+pytest = "^9.0.0"
 coverage = { extras = ["toml"], version = "^7.9.1" }
 pytest-mock = "^3.14.1"
 pyyaml = "^6.0.2"
@@ -139,7 +139,7 @@ responses = "^0.25.7"
 
 [tool.poetry.group.integration.dependencies]
 charmlibs-pathops = "^1.0.1"
-pytest = "^8.4.1"
+pytest = "^9.0.0"
 juju = "^3.6.1.3"
 tenacity = "^9.1.2"
 coverage = { extras = ["toml"], version = "^7.9.1" }
