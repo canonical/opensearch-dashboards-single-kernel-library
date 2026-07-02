@@ -1,7 +1,7 @@
 summary: test_charm.py
 environment:
   TEST_MODULE: test_charm.py
-  TEST_TRAEFIK_TRUST: true
+  TEST_TRAEFIK: true
   TEST_TLS: true
   TRANSFER_TRAEFIK_CA: true
   SUBSTRATE: "k8s"

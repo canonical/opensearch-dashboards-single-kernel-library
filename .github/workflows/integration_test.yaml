@@ -205,7 +205,7 @@ jobs:
           # shellcheck disable=SC2086
           for model in $TARGET_MODELS; do
             echo "::group::jhack tail -m $model"
-            sudo jhack tail -m "$model" --printer raw --replay --no-watch | tee "$HOME/logs/jhack-tail-${model}.txt"
+            script -q -c "sudo env JUJU_MODEL=$model jhack tail --printer raw --replay --no-watch" /dev/null | tee "$HOME/logs/jhack-tail-${model}.txt" || true
             echo "::endgroup::"
           done
 
