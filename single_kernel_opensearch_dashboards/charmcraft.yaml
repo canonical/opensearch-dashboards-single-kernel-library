@@ -11,4 +11,32 @@ platforms:
   ubuntu@22.04:amd64:
   ubuntu@24.04:amd64:
 
+charm-libs:
+  - lib: data_platform_libs.data_interfaces
+    version: "0"
+  - lib: data_platform_libs.data_models
+    version: "1"
+  - lib: data_platform_libs.upgrade
+    version: "1"
+  - lib: grafana_agent.cos_agent
+    version: "0"
+  - lib: grafana_k8s.grafana_dashboard
+    version: "0"
+  - lib: hydra.oauth
+    version: "0"
+  - lib: loki_k8s.loki_push_api
+    version: "1"
+  - lib: operator_libs_linux.snap
+    version: "2"
+  - lib: prometheus_k8s.prometheus_scrape
+    version: "0"
+  - lib: rolling_ops.rollingops
+    version: "0"
+  - lib: tls_certificates_interface.tls_certificates
+    version: "3"
+  - lib: traefik_k8s.ingress
+    version: "2"
+
 parts:
+  charm:
+    plugin: charm
