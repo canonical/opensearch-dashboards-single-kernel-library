@@ -20,7 +20,7 @@ def test_certificates_created_sets_tls_enabled(harness):
 
     with (
         patch("ops.framework.EventBase.defer"),
-        patch("core.cluster.ClusterState.stable", new_callable=PropertyMock, return_value=True),
+        patch("core.state.ClusterState.stable", new_callable=PropertyMock, return_value=True),
     ):
         harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
 
@@ -30,7 +30,7 @@ def test_certificates_created_sets_tls_enabled(harness):
 @pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_joined_creates_private_key(harness):
     with (
-        patch("core.cluster.ClusterState.stable", new_callable=PropertyMock, return_value=True),
+        patch("core.state.ClusterState.stable", new_callable=PropertyMock, return_value=True),
         patch("core.models.OSDCluster.tls_enabled", new_callable=PropertyMock, return_value=True),
         patch("workload.vm.VMWorkload.configure") as workload_config,
     ):
@@ -124,7 +124,6 @@ def test_certificates_broken(harness):
         patch(
             "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"
         ),
-        patch("single_kernel_opensearch_dashboards.events.tls.relation_departure_reason"),
     ):
         harness.remove_relation(certs_rel_id)
 

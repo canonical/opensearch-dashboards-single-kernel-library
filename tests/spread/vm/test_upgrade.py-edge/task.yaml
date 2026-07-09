@@ -1,0 +1,10 @@
+summary: test_upgrade.py::test_vm_upgrade_from_edge
+environment:
+  TEST_MODULE: test_upgrade.py
+  TEST_NAME: test_vm_upgrade_from_edge
+  SUBSTRATE: "vm"
+
+execute: |
+  tox run -e integration -- "tests/integration/${TEST_MODULE}::${TEST_NAME}" --model testing --alluredir="$SPREAD_TASK/allure-results"
+artifacts:
+  - allure-results

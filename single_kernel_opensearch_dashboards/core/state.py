@@ -14,15 +14,19 @@ from ops.model import ModelError, Relation, Unit
 
 from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
+    COS_RELATION_NAME,
     DASHBOARD_INDEX,
     DASHBOARD_ROLE,
+    GRAFANA_RELATION_NAME,
     INGRESS_REL_NAME,
     JWT_REL_NAME,
+    LOKI_RELATION_NAME,
     OAUTH_REL_NAME,
     OPENSEARCH_REL_NAME,
     PEER_APP_SECRETS,
     PEER_UNIT_SECRETS,
     PEERS_REL_NAME,
+    PROMETHEUS_RELATION_NAME,
     SERVER_PORT,
     STATUS_PEERS_REL_NAME,
     UPGRADE_REL_NAME,
@@ -120,9 +124,27 @@ class ClusterState(Object, StatusesStateProtocol):
     @property
     def ingress_relation(self) -> Relation | None:
         """Return the ingress relation if present."""
-        if self.substrate == Substrates.VM:
-            return None
         return self.model.get_relation(INGRESS_REL_NAME)
+
+    @property
+    def cos_agent_relation(self) -> Relation | None:
+        """Return the cos-agent relation if present."""
+        return self.model.get_relation(COS_RELATION_NAME)
+
+    @property
+    def prometheus_relation(self) -> Relation | None:
+        """Return the prometheus relation if present."""
+        return self.model.get_relation(PROMETHEUS_RELATION_NAME)
+
+    @property
+    def loki_relation(self) -> Relation | None:
+        """Return the loki relation if present."""
+        return self.model.get_relation(LOKI_RELATION_NAME)
+
+    @property
+    def grafana_relation(self) -> Relation | None:
+        """Return the grafana relation if present."""
+        return self.model.get_relation(GRAFANA_RELATION_NAME)
 
     # --- CORE COMPONENTS---
     @property

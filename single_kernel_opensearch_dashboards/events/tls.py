@@ -23,10 +23,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     SERVER_PORT,
     TLS_MANAGER_NAME,
-    RelDepartureReason,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ServerStatuses,
     TLSStatuses,
@@ -37,7 +36,8 @@ from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
+from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +46,12 @@ class TLSEvents(Object):
     """Event handlers for related applications on the `certificates` relation interface."""
 
     def __init__(
-        self,
-        charm: StatusHandlingCharm,
-        state: ClusterState,
+        self, charm: StatusHandlingCharm, state: ClusterState, workload: WorkloadBase
     ) -> None:
         super().__init__(charm, "tls")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
+        self.workload = workload
         self.tls_manager = self.charm.tls_manager
         self.ingress_manager = self.charm.ingress_manager
         self.certificates = TLSCertificatesRequiresV3(
@@ -179,6 +178,11 @@ class TLSEvents(Object):
 
     def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
+        # CONTAINER CHECK
+        if not self.workload.ready():
+            event.defer()
+            return
+
         if self.state.unit_server.tls_enabled and not self.tls_manager.certificate_valid():
             self._remove_certificates(event)
             self._request_certificates(event)
@@ -186,12 +190,7 @@ class TLSEvents(Object):
     def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
-        if (
-            relation_departure_reason(
-                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
-            )
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        if app_going_down(self.charm.base, event):
             return
 
         if self.state.oauth_relation:

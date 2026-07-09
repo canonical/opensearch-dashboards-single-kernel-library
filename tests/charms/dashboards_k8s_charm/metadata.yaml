@@ -1,12 +1,12 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 name: opensearch-dashboards-k8s
 display-name: Opensearch Dashboards K8s
 description: |
-    OpenSearch Dashboard is a community-driven, Apache 2.0-licensed open source 
-    user interface that lets you visualize your OpenSearch data and run and scale
-    your OpenSearch clusters.
+  OpenSearch Dashboard is a community-driven, Apache 2.0-licensed open source 
+  user interface that lets you visualize your OpenSearch data and run and scale
+  your OpenSearch clusters.
 
 summary: The Charmed Opensearch Dashboards operator
 docs: https://discourse.charmhub.io/t/charmed-opensearch-dashboards-home/14117
@@ -28,7 +28,7 @@ resources:
   opensearch-dashboards-image:
     type: oci-image
     description: OCI image for opensearch-dashboards
-    upstream-source: ghcr.io/canonical/charmed-opensearch-dashboards:2.19.4-24.04-edge
+    upstream-source: ghcr.io/canonical/charmed-opensearch-dashboards:2.19.5-24.04_edge
 
 peers:
   dashboard_peers:
@@ -63,6 +63,8 @@ requires:
     limit: 1
 
 provides:
+  cos-agent:
+    interface: cos_agent
   metrics-endpoint:
     interface: prometheus_scrape
   grafana-dashboard:

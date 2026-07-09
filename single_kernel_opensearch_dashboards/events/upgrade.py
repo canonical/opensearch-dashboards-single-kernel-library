@@ -16,8 +16,8 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
@@ -118,7 +118,10 @@ class UpgradeEvents(DataUpgrade):
         Raises:
             ClusterNotReadyError: If the workload is not running.
         """
-        if not self.workload.healthy():
+        for _ in range(3):
+            if self.workload.healthy():
+                break
+        else:
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
                 cause="Unit workload is not running",

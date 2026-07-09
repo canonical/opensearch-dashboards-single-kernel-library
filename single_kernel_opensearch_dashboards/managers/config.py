@@ -18,7 +18,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ConfigStatuses,

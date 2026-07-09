@@ -4,6 +4,8 @@
 
 """OpenSearch Dashboards Kubernetes Charm."""
 
+from pathlib import Path
+
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsBaseCharm,
 )
@@ -17,6 +19,13 @@ from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
 class OpenSearchDashboardsK8sCharm(OpenSearchDashboardsBaseCharm):
     """OpenSearch Dashboards kubernetes Charm"""
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        try:
+            self.unit.set_workload_version(Path("workload_version").read_text().strip())
+        except FileNotFoundError:
+            self.unit.set_workload_version("2.19.2")
 
     @property
     def workload(self) -> WorkloadBase:

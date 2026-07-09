@@ -16,7 +16,7 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDTLSMissingDataError,
 )
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ServerStatuses,
@@ -71,6 +71,11 @@ class TLSManager(BaseManager):
             self.workload.write_text(
                 self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
             )
+
+    def remove_ca_opensearch(self) -> None:
+        """Removes the stored OpenSearch CA, if present."""
+        if self.workload.exists(self.workload.paths.opensearch_ca):
+            self.workload.unlink(self.workload.paths.opensearch_ca)
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""

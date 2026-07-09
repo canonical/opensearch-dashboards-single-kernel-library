@@ -22,8 +22,8 @@ from single_kernel_opensearch_dashboards.common.literals import (
     SERVER_PORT,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     HealthStatuses,
     ServerStatuses,
@@ -101,7 +101,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             protocol_self, self.state, self.workload
         )
         self.jwt_events = JwtEvents(protocol_self, self.state)
-        self.tls_events = TLSEvents(protocol_self, self.state)
+        self.tls_events = TLSEvents(protocol_self, self.state, self.workload)
         self.requirer_events = RequirerEvents(protocol_self, self.state)
         self.oauth = OAuthEvents(protocol_self, self.state)
         self.ingress_events = IngressEvents(protocol_self, self.state)
@@ -151,7 +151,12 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     def restart_on_lock_acquired(self, event: EventBase) -> None:
         """RollingOpsManager callback: apply config, restart, then verify health."""
         logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
-        self.config_manager.set_dashboard_properties()
+        try:
+            self.config_manager.set_dashboard_properties()
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            event.defer()
+            return
 
         self.state.delete_status_if_present(
             status=ServerStatuses.WAITING_ON_RESTART.value,

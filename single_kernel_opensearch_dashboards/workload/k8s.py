@@ -16,6 +16,7 @@ from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_not_result, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
+from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     EXPORTER_SERVICE,
     LAYER_NAME,
@@ -90,13 +91,6 @@ class K8sWorkload(WorkloadBase):
             raise
 
     @override
-    @retry(
-        wait=wait_fixed(1),
-        stop=stop_after_attempt(5),
-        retry_error_callback=lambda state: state.outcome.result(),
-        # type: ignore
-        retry=retry_if_not_result(lambda result: True if result else False),
-    )
     def restart(self) -> bool:
         """Restarts the workload services and verifies their status.
 
@@ -174,12 +168,6 @@ class K8sWorkload(WorkloadBase):
         return stdout
 
     @override
-    @retry(
-        wait=wait_fixed(1),
-        stop=stop_after_attempt(5),
-        retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
-        retry=retry_if_not_result(lambda result: True if result else False),
-    )
     def healthy(self) -> bool:
         """Checks if the workload is healthy.
 
@@ -227,13 +215,33 @@ class K8sWorkload(WorkloadBase):
         if ca is None:
             return None
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
-            local_ca_file.write(ca)
-            return local_ca_file.name
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False) as local_ca_file:
+                local_ca_file.write(ca)
+                return local_ca_file.name
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)
 
     def remove_certs(self, local_ca_path: str | None) -> None:
         """Removes certs from container"""
         if local_ca_path is None:
             return
-        if os.path.exists(local_ca_path):
-            os.remove(local_ca_path)
+        try:
+            if os.path.exists(local_ca_path):
+                os.remove(local_ca_path)
+        except (
+            FileNotFoundError,
+            LookupError,
+            NotADirectoryError,
+            PermissionError,
+            pathops.PebbleConnectionError,
+            ValueError,
+        ) as e:
+            raise OSDFileOperationError(e)

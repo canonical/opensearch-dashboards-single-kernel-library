@@ -11,7 +11,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     INGRESS_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ServerStatuses,
@@ -44,6 +44,8 @@ class IngressManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the ingress manager's statuses."""
         if self.state.substrate == Substrates.VM:
+            if self.state.ingress_relation:
+                return [ServerStatuses.INGRESS_RELATION_IN_VM.value]
             return [CharmStatuses.ACTIVE_IDLE.value]
 
         if not self.ingress_requirer.relation:

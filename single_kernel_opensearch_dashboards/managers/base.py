@@ -14,13 +14,15 @@ from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDAPIError,
+    OSDFileOperationError,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
-    REQUEST_TIMEOUT,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
@@ -164,7 +166,7 @@ class BaseManager(ManagerStatusProtocol):
             "method": method.upper(),
             "verify": cert_path.as_posix(),
             "headers": headers,
-            "timeout": REQUEST_TIMEOUT,
+            "timeout": (5, 5),
             "data": json.dumps(payload),
         }
         path = None
@@ -175,7 +177,11 @@ class BaseManager(ManagerStatusProtocol):
                 if cert_path == self.workload.paths.ca
                 else self.state.opensearch_server.tls_ca
             )
-            path = workload.write_certs(cert)
+            try:
+                path = workload.write_certs(cert)
+            except OSDFileOperationError as e:
+                logger.warning(e)
+                raise
             request_kwargs["verify"] = path
 
         try:
@@ -202,7 +208,10 @@ class BaseManager(ManagerStatusProtocol):
         finally:
             if self.state.substrate == Substrates.K8S and path:
                 workload = cast(K8sWorkload, self.workload)
-                workload.remove_certs(path)
+                try:
+                    workload.remove_certs(path)
+                except OSDFileOperationError as e:
+                    logger.warning(e)
         try:
             return resp.status_code, resp.json()
         except requests.exceptions.JSONDecodeError:

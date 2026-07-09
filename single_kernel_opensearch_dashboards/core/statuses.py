@@ -66,6 +66,12 @@ class HealthStatuses(Enum):
         short_message="Health status is unknown",
     )
 
+    STATUS_UNKNOWN_OS = StatusObject(
+        status="blocked",
+        message="OpenSearch health status is unknown",
+        short_message="Health status is unknown",
+    )
+
     STATUS_HANGING = StatusObject(
         status="blocked",
         message="API does not respond, request hanging",
@@ -137,6 +143,20 @@ class ServerStatuses(Enum):
     )
     INGRESS_RELATION_NOT_READY = StatusObject(
         status="waiting", message="Ingress relation not ready."
+    )
+
+    INGRESS_RELATION_IN_VM = StatusObject(
+        status="blocked", message="Ingress relation is not possible for VM"
+    )
+
+    COS_RELATION_IN_K8s = StatusObject(
+        status="blocked",
+        message="grafana-agent relation is not possible for k8s, use grafana-k8s, loki-k8s, prometheus-k8s instead",
+    )
+
+    COS_RELATION_IN_VM = StatusObject(
+        status="blocked",
+        message="grafana-k8s, loki-k8s, prometheus-k8s relation is not possible for vm, use grafana-agent instead",
     )
 
     WAITING_ON_RESTART = StatusObject(

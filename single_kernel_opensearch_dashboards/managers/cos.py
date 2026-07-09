@@ -4,6 +4,8 @@
 
 """Manager for handling COS"""
 
+import logging
+
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
@@ -13,9 +15,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     COS_RELATION_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
+from single_kernel_opensearch_dashboards.core.state import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
 )
@@ -33,6 +35,8 @@ from single_kernel_opensearch_dashboards.lib.charms.prometheus_k8s.v0.prometheus
 )
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
+
+logger = logging.getLogger(__name__)
 
 
 class COSManager(BaseManager):
@@ -98,5 +102,15 @@ class COSManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the cos manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.substrate == Substrates.VM and (
+            self.state.loki_relation
+            or self.state.grafana_relation
+            or self.state.prometheus_relation
+        ):
+            status_list.append(ServerStatuses.COS_RELATION_IN_VM.value)
+
+        elif self.state.substrate == Substrates.K8S and self.state.cos_agent_relation:
+            status_list.append(ServerStatuses.COS_RELATION_IN_K8s.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

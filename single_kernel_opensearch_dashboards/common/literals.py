@@ -23,16 +23,8 @@ class OpenSearchDashboardsPaths:
     BIN = "opt/opensearch-dashboards"
 
 
-class RelDepartureReason(Enum):
-    """Enum depicting the 3 various causes of a Relation Departed event."""
-
-    APP_REMOVAL = "app-removal"
-    SCALE_DOWN = "scale-down"
-    REL_BROKEN = "rel-broken"
-
-
 # Snap
-OPENSEARCH_DASHBOARDS_SNAP_REVISION = "54"
+OPENSEARCH_DASHBOARDS_SNAP_REVISION = "61"
 CHARM_KEY = "opensearch-dashboards"
 
 # K8s
@@ -50,6 +42,9 @@ OAUTH_REL_NAME = "oauth"
 INGRESS_REL_NAME = "ingress"
 JWT_REL_NAME = "jwt-configuration"
 COS_RELATION_NAME = "cos-agent"
+PROMETHEUS_RELATION_NAME = "metrics-endpoint"
+LOKI_RELATION_NAME = "logging"
+GRAFANA_RELATION_NAME = "grafana-dashboard"
 STATUS_PEERS_REL_NAME = "status-peers"
 RESTART_REL_NAME = "restart"
 
@@ -95,4 +90,3 @@ PEER_UNIT_SECRETS = ["ca-cert", "csr", "certificate", "private-key"]
 # Timeouts
 RESTART_TIMEOUT = 30
 SERVICE_AVAILABLE_TIMEOUT = 90
-REQUEST_TIMEOUT = 30

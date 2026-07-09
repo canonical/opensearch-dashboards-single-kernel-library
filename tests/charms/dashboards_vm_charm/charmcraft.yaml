@@ -86,3 +86,4 @@ parts:
     source: .
     stage:
       - LICENSE
+      - workload_version

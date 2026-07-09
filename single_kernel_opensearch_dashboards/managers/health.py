@@ -13,12 +13,15 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 from requests.exceptions import ConnectionError, HTTPError, RequestException
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDAPIError,
+    OSDFileOperationError,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
     HEALTH_MANAGER_NAME,
     SERVICE_AVAILABLE_TIMEOUT,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     HealthStatuses,
@@ -55,6 +58,8 @@ class HealthManager(BaseManager):
             return False, HealthStatuses.STATUS_UNKNOWN.value
         except requests.ReadTimeout:
             return False, HealthStatuses.STATUS_HANGING.value
+        except OSDFileOperationError:
+            return False, HealthStatuses.STATUS_UNKNOWN.value
         except (ConnectionError, OSDAPIError, RequestException):
             return False, HealthStatuses.STATUS_UNAVAILABLE.value
 
@@ -87,6 +92,8 @@ class HealthManager(BaseManager):
             except requests.RequestException:
                 logger.error(f"Failed to connect to {full_url}")
                 continue
+            except OSDFileOperationError:
+                return False, HealthStatuses.STATUS_UNKNOWN_OS.value
 
             if code == 200:
                 state = body.get("status")
@@ -100,14 +107,22 @@ class HealthManager(BaseManager):
     def check_unit_health(self) -> bool:
         """Returns true if OSD is healthy otherwise false"""
 
-        if not self.workload.healthy():
+        for _ in range(3):
+            if self.workload.healthy():
+                break
+        else:
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server or not self.workload.exists(
-            self.workload.paths.opensearch_ca
-        ):
-            return True
+        try:
+            if not self.state.opensearch_server or not self.workload.exists(
+                self.workload.paths.opensearch_ca
+            ):
+                return True
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            self.state.statuses.add(HealthStatuses.STATUS_UNKNOWN.value, "unit", self.name)
+            return False
 
         logger.info(f"Checking health")
         return self.dashboards_status()[0]
@@ -159,7 +174,10 @@ class HealthManager(BaseManager):
 
         Returns true if OSD is healthy otherwise false
         """
-        if not self.workload.healthy():
+        for _ in range(3):
+            if self.workload.healthy():
+                break
+        else:
             self.state.add_status_to_both(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value, component=self.name
             )
@@ -172,10 +190,14 @@ class HealthManager(BaseManager):
         self.state.statuses.clear(scope="unit", component=self.name)
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
-        if not self.state.opensearch_server or not self.workload.exists(
-            self.workload.paths.opensearch_ca
-        ):
-            return
+        try:
+            if not self.state.opensearch_server or not self.workload.exists(
+                self.workload.paths.opensearch_ca
+            ):
+                return
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            self.state.statuses.add(HealthStatuses.STATUS_UNKNOWN.value, "unit", self.name)
 
         self.wait_for_unit_health()
         self.check_opensearch_health()
@@ -196,17 +218,22 @@ class HealthManager(BaseManager):
             statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
-        # Do not check opensearch health if it's not connected or missing certificates
-        if self.state.opensearch_server and (
-            self.workload.paths.opensearch_ca.exists()
-            and self.workload.paths.opensearch_ca.read_text()
-        ):
-            opensearch_healthy, status = self.opensearch_status()
-            if not opensearch_healthy and status:
-                status_list.append(status)
+        # Do not check opensearch health if it's not connected or missing certificates\
+        try:
+            if self.state.opensearch_server and (
+                self.workload.paths.opensearch_ca.exists()
+                and self.workload.paths.opensearch_ca.read_text()
+            ):
+                opensearch_healthy, status = self.opensearch_status()
+                if not opensearch_healthy and status:
+                    status_list.append(status)
 
-            dashboards_healthy, status = self.dashboards_status()
-            if not dashboards_healthy and status:
-                status_list.append(status)
+                dashboards_healthy, status = self.dashboards_status()
+                if not dashboards_healthy and status:
+                    status_list.append(status)
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            status_list.append(HealthStatuses.STATUS_UNKNOWN_OS.value)
+            status_list.append(HealthStatuses.STATUS_UNKNOWN.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

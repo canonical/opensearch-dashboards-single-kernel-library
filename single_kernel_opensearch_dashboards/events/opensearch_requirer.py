@@ -16,14 +16,13 @@ from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperati
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
-    RelDepartureReason,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
+from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
 
 logger = logging.getLogger(__name__)
 
@@ -69,18 +68,21 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
-        departing_app = event.app.name if event.app else None
-        if (
-            departing_app
-            and relation_departure_reason(self.charm.base, event.relation.name, departing_app)
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        # do not bother reconfiguring/restarting a unit that is going down anyway
+        if app_going_down(self.charm.base, event):
             return
 
         self.state.add_status_to_both(
             status=ServerStatuses.DB_CONNECTION_MISSING.value,
             component=CLUSTER_MANAGER_NAME,
         )
+
+        try:
+            self.tls_manager.remove_ca_opensearch()
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            event.defer()
+            return
 
         # call normal updated handler
         self._on_client_relation_changed(event=event)

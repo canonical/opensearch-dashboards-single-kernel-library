@@ -13,7 +13,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     UPGRADE_MANAGER_NAME,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     UpgradeStatuses,

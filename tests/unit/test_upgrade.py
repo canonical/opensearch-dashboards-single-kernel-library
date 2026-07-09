@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+import yaml
 from ops.model import BlockedStatus
 from ops.testing import Harness
 
@@ -37,18 +38,18 @@ logger = logging.getLogger(__name__)
 
 OPENSEARCH_APP_NAME = "opensearch"
 
-K8S_CONFIG = Path("tests/charms/dashboards_k8s_charm/config.yaml").read_text()
-K8S_ACTIONS = Path("tests/charms/dashboards_k8s_charm/actions.yaml").read_text()
-K8S_METADATA = Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text()
+CONFIG = str(yaml.safe_load(Path("tests/unit/charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/unit/charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/unit/charm/metadata.yaml").read_text()))
 
 
 def _begin_k8s_harness(mocker):
     mocker.patch.object(UpgradeEvents, "is_charm_trusted", return_value=True)
     harness = Harness(
         OpenSearchDashboardsK8sCharm,
-        meta=K8S_METADATA,
-        config=K8S_CONFIG,
-        actions=K8S_ACTIONS,
+        meta=METADATA,
+        config=CONFIG,
+        actions=ACTIONS,
     )
     harness.begin()
     return harness
