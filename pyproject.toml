@@ -92,7 +92,7 @@ optional = true
 
 [tool.poetry.group.fmt.dependencies]
 black = "^25.1.0"
-isort = "^6.0.1"
+isort = "^8.0.1"
 
 
 [tool.poetry.group.lint]
@@ -111,7 +111,7 @@ build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry.group.lint.dependencies]
 black = "^25.1.0"
-isort = "^6.0.1"
+isort = "^8.0.1"
 flake8 = "^7.0.0"
 flake8-docstrings = "^1.7.0"
 flake8-copyright = "^0.2.4"
