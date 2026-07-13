@@ -52,6 +52,10 @@ class ApplicationCharm(CharmBase):
 
     def _on_update_status(self, _) -> None:
         """Health check for index connection."""
+        self._set_status_from_connection()
+
+    def _set_status_from_connection(self) -> None:
+        """Set workload status from the current OpenSearch connection state."""
         if self.connection_check():
             self.unit.status = ActiveStatus()
         else:
@@ -96,6 +100,7 @@ class ApplicationCharm(CharmBase):
         logger.info(f"writing cert to {CERT_PATH}.")
         with open(CERT_PATH, "w") as f:
             f.write(tls_ca)
+        self._set_status_from_connection()
 
     def _run_request_action(self, event: ActionEvent, server):
         """Generic request action handler to be used in the specific request action handlers."""

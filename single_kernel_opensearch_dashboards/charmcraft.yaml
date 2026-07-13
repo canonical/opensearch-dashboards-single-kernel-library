@@ -8,37 +8,35 @@ description: Placeholder charm for lib refresh.
 type: charm
 
 platforms:
-  ubuntu-22.04-amd64:
-    build-on: [ amd64 ]
-    build-for: [ amd64 ]
-  ubuntu-24.04-amd64:
-    build-on: [ amd64 ]
-    build-for: [ amd64 ]
+  ubuntu@22.04:amd64:
+  ubuntu@24.04:amd64:
 
 charm-libs:
-  - lib: charms.data_platform_libs.data_interface
+  - lib: data_platform_libs.data_interfaces
     version: "0"
-  - lib: charms.data_platform_libs.upgrade
+  - lib: data_platform_libs.data_models
     version: "1"
-  - lib: charms.opensearch_libs.data_models
+  - lib: data_platform_libs.upgrade
     version: "1"
-  - lib: charms.cos_agent.cos_agent
+  - lib: grafana_agent.cos_agent
     version: "0"
-  - lib: charms.hydra.oauth
+  - lib: grafana_k8s.grafana_dashboard
     version: "0"
-  - lib: charms.operator_libs_linux.snap
+  - lib: hydra.oauth
+    version: "0"
+  - lib: loki_k8s.loki_push_api
+    version: "1"
+  - lib: operator_libs_linux.snap
     version: "2"
-  - lib: charms.data_platform_libs.rollingops
+  - lib: prometheus_k8s.prometheus_scrape
     version: "0"
-  - lib: charms.tls_certificates_interface.tls_certificates
+  - lib: rolling_ops.rollingops
+    version: "0"
+  - lib: tls_certificates_interface.tls_certificates
     version: "3"
+  - lib: traefik_k8s.ingress
+    version: "2"
 
 parts:
   charm:
-    plugin: python
-    source: .
-    python-packages:
-      - ops
-      - cryptography
-    build-packages:
-      - git
+    plugin: charm

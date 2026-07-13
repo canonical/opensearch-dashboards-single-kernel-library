@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Manager for building necessary files for Java TLS auth."""
+
 import logging
 import subprocess
 from subprocess import STDOUT, CalledProcessError

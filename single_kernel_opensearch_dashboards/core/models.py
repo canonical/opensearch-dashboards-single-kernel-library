@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Collection of state objects for relations, apps and units."""
+
 import json
 import logging
 import socket

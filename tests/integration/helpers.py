@@ -124,14 +124,14 @@ async def wait_for_ingress_blocked(
     await ops_test.model.wait_for_idle(**kwargs)
     status_data = await ops_test.model.get_status()
     app_status_info = status_data.applications[app_name].status.info
-    assert (
-        app_status_info == INGRESS_BLOCKED_MSG
-    ), f"Expected app blocked status '{INGRESS_BLOCKED_MSG}', got '{app_status_info}'"
+    assert app_status_info == INGRESS_BLOCKED_MSG, (
+        f"Expected app blocked status '{INGRESS_BLOCKED_MSG}', got '{app_status_info}'"
+    )
     for unit_name, unit_data in status_data.applications[app_name].units.items():
         unit_msg = unit_data.workload_status.info
-        assert (
-            unit_msg == INGRESS_BLOCKED_MSG
-        ), f"Expected unit {unit_name} blocked status '{INGRESS_BLOCKED_MSG}', got '{unit_msg}'"
+        assert unit_msg == INGRESS_BLOCKED_MSG, (
+            f"Expected unit {unit_name} blocked status '{INGRESS_BLOCKED_MSG}', got '{unit_msg}'"
+        )
 
 
 async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period: int = 30):
@@ -486,7 +486,6 @@ async def access_all_dashboards(
 async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> bool:
     unavail = True
     for unit in ops_test.model.applications[APP_NAME].units:
-
         if https:
             if not get_dashboard_ca_cert(ops_test.model.name, unit):
                 logger.info(f"Couldn't retrieve host certificate for unit {unit}")

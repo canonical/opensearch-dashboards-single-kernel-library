@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Implementation of WorkloadBase for running on VMs."""
+
 import logging
 import subprocess
 

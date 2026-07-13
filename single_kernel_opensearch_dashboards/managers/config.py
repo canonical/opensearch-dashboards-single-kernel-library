@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Manager for handling configuration building + writing."""
+
 import logging
 from typing import Any
 

@@ -109,6 +109,8 @@ class Flags:
         self.test_tls = os.environ.get("TEST_TLS", "false").lower() == "true"
         self.traefik = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
         self.transfer_traefik_ca = os.environ.get("TRANSFER_TRAEFIK_CA", "false").lower() == "true"
+        if self.transfer_traefik_ca and not self.traefik:
+            raise ValueError("TRANSFER_TRAEFIK_CA=true requires TEST_TRAEFIK=true.")
 
 
 @pytest.fixture(scope="class")

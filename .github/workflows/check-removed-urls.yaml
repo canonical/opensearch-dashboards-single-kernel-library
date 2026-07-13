@@ -9,6 +9,8 @@ on:
 jobs:
   build-docs:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v5
@@ -19,6 +21,7 @@ jobs:
           # ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           path: compare
+          persist-credentials: false
       - name: Checkout base branch
         uses: actions/checkout@v5
         with:
@@ -26,6 +29,7 @@ jobs:
           repository: ${{ github.event.pull_request.base.repo.full_name }}
           fetch-depth: 0
           path: base
+          persist-credentials: false
       - uses: actions/setup-python@v6
       - name: Build docs
         run: |

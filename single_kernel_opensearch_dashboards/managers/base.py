@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Base manager for common methods"""
+
 import json
 import logging
 from typing import Any, cast

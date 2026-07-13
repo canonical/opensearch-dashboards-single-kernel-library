@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Event handler for related applications on the `opensearch-client` relation interface."""
+
 import logging
 from typing import cast
 

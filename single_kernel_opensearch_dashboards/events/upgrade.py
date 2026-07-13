@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Event handler for handling OpensearchDashboards in-place upgrades."""
+
 import logging
 
 from typing_extensions import override
@@ -64,16 +65,20 @@ class UpgradeEvents(DataUpgrade):
             raise OSDNotTrusted
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
-        self.framework.observe(self.charm.on.upgrade_charm, self._on_k8s_upgrade_charm)
 
-    def _on_k8s_upgrade_charm(self, event) -> None:
+    @override
+    def _on_upgrade_charm(self, event) -> None:
         """Handle the K8s-specific upgrade flow."""
         if self.osd_state.substrate == Substrates.VM:
-            return
+            return super()._on_upgrade_charm(event)
 
-        if self.osd_state.upgrade_idle:
+        if self.osd_state.upgrade_idle and not self.upgrade_stack:
             logger.info("Pod restarted, but no upgrade is in progress. Skipping upgrade logic.")
-            return
+            return None
+
+        super()._on_upgrade_charm(event)
+        if self.state != UpgradeState.UPGRADING:
+            return None
 
         try:
             logger.debug("Running post-upgrade check...")
