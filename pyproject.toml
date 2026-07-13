@@ -89,7 +89,7 @@ poetry-dynamic-versioning = { version = ">=1.10.0,<2.0.0", extras = ["plugin"] }
 [tool.poetry.group.charm-libs.dependencies]
 ops = "^3.8.0"  # data_platform_libs/v0/data_interfaces.py, data_platform_libs/v1/upgrade.py
 pydantic = "^2.13.4"  # data_platform_libs/v1/upgrade.py
-lightkube = "0.21.0"  # data_platform_libs/v1/upgrade.py
+lightkube = "0.22.0"  # data_platform_libs/v1/upgrade.py
 poetry-core = "^2.4.1"  # data_platform_libs/v1/upgrade.py
 cryptography = "^49.0.0"  # tls_certificates_interface/v3/tls_certificates.py
 jsonschema = "^4.26.0"  # tls_certificates_interface/v3/tls_certificates.py
