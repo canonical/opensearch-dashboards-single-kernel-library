@@ -6,10 +6,11 @@
 
 import logging
 import subprocess
+from functools import cached_property
 
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
-from tenacity import retry, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, Retrying
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
@@ -86,19 +87,16 @@ class VMWorkload(WorkloadBase):
     SNAP_APP_SERVICE = "opensearch-dashboards-daemon"
     SNAP_EXPORTER_SERVICE = "exporter-daemon"
 
-    def __init__(self):
-        """Initializes the VM workload instance and loads the snap into the cache."""
-        self.dashboards = self._load_snap()
-
-    @retry(
-        wait=wait_fixed(1),
-        stop=stop_after_attempt(5),
-        reraise=True,
-        retry=retry_if_exception_type(snap.SnapError),
-    )
-    def _load_snap(self) -> snap.Snap:
+    @cached_property
+    def dashboards(self) -> snap.Snap:
         """Loads the snap from the cache, retrying on SnapError."""
-        return snap.SnapCache()[self.SNAP_NAME]
+        for attempt in Retrying(stop=stop_after_attempt(12), wait=wait_fixed(10), reraise=True):
+            with attempt:
+                dashboards_snap = snap.SnapCache()[self.SNAP_NAME]
+        logger.debug(
+            f"Snap {self.SNAP_NAME} fetched after {attempt.retry_state.attempt_number - 1} retries."
+        )
+        return dashboards_snap
 
     @property
     @override
@@ -141,7 +139,7 @@ class VMWorkload(WorkloadBase):
         try:
             self.dashboards.restart(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
         except snap.SnapError as e:
-            logger.exception(str(e))
+            logger.exception(e)
             raise
         return self.healthy()
 
