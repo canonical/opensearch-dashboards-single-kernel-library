@@ -57,7 +57,7 @@ scripts/       Development and charm build helpers.
 Install the project dependencies:
 
 ```bash
-poetry install --with charm-libs,lint,unit
+poetry install --with lint,unit
 ```
 
 Run the standard local checks:
