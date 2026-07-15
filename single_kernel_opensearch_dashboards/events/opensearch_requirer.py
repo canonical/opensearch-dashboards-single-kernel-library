@@ -69,8 +69,10 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
+        departing_app = event.app.name if event.app else None
         if (
-            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
+            departing_app
+            and relation_departure_reason(self.charm.base, event.relation.name, departing_app)
             == RelDepartureReason.APP_REMOVAL
         ):
             return
