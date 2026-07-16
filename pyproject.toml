@@ -137,7 +137,7 @@ oauth_tools = { git = "https://github.com/canonical/iam-bundle", rev = "921d1133
 pyjwt = "^2.13.0"
 # Avoid httpx-ws 0.9.0 importing anyio.AsyncContextManagerMixin, which is unavailable in
 # the AnyIO version resolved for the integration environment (for oauth tests).
-httpx-ws = ">=0.8.2,<0.9.0"
+httpx-ws = ">=0.9.0,<0.10.0"
 
 [tool.pyright]
 include = ["single_kernel_opensearch_dashboards", "tests"]
