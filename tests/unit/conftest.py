@@ -39,7 +39,8 @@ def patched_pebble_restart(mocker):
 @pytest.fixture(autouse=True)
 def patched_snap(mocker):
     mocker.patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload._load_snap",
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.dashboards",
+        new_callable=PropertyMock,
         return_value=MagicMock(),
     )
 
