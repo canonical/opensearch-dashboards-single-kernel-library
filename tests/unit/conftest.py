@@ -17,13 +17,13 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
 )
-from tests.charms.dashboards_vm_charm.src.charm import (
+from tests.charms.dashboards_charm.src.charm import (
     OpenSearchDashboardsVMCharm as TestCharm,
 )
 
-CONFIG = str(yaml.safe_load(Path("tests/unit/charm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/unit/charm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/unit/charm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text()))
 
 
 @pytest.fixture(autouse=True)
@@ -51,6 +51,15 @@ def patched_healthy(mocker):
         "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.healthy",
         return_value=True,
     )
+
+
+@pytest.fixture(autouse=True)
+def patched_workload_version(mocker):
+    """The charm reads the workload_version file from its own directory at runtime;
+    unit tests run from the repo root where that file does not exist."""
+    mocker.patch(
+        "single_kernel_opensearch_dashboards.charms.base.Path"
+    ).return_value.read_text.return_value = "2.19.4"
 
 
 @pytest.fixture(autouse=True)

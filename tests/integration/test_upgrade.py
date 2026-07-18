@@ -46,8 +46,7 @@ CHANNEL_EDGE = "2/edge"
 async def _run_upgrade_scenario(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
@@ -69,8 +68,7 @@ async def _run_upgrade_scenario(
     app_name = await deploy_base(
         ops_test_vm=ops_test_vm,
         ops_test=ops_test,
-        charmvm=old_charm_local or charmvm,
-        charmk8s=old_charm_local or charmk8s,
+        charm=old_charm_local or charm,
         charm_base=charm_base,
         substrate=substrate,
         num_units_app=NUM_UNITS_APP,
@@ -148,9 +146,9 @@ async def _run_upgrade_scenario(
     logger.info(f"Old Dashboards Version: {old_dashboards_version}")
 
     if substrate == "k8s":
-        await ops_test.model.applications[app_name].refresh(path=charmk8s, resources=RESOURCE)
+        await ops_test.model.applications[app_name].refresh(path=charm, resources=RESOURCE)
     else:
-        await ops_test.model.applications[app_name].refresh(path=charmvm)
+        await ops_test.model.applications[app_name].refresh(path=charm)
 
     await wait_for_dashboard_idle(ops_test, traefik)
     # Validate access
@@ -173,25 +171,22 @@ async def _run_upgrade_scenario(
     assert new_dashboards_version != old_dashboards_version
 
 
+@pytest.mark.vm_only
 @pytest.mark.abort_on_fail
 async def test_vm_upgrade_from_stable(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
     test_flags: Flags,
 ):
     """VM: upgrade from the 2/stable Charmhub release to the locally built charm."""
-    if substrate != "vm":
-        pytest.skip("VM-only scenario.")
     await _run_upgrade_scenario(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         dashboard_tester_charm,
@@ -200,25 +195,22 @@ async def test_vm_upgrade_from_stable(
     )
 
 
+@pytest.mark.vm_only
 @pytest.mark.abort_on_fail
 async def test_vm_upgrade_from_edge(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
     test_flags: Flags,
 ):
     """VM: upgrade from the 2/edge Charmhub release to the locally built charm."""
-    if substrate != "vm":
-        pytest.skip("VM-only scenario.")
     await _run_upgrade_scenario(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         dashboard_tester_charm,
@@ -227,12 +219,12 @@ async def test_vm_upgrade_from_edge(
     )
 
 
+@pytest.mark.k8s_only
 @pytest.mark.abort_on_fail
-async def test_k8s_upgrade_from_tester_charm(
+async def test_k8s_upgrade_from_local_2_19_4_charm(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
@@ -243,13 +235,10 @@ async def test_k8s_upgrade_from_tester_charm(
 
     Used in place of a Charmhub 2/stable release, which doesn't exist yet for the k8s charm.
     """
-    if substrate != "k8s":
-        pytest.skip("K8s-only scenario.")
     await _run_upgrade_scenario(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         dashboard_tester_charm,
@@ -260,12 +249,12 @@ async def test_k8s_upgrade_from_tester_charm(
 
 
 @pytest.mark.skip(reason="opensearch-dashboards-k8s has not been published to 2/edge yet")
+@pytest.mark.k8s_only
 @pytest.mark.abort_on_fail
 async def test_k8s_upgrade_from_edge(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
@@ -275,13 +264,10 @@ async def test_k8s_upgrade_from_edge(
 
     Disabled until opensearch-dashboards-k8s is published to 2/edge
     """
-    if substrate != "k8s":
-        pytest.skip("K8s-only scenario.")
     await _run_upgrade_scenario(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         dashboard_tester_charm,

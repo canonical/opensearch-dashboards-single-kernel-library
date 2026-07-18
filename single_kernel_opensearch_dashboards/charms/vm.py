@@ -17,13 +17,6 @@ from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 class OpenSearchDashboardsVMCharm(OpenSearchDashboardsBaseCharm):
     """OpenSearch Dashboards Machine Charm"""
 
-    def __init__(self, *args):
-        super().__init__(*args)
-        try:
-            self.unit.set_workload_version(Path("workload_version").read_text().strip())
-        except FileNotFoundError:
-            self.unit.set_workload_version("2.19.2")
-
     @property
     def workload(self) -> WorkloadBase:
         """Access current workload."""

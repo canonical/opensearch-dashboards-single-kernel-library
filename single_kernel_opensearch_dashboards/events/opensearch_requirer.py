@@ -22,7 +22,7 @@ from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
+from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class RequirerEvents(Object):
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
         # do not bother reconfiguring/restarting a unit that is going down anyway
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         self.state.add_status_to_both(
@@ -77,12 +77,8 @@ class RequirerEvents(Object):
             component=CLUSTER_MANAGER_NAME,
         )
 
-        try:
-            self.tls_manager.remove_ca_opensearch()
-        except OSDFileOperationError as e:
-            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+        if self.tls_manager.remove_ca_opensearch():
             event.defer()
             return
 
-        # call normal updated handler
-        self._on_client_relation_changed(event=event)
+        self.charm.emit_restart(event)

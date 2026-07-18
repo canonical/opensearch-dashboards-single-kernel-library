@@ -58,7 +58,8 @@ class HealthManager(BaseManager):
             return False, HealthStatuses.STATUS_UNKNOWN.value
         except requests.ReadTimeout:
             return False, HealthStatuses.STATUS_HANGING.value
-        except OSDFileOperationError:
+        except OSDFileOperationError as e:
+            logger.warning(e)
             return False, HealthStatuses.STATUS_UNKNOWN.value
         except (ConnectionError, OSDAPIError, RequestException):
             return False, HealthStatuses.STATUS_UNAVAILABLE.value
@@ -92,7 +93,8 @@ class HealthManager(BaseManager):
             except requests.RequestException:
                 logger.error(f"Failed to connect to {full_url}")
                 continue
-            except OSDFileOperationError:
+            except OSDFileOperationError as e:
+                logger.warning(e)
                 return False, HealthStatuses.STATUS_UNKNOWN_OS.value
 
             if code == 200:
@@ -198,6 +200,7 @@ class HealthManager(BaseManager):
         except OSDFileOperationError as e:
             logger.warning(e)
             self.state.statuses.add(HealthStatuses.STATUS_UNKNOWN.value, "unit", self.name)
+            return
 
         self.wait_for_unit_health()
         self.check_opensearch_health()
@@ -218,7 +221,7 @@ class HealthManager(BaseManager):
             statuses = self.state.statuses.get(scope, self.name).root
             return statuses or [CharmStatuses.ACTIVE_IDLE.value]
 
-        # Do not check opensearch health if it's not connected or missing certificates\
+        # Do not check opensearch health if it's not connected or missing certificates
         try:
             if self.state.opensearch_server and (
                 self.workload.paths.opensearch_ca.exists()

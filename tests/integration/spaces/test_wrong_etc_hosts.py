@@ -28,7 +28,7 @@ DEFAULT_NUM_UNITS = 3
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
 async def test_build_and_deploy(
-    ops_test: OpsTest, lxd_spaces, charmvm: str, charm_base: str
+    ops_test: OpsTest, lxd_spaces, charm: str, charm_base: str
 ) -> None:
     """Build and deploy OpenSearch Dashboards.
 
@@ -71,7 +71,7 @@ async def test_build_and_deploy(
         )
 
     await ops_test.model.deploy(
-        charmvm,
+        charm,
         num_units=DEFAULT_NUM_UNITS,
         base=charm_base,
         constraints="spaces=alpha,client,cluster,backup",

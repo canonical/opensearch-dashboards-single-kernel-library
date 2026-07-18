@@ -32,8 +32,7 @@ METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.y
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     dashboard_tester_charm: str,
     substrate: str,
@@ -46,8 +45,7 @@ async def test_build_and_deploy(
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_app=1,

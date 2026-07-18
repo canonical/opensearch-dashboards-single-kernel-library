@@ -41,7 +41,7 @@ from .helpers import (
 logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 PROMETHEUS_APP = "prometheus-k8s"
 LOKI_APP = "loki-k8s"
 GRAFANA_APP = "grafana-k8s"
@@ -60,8 +60,7 @@ NUM_UNITS_DB = 3
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     application_charm: str,
     dashboard_tester_charm: str,
     charm_base: str,
@@ -76,8 +75,7 @@ async def test_build_and_deploy(
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,
@@ -152,6 +150,7 @@ async def test_dashboard_access(
     assert await access_all_prometheus_exporters(ops_test, substrate)
 
 
+@pytest.mark.tls_only
 @pytest.mark.abort_on_fail
 async def test_dashboard_tls_lifecycle(
     ops_test_vm: OpsTest,
@@ -164,9 +163,6 @@ async def test_dashboard_tls_lifecycle(
     tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
-
-    if not tls:
-        pytest.skip("Skipping TLS lifecycle test as TLS is disabled in this matrix run.")
 
     server_cert = (
         "/etc/opensearch-dashboards/certificates/server.pem"

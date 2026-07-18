@@ -24,8 +24,15 @@ def update_grafana_dashboards_title(charm: CharmBase) -> None:
 
     try:
         dashboard = json.loads(dashboard_path.read_text())
+        if not isinstance(dashboard, dict):
+            logger.error(
+                "Dashboard %s is not a JSON object, skipping title update", dashboard_path.name
+            )
+            return
 
         old_title = dashboard.get("title", "Charmed OpenSearch Dashboards")
+        if not isinstance(old_title, str):
+            old_title = "Charmed OpenSearch Dashboards"
         title_prefix = old_title.split(" - Rev")[0]
         new_title = f"{title_prefix} - Rev {revision}"
         dashboard["title"] = new_title
@@ -42,7 +49,7 @@ def update_grafana_dashboards_title(charm: CharmBase) -> None:
         logger.error("Failed to update the title of dashboard %s: %s", dashboard_path.name, e)
 
 
-def app_going_down(charm: CharmBase, event: EventBase | None = None) -> bool:
+def is_app_removal(charm: CharmBase, event: EventBase) -> bool:
     """Returns True if the local application, or this unit specifically, is going down.
 
     Args:
@@ -50,7 +57,7 @@ def app_going_down(charm: CharmBase, event: EventBase | None = None) -> bool:
         event: the event being handled, if it carries a `departing_unit` (e.g. a
             peer `relation-departed` event) this unit is checked against it.
     """
-    if event is not None and getattr(event, "departing_unit", None) == charm.unit:
+    if getattr(event, "departing_unit", None) == charm.unit:
         return True
 
     try:

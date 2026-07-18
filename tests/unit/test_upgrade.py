@@ -38,9 +38,9 @@ logger = logging.getLogger(__name__)
 
 OPENSEARCH_APP_NAME = "opensearch"
 
-CONFIG = str(yaml.safe_load(Path("tests/unit/charm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/unit/charm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/unit/charm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text()))
 
 
 def _begin_k8s_harness(mocker):

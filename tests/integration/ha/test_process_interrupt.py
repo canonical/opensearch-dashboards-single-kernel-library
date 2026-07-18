@@ -81,8 +81,7 @@ async def restart_delay(ops_test_vm: OpsTest, ops_test: OpsTest, substrate: str)
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     test_flags: Flags,
@@ -96,8 +95,7 @@ async def test_build_and_deploy(
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,

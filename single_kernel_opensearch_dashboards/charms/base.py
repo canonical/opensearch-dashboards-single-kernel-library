@@ -6,6 +6,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, cast
 
 from data_platform_helpers.advanced_statuses import StatusHandler
@@ -28,6 +29,7 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     HealthStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.events.cos import COSEvents
 from single_kernel_opensearch_dashboards.events.ingress import IngressEvents
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
 from single_kernel_opensearch_dashboards.events.oauth import OAuthEvents
@@ -105,7 +107,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         self.requirer_events = RequirerEvents(protocol_self, self.state)
         self.oauth = OAuthEvents(protocol_self, self.state)
         self.ingress_events = IngressEvents(protocol_self, self.state)
-
+        self.cos_events = COSEvents(protocol_self, self.state)
         try:
             self.upgrade_events = UpgradeEvents(
                 self,
@@ -130,6 +132,8 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             self.tls_manager,
             self.cos_manager,
         )
+
+        self.unit.set_workload_version(Path("workload_version").read_text().strip())
 
     @property
     def base(self) -> "OpenSearchDashboardsBaseCharm":

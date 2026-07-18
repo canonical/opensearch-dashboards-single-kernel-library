@@ -19,7 +19,7 @@ from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress impor
     IngressPerAppReadyEvent,
     IngressPerAppRevokedEvent,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
+from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class IngressEvents(Object):
 
     def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent) -> None:
         """Handle ingress revoked event."""
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         logger.warning("Ingress revoked, falling back to direct access.")
@@ -65,6 +65,3 @@ class IngressEvents(Object):
             return
 
         logger.warning("Ingress on VM charm is not possible")
-        self.state.add_status_to_both(
-            ServerStatuses.INGRESS_RELATION_IN_VM.value, CLUSTER_MANAGER_NAME
-        )

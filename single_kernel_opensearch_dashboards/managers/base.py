@@ -177,11 +177,7 @@ class BaseManager(ManagerStatusProtocol):
                 if cert_path == self.workload.paths.ca
                 else self.state.opensearch_server.tls_ca
             )
-            try:
-                path = workload.write_certs(cert)
-            except OSDFileOperationError as e:
-                logger.warning(e)
-                raise
+            path = workload.write_certs(cert)
             request_kwargs["verify"] = path
 
         try:
@@ -208,10 +204,7 @@ class BaseManager(ManagerStatusProtocol):
         finally:
             if self.state.substrate == Substrates.K8S and path:
                 workload = cast(K8sWorkload, self.workload)
-                try:
-                    workload.remove_certs(path)
-                except OSDFileOperationError as e:
-                    logger.warning(e)
+                workload.remove_certs(path)
         try:
             return resp.status_code, resp.json()
         except requests.exceptions.JSONDecodeError:

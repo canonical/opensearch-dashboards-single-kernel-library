@@ -26,7 +26,7 @@ from .helpers_jwt import generate_json_web_token
 logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -36,8 +36,7 @@ OPENSEARCH_RELATION_NAME = "opensearch-client"
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     test_flags: Flags,
@@ -52,8 +51,7 @@ async def test_build_and_deploy(
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_db=3,

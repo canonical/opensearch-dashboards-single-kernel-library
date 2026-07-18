@@ -48,7 +48,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     PEERS_REL_NAME,
 )
 from single_kernel_opensearch_dashboards.utils.helpers import (
-    app_going_down,
+    is_app_removal,
     update_grafana_dashboards_title,
 )
 
@@ -82,19 +82,6 @@ class OpenSearchDashboardsEvents(Object):
         )
         self.framework.observe(
             self.charm.on[PEERS_REL_NAME].relation_departed, self._on_relation_departed
-        )
-
-        self.framework.observe(
-            self.charm.on[COS_RELATION_NAME].relation_created, self._on_cos_relation_created
-        )
-        self.framework.observe(
-            self.charm.on[PROMETHEUS_RELATION_NAME].relation_created, self._on_cos_relation_created
-        )
-        self.framework.observe(
-            self.charm.on[LOKI_RELATION_NAME].relation_created, self._on_cos_relation_created
-        )
-        self.framework.observe(
-            self.charm.on[GRAFANA_RELATION_NAME].relation_created, self._on_cos_relation_created
         )
 
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
@@ -155,7 +142,7 @@ class OpenSearchDashboardsEvents(Object):
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Handle the peer `relation-departed` event."""
         # do not restart a unit that is dying, or an application going down
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         if not self.pre_restart_check():
@@ -191,7 +178,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         if not self.pre_restart_check():
@@ -214,30 +201,6 @@ class OpenSearchDashboardsEvents(Object):
         ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
             logger.info(f"Secret {event.secret.label} changed.")
             self.charm.emit_restart(event)
-
-    def _on_cos_relation_created(self, event: RelationCreatedEvent) -> None:
-        """Handle the `secret-changed` event."""
-        if self.state.substrate == Substrates.VM and (
-            self.state.loki_relation
-            or self.state.grafana_relation
-            or self.state.prometheus_relation
-        ):
-            logger.warning(
-                "grafana-k8s, loki-k8s, prometheus-k8s relation is not possible for vm, use grafana-agent instead"
-            )
-            self.state.add_status_to_both(
-                ServerStatuses.COS_RELATION_IN_VM.value, CLUSTER_MANAGER_NAME
-            )
-            return
-        elif self.state.substrate == Substrates.K8S and self.state.cos_agent_relation:
-            logger.warning(
-                "grafana-agent relation is not possible for k8s, use grafana-k8s, loki-k8s, prometheus-k8s instead"
-            )
-            self.state.add_status_to_both(
-                ServerStatuses.COS_RELATION_IN_K8s.value, CLUSTER_MANAGER_NAME
-            )
-
-        return
 
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""

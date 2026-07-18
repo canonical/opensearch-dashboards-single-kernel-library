@@ -36,7 +36,7 @@ from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
+from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -190,7 +190,7 @@ class TLSEvents(Object):
     def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         if self.state.oauth_relation:

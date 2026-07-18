@@ -9,7 +9,7 @@ from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
-MICROK8S_CLOUD_NAME = "uk8s"
+K8S_CLOUD_NAME = "uk8s"
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -57,23 +57,12 @@ def charm_base():
 
 
 @pytest.fixture
-def charmvm(charm_base):
+def charm(charm_base):
     """Path to the vm charm file to use for testing."""
     # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
     # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
     # Charmhub charms.
-    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
-
-
-@pytest.fixture
-def charmk8s(charm_base):
-    """Path to the k8s charm file to use for testing."""
-    # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
-    # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
-    # Charmhub charms.
-    return (
-        f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
-    )
+    return f"./tests/charms/dashboards_charm/opensearch-dashboards_{charm_base}-amd64.charm"
 
 
 @pytest.fixture
@@ -101,6 +90,21 @@ def pytest_addoption(parser):
         default=False,
         help="Run tests targeting the Kubernetes charm.",
     )
+
+
+def pytest_collection_modifyitems(config, items):
+    substrate = os.environ.get("SUBSTRATE", "vm").lower()
+    tls = os.environ.get("TEST_TLS", "false").lower() == "true"
+    skip_vm_only = pytest.mark.skip(reason="VM-only scenario.")
+    skip_k8s_only = pytest.mark.skip(reason="K8s-only scenario.")
+    skip_tls_only = pytest.mark.skip(reason="TLS is disabled in this matrix run.")
+    for item in items:
+        if substrate != "vm" and "vm_only" in item.keywords:
+            item.add_marker(skip_vm_only)
+        if substrate != "k8s" and "k8s_only" in item.keywords:
+            item.add_marker(skip_k8s_only)
+        if not tls and "tls_only" in item.keywords:
+            item.add_marker(skip_tls_only)
 
 
 def pytest_configure(config):

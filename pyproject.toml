@@ -53,7 +53,12 @@ show_missing = true
 [tool.pytest.ini_options]
 minversion = "6.0"
 log_cli_level = "INFO"
-markers = ["unstable"]
+markers = [
+  "unstable",
+  "vm_only: skip unless SUBSTRATE=vm",
+  "k8s_only: skip unless SUBSTRATE=k8s",
+  "tls_only: skip unless TEST_TLS=true",
+]
 asyncio_mode = "auto"
 
 # Formatting and linting tools configuration

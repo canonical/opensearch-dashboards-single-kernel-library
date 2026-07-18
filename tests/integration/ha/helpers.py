@@ -273,7 +273,7 @@ def network_throttle_k8s(pod_name: str, namespace: str) -> None:
 
     try:
         result = subprocess.run(
-            ["microk8s", "kubectl", "apply", "-f", "-"],
+            ["sudo", "k8s", "kubectl", "apply", "-f", "-"],
             input=chaos_yaml,
             text=True,
             capture_output=True,
@@ -297,7 +297,8 @@ def network_restore_throttle_k8s(pod_name: str, namespace: str) -> None:
     try:
         result = subprocess.run(
             [
-                "microk8s",
+                "sudo",
+                "k8s",
                 "kubectl",
                 "delete",
                 "networkchaos",

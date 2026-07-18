@@ -1,8 +1,8 @@
-summary: test_upgrade.py::test_k8s_upgrade_from_tester_charm
+summary: test_upgrade.py::test_k8s_upgrade_from_local_2_19_4_charm
 environment:
   TEST_MODULE: test_upgrade.py
-  TEST_NAME: test_k8s_upgrade_from_tester_charm
-  TEST_TRAEFIK: true
+  TEST_NAME: test_k8s_upgrade_from_local_2_19_4_charm
+  TEST_TLS: true
   SUBSTRATE: "k8s"
 
 execute: |

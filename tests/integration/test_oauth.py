@@ -28,7 +28,7 @@ pytest_plugins = ["oauth_tools.fixtures"]
 logger = logging.getLogger(__name__)
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -58,8 +58,7 @@ RESOURCE = {
 async def test_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     dashboard_substrate: str,
@@ -79,12 +78,12 @@ async def test_deploy(
 
     if dashboard_substrate == "k8s":
         await ops_test.model.deploy(
-            charmk8s, application_name=app_name, base=charm_base, resources=RESOURCE
+            charm, application_name=app_name, base=charm_base, resources=RESOURCE
         )
         if traefik:
             await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
     else:
-        await ops_test_vm.model.deploy(charmvm, application_name=app_name, base=charm_base)
+        await ops_test_vm.model.deploy(charm, application_name=app_name, base=charm_base)
 
 
 @pytest.mark.abort_on_fail

@@ -35,7 +35,7 @@ from tenacity import (
 from .conftest import Flags
 
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
 APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
 K8s_APP_NAME = METADATA_K8S["name"]
@@ -152,8 +152,7 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
 async def deploy_base(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     num_units_app: int = 1,
@@ -194,12 +193,12 @@ async def deploy_base(
         "application_name": app_name,
         "num_units": num_units_app,
     }
+    # for upgrades test we need to pull dashboards from 2/stable and 2/edge, not local one
     if charm_channel:
         charm = app_name
         deploy_kwargs["channel"] = charm_channel
         deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
     else:
-        charm = charmk8s if substrate == "k8s" else charmvm
         deploy_kwargs["base"] = charm_base
 
     if substrate == "k8s":

@@ -19,7 +19,7 @@ from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
     ServerStatuses,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import app_going_down
+from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class OAuthEvents(Object):
 
     def _on_oauth_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
-        if app_going_down(self.charm.base, event):
+        if is_app_removal(self.charm.base, event):
             return
 
         self.state.cluster.update({"oauth-client-secret": ""})

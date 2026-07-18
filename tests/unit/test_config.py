@@ -38,7 +38,11 @@ def test_tls_disabled(harness):
 def test_tls_enabled(harness):
     with (
         patch("ops.framework.EventBase.defer"),
-        patch("core.state.ClusterState.stable", new_callable=PropertyMock, return_value=True),
+        patch(
+            "single_kernel_opensearch_dashboards.core.state.ClusterState.stable",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
     ):
         harness.charm.unit.add_secret(
             {"private-key": "key", "certificate": "cert", "ca-cert": "exists"},
