@@ -2,35 +2,30 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import json
 import logging
 import time
-from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
 import responses
+from ops import ModelError
 
+from single_kernel_opensearch_dashboards.charms.base import OpenSearchDashboardsBaseCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
-    CLUSTER_MANAGER_NAME,
     HEALTH_MANAGER_NAME,
-    INGRESS_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
     UPGRADE_MANAGER_NAME,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     HealthStatuses,
-    ServerStatuses,
     UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
-)
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    update_grafana_dashboards_title,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,27 +33,18 @@ logger = logging.getLogger(__name__)
 OPENSEARCH_APP_NAME = "opensearch"
 
 
-@pytest.fixture
-def mocked_dashboards():
-    mock_charm = MagicMock()
-    mock_charm.model.unit = MagicMock()
-    type(mock_charm).charm_dir = PropertyMock(return_value=Path("/fake/charm/dir"))
-
-    yield mock_charm
-
-
 @pytest.fixture(autouse=True)
 def patch_get_charm_revision():
     with patch(
-        "single_kernel_opensearch_dashboards.utils.helpers.get_charm_revision", return_value=167
+        "single_kernel_opensearch_dashboards.managers.cos.get_charm_revision", return_value=167
     ) as mock_func:
         yield mock_func
 
 
 @pytest.fixture(autouse=True)
-def patch_test_relation_changed_starts_units():
+def patch_update_grafana_dashboards_title():
     with patch(
-        "single_kernel_opensearch_dashboards.utils.helpers.update_grafana_dashboards_title"
+        "single_kernel_opensearch_dashboards.managers.cos.COSManager.update_grafana_dashboards_title"
     ) as mock_func:
         yield mock_func
 
@@ -594,9 +580,6 @@ def test_workload_down_blocked_status(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch(
-            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.update_grafana_dashboards_title"
-        ),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
         patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
@@ -1000,53 +983,67 @@ def test_wrong_opensearch_version(harness):
         add.assert_has_calls(expected_calls, any_order=False)
 
 
-@patch("pathlib.Path.write_text")
-@patch(
-    "pathlib.Path.read_text",
-    return_value=json.dumps({"title": "Charmed OpenSearch Dashboards"}),
-)
-def test_update_grafana_dashboards_title_no_prior_revision(
-    mock_read_text, mock_write_text, mocked_dashboards
-):
-
-    update_grafana_dashboards_title(mocked_dashboards)
-
-    expected_updated_dashboard = {"title": "Charmed OpenSearch Dashboards - Rev 167"}
-    mock_write_text.assert_called_once_with(json.dumps(expected_updated_dashboard, indent=4))
+def _removal_state(planned_units: int) -> MagicMock:
+    state = MagicMock()
+    state.charm.app.planned_units.return_value = planned_units
+    return state
 
 
-@patch("pathlib.Path.write_text")
-@patch(
-    "pathlib.Path.read_text",
-    return_value=json.dumps({"title": "Charmed OpenSearch - Rev 166"}),
-)
-def test_update_grafana_dashboards_title_prior_revision(
-    mock_read_text, mock_write_text, mocked_dashboards
-):
-    update_grafana_dashboards_title(mocked_dashboards)
-
-    expected_updated_dashboard = {"title": "Charmed OpenSearch - Rev 167"}
-    mock_write_text.assert_called_once_with(json.dumps(expected_updated_dashboard, indent=4))
+def _removal_event() -> MagicMock:
+    return MagicMock(departing_unit=None)
 
 
-@patch("pathlib.Path.write_text")
-@patch("pathlib.Path.read_text", side_effect=FileNotFoundError("no such file"))
-def test_update_grafana_dashboards_title_missing_file_is_guarded(
-    mock_read_text, mock_write_text, mocked_dashboards
-):
-    update_grafana_dashboards_title(mocked_dashboards)
-
-    mock_write_text.assert_not_called()
+def test_app_removal_true_when_no_units_planned():
+    assert ClusterState.app_removal.fget(_removal_state(0)) is True
 
 
-@patch("pathlib.Path.write_text")
-@patch("pathlib.Path.read_text", return_value="not valid json")
-def test_update_grafana_dashboards_title_invalid_json_is_guarded(
-    mock_read_text, mock_write_text, mocked_dashboards
-):
-    update_grafana_dashboards_title(mocked_dashboards)
+def test_app_removal_false_when_units_planned():
+    assert ClusterState.app_removal.fget(_removal_state(2)) is False
 
-    mock_write_text.assert_not_called()
+
+def test_app_removal_true_when_planned_units_raises_model_error():
+    state = _removal_state(2)
+    state.charm.app.planned_units.side_effect = ModelError("saas application not found")
+    assert ClusterState.app_removal.fget(state) is True
+
+
+def test_app_going_down_true_when_this_unit_is_departing():
+    charm = MagicMock()
+    charm.state.app_removal = False
+    event = MagicMock(departing_unit=charm.unit)
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, event) is True
+
+
+def test_app_going_down_false_when_other_unit_is_departing():
+    charm = MagicMock()
+    charm.state.app_removal = False
+    event = MagicMock(departing_unit=MagicMock())
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, event) is False
+
+
+def test_app_going_down_delegates_to_state():
+    charm = MagicMock()
+    charm.state.app_removal = True
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, _removal_event()) is True
+
+
+def test_get_statuses_report_app_removal(harness):
+    with harness.hooks_disabled():
+        harness.set_planned_units(0)
+
+    assert harness.charm.cluster_manager.get_statuses("unit", recompute=True) == [
+        CharmStatuses.APP_BEING_DESTROYED.value
+    ]
+
+    for manager in (
+        harness.charm.config_manager,
+        harness.charm.health_manager,
+        harness.charm.ingress_manager,
+        harness.charm.tls_manager,
+        harness.charm.upgrade_manager,
+        harness.charm.cos_manager,
+    ):
+        assert manager.get_statuses("unit", recompute=True) == []
 
 
 # def test_port_updates_if_tls(harness):

@@ -323,6 +323,18 @@ class ClusterState(Object, StatusesStateProtocol):
 
         return self.url
 
+    @property
+    def app_removal(self) -> bool:
+        """Whether the whole application is going down."""
+        try:
+            return self.charm.app.planned_units() == 0
+        except ModelError:
+            # juju check planned units for charm using `goal-state` for all model
+            # `goal-state` can fail to resolve the full model state (e.g. a cross-model
+            # relation's remote offer is already gone), even though we only care about
+            # our own app. Assume the app is going down because that can happen only if model is being destroyed.
+            return True
+
     # --- UPGRADE RELATED ---
     @property
     def upgrade_unit_states(self) -> list:

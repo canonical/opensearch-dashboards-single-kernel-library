@@ -60,7 +60,7 @@ class HealthManager(BaseManager):
             return False, HealthStatuses.STATUS_HANGING.value
         except OSDFileOperationError as e:
             logger.warning(e)
-            return False, HealthStatuses.STATUS_UNKNOWN.value
+            return False, HealthStatuses.FILE_OPERATION_FAILED.value
         except (ConnectionError, OSDAPIError, RequestException):
             return False, HealthStatuses.STATUS_UNAVAILABLE.value
 
@@ -95,7 +95,7 @@ class HealthManager(BaseManager):
                 continue
             except OSDFileOperationError as e:
                 logger.warning(e)
-                return False, HealthStatuses.STATUS_UNKNOWN_OS.value
+                return False, HealthStatuses.FILE_OPERATION_FAILED.value
 
             if code == 200:
                 state = body.get("status")
@@ -123,7 +123,7 @@ class HealthManager(BaseManager):
                 return True
         except OSDFileOperationError as e:
             logger.warning(e)
-            self.state.statuses.add(HealthStatuses.STATUS_UNKNOWN.value, "unit", self.name)
+            self.state.statuses.add(HealthStatuses.FILE_OPERATION_FAILED.value, "unit", self.name)
             return False
 
         logger.info(f"Checking health")
@@ -196,10 +196,14 @@ class HealthManager(BaseManager):
             if not self.state.opensearch_server or not self.workload.exists(
                 self.workload.paths.opensearch_ca
             ):
+                logger.debug(
+                    "Skipping OSD/OpenSearch health checks: "
+                    "OpenSearch connection or CA file not available"
+                )
                 return
         except OSDFileOperationError as e:
             logger.warning(e)
-            self.state.statuses.add(HealthStatuses.STATUS_UNKNOWN.value, "unit", self.name)
+            self.state.statuses.add(HealthStatuses.FILE_OPERATION_FAILED.value, "unit", self.name)
             return
 
         self.wait_for_unit_health()
@@ -208,6 +212,9 @@ class HealthManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the health manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.app_removal:
+            return status_list
 
         if not self.state.upgrade_idle:
             return status_list
@@ -236,7 +243,6 @@ class HealthManager(BaseManager):
                     status_list.append(status)
         except OSDFileOperationError as e:
             logger.warning(e)
-            status_list.append(HealthStatuses.STATUS_UNKNOWN_OS.value)
-            status_list.append(HealthStatuses.STATUS_UNKNOWN.value)
+            status_list.append(HealthStatuses.FILE_OPERATION_FAILED.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

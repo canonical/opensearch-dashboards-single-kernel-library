@@ -27,8 +27,8 @@ pytest_plugins = ["oauth_tools.fixtures"]
 
 logger = logging.getLogger(__name__)
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+APP_NAME = METADATA["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -47,7 +47,7 @@ DATA_INTEGRATOR_CONFIG = {
     "extra-user-roles": "admin",
 }
 RESOURCE = {
-    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+    "opensearch-dashboards-image": METADATA["resources"]["opensearch-dashboards-image"][
         "upstream-source"
     ]
 }
@@ -73,17 +73,16 @@ async def test_deploy(
         num_units=2,
         config=CONFIG_OPTS,
     )
-    app_name = METADATA_K8S["name"] if dashboard_substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
 
     if dashboard_substrate == "k8s":
         await ops_test.model.deploy(
-            charm, application_name=app_name, base=charm_base, resources=RESOURCE
+            charm, application_name=APP_NAME, base=charm_base, resources=RESOURCE
         )
         if traefik:
             await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
     else:
-        await ops_test_vm.model.deploy(charm, application_name=app_name, base=charm_base)
+        await ops_test_vm.model.deploy(charm, application_name=APP_NAME, base=charm_base)
 
 
 @pytest.mark.abort_on_fail
@@ -115,7 +114,6 @@ async def test_setup_relations(
     test_flags: Flags,
 ):
     """Establish all the required relations."""
-    app_name = METADATA_K8S["name"] if dashboard_substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
 
     # Identity bundle (self-signed-certificates, hydra) is always in ops_test (K8S).
@@ -123,7 +121,7 @@ async def test_setup_relations(
     # Dashboards are in ops_test when dashboard_substrate=k8s, in ops_test_vm when vm.
 
     if traefik and dashboard_substrate == "k8s":
-        await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
+        await ops_test.model.integrate(APP_NAME, TRAEFIK_APP_NAME)
         await ops_test.model.wait_for_idle(timeout=1000)
 
     # Create certificates offer from the identity bundle model and consume in the VM model.
@@ -133,7 +131,7 @@ async def test_setup_relations(
 
     if dashboard_substrate == "k8s":
         # Dashboards are in ops_test (K8S), integrate certificates directly.
-        await ops_test.model.integrate(f"{app_name}:certificates", "self-signed-certificates")
+        await ops_test.model.integrate(f"{APP_NAME}:certificates", "self-signed-certificates")
         if traefik:
             await ops_test.model.integrate(
                 f"{TRAEFIK_APP_NAME}:certificates", "self-signed-certificates"
@@ -146,17 +144,17 @@ async def test_setup_relations(
         )
         await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
         await ops_test.model.integrate(
-            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{app_name}:opensearch-client"
+            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{APP_NAME}:opensearch-client"
         )
     else:
         # VM dashboards are in ops_test_vm alongside opensearch.
         # Consume certificates in the VM model for dashboards too.
-        await ops_test_vm.model.integrate(f"{app_name}:certificates", "certificates")
+        await ops_test_vm.model.integrate(f"{APP_NAME}:certificates", "certificates")
         await ops_test_vm.model.wait_for_idle(timeout=1000)
 
         # Opensearch and dashboards are in the same VM model — integrate directly.
         await ops_test_vm.model.integrate(
-            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{app_name}:opensearch-client"
+            f"{OPENSEARCH_APP_NAME}:opensearch-client", f"{APP_NAME}:opensearch-client"
         )
 
     await gather(
@@ -171,10 +169,10 @@ async def test_setup_relations(
 
     if dashboard_substrate == "k8s":
         # Dashboards in ops_test — integrate with hydra directly (same model).
-        await ops_test.model.integrate(f"{app_name}:oauth", "hydra:oauth")
+        await ops_test.model.integrate(f"{APP_NAME}:oauth", "hydra:oauth")
     else:
         # VM dashboards in ops_test_vm — consume the same oauth offer.
-        await ops_test_vm.model.integrate(f"{app_name}:oauth", "oauth")
+        await ops_test_vm.model.integrate(f"{APP_NAME}:oauth", "oauth")
 
     await gather(
         ops_test_vm.model.wait_for_idle(status="active"),
@@ -192,13 +190,12 @@ async def test_oauth(
     test_flags: Flags,
 ):
     """Ensure that SSO works for OpenSearch Dashboards login."""
-    app_name = METADATA_K8S["name"] if dashboard_substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
 
     # Dashboards is in ops_test for k8s, in ops_test_vm for vm.
     ops_test_dashboards = ops_test if dashboard_substrate == "k8s" else ops_test_vm
 
-    unit = ops_test_dashboards.model.applications[app_name].units[0]
+    unit = ops_test_dashboards.model.applications[APP_NAME].units[0]
     host, port, path, _ = await get_dashboard_routing(
         ops_test_dashboards,
         unit.name,

@@ -9,17 +9,14 @@ from ops import Object, RelationCreatedEvent
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
-    CLUSTER_MANAGER_NAME,
     INGRESS_REL_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
     IngressPerAppReadyEvent,
     IngressPerAppRevokedEvent,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +50,7 @@ class IngressEvents(Object):
 
     def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent) -> None:
         """Handle ingress revoked event."""
-        if is_app_removal(self.charm.base, event):
+        if self.charm.is_app_removal(event):
             return
 
         logger.warning("Ingress revoked, falling back to direct access.")

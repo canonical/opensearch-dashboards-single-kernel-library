@@ -25,8 +25,8 @@ from .helpers_jwt import generate_json_web_token
 
 logger = logging.getLogger(__name__)
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+APP_NAME = METADATA["name"]
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -125,12 +125,11 @@ async def test_dashboard_access(
     test_flags: Flags,
 ):
     """Test access to dashboard unit with JWT and basic auth."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
 
     # Calculate protocol depending on tls/traefik state
     protocol = "https" if is_https_enabled(test_flags) else "http"
-    unit = ops_test.model.applications[app_name].units[0]
+    unit = ops_test.model.applications[APP_NAME].units[0]
     host, port, path, _ = await get_dashboard_routing(
         ops_test,
         unit.name,
@@ -144,8 +143,8 @@ async def test_dashboard_access(
     assert jwt_result.status_code == 200, "Request failed"
     logger.info("Access with JWT successful")
 
-    logger.info(f"Remove relation of {JWT_APP_NAME} with {app_name}")
-    await ops_test.juju("remove-relation", JWT_APP_NAME, app_name)
+    logger.info(f"Remove relation of {JWT_APP_NAME} with {APP_NAME}")
+    await ops_test.juju("remove-relation", JWT_APP_NAME, APP_NAME)
 
     logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
     await ops_test_vm.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)

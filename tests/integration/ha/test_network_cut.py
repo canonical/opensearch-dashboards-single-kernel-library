@@ -13,8 +13,7 @@ from pytest_operator.plugin import OpsTest
 import tests.integration.ha.helpers as ha_helpers
 from tests.integration.conftest import Flags
 from tests.integration.helpers import (
-    METADATA_K8S,
-    METADATA_VM,
+    APP_NAME,
     OPENSEARCH_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -155,11 +154,10 @@ async def test_network_cut_ip_change_leader_http(
     test_flags: Flags,
 ):
     """Full network cut for the leader, resulting in IP change."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     tls = test_flags.test_tls
 
-    old_leader_name = await get_leader_name(ops_test, app_name)
-    old_ip = await get_address(ops_test, old_leader_name, app_name, substrate)
+    old_leader_name = await get_leader_name(ops_test, APP_NAME)
+    old_ip = await get_address(ops_test, old_leader_name, APP_NAME, substrate)
 
     if substrate == "k8s":
         # We can't simulate network cut for k8s pod same way as the VM
@@ -176,7 +174,7 @@ async def test_network_cut_ip_change_leader_http(
         await asyncio.sleep(lease_timeout)
 
         logger.info("Waiting for stabilize")
-        await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
     else:
         # VM
@@ -197,18 +195,18 @@ async def test_network_cut_ip_change_leader_http(
         await ops_test_vm.model.block_until(
             lambda: (
                 ["unknown", "lost"]
-                == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name)
+                == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, APP_NAME)
             ),
             timeout=LONG_TIMEOUT,
             wait_period=LONG_WAIT,
         )
 
         logger.info("Waiting for stabilize")
-        await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
 
         logger.info("Checking new leader was elected")
         await ops_test.model.block_until(
-            lambda: old_leader_name != get_leader_name(ops_test, app_name),
+            lambda: old_leader_name != get_leader_name(ops_test, APP_NAME),
             timeout=LONG_TIMEOUT,
             wait_period=LONG_WAIT,
         )
@@ -227,12 +225,12 @@ async def test_network_cut_ip_change_leader_http(
 
     logger.info("Waiting for Juju to detect new IP...")
     await ops_test.model.block_until(
-        lambda: old_ip not in ha_helpers.get_hosts_from_status(ops_test, app_name).values(),
+        lambda: old_ip not in ha_helpers.get_hosts_from_status(ops_test, APP_NAME).values(),
         timeout=LONG_TIMEOUT,
         wait_period=LONG_WAIT,
     )
 
-    new_ip = await get_address(ops_test, old_leader_name, app_name, substrate)
+    new_ip = await get_address(ops_test, old_leader_name, APP_NAME, substrate)
     assert new_ip != old_ip
     logger.info(f"Old IP {old_ip} has changed to {new_ip}...")
 
@@ -241,7 +239,7 @@ async def test_network_cut_ip_change_leader_http(
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
     )
-    await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
@@ -255,10 +253,9 @@ async def test_network_cut_no_ip_change_leader_http(
     test_flags: Flags,
 ):
     """Network interrupt for the leader without IP change."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     tls = test_flags.test_tls
-    old_leader_name = await get_leader_name(ops_test, app_name)
-    old_ip = await get_address(ops_test, old_leader_name, app_name, substrate)
+    old_leader_name = await get_leader_name(ops_test, APP_NAME)
+    old_ip = await get_address(ops_test, old_leader_name, APP_NAME, substrate)
 
     if substrate == "k8s":
         pod_name = old_leader_name.replace("/", "-")
@@ -287,7 +284,7 @@ async def test_network_cut_no_ip_change_leader_http(
     await ops_test.model.block_until(
         lambda: (
             ["unknown", "lost"]
-            == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name=app_name)
+            == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, app_name=APP_NAME)
         ),
         timeout=LONG_TIMEOUT,
         wait_period=LONG_WAIT,
@@ -295,7 +292,7 @@ async def test_network_cut_no_ip_change_leader_http(
 
     logger.info("Checking leader re-election...")
     await ops_test.model.block_until(
-        lambda: old_leader_name != get_leader_name(ops_test, app_name),
+        lambda: old_leader_name != get_leader_name(ops_test, APP_NAME),
         timeout=LONG_TIMEOUT,
         wait_period=LONG_WAIT,
     )
@@ -326,7 +323,7 @@ async def test_network_cut_no_ip_change_leader_http(
     )
 
     # Double-checking that the network throttle didn't change the IP
-    current_ip = await get_address(ops_test, old_leader_name, app_name, substrate)
+    current_ip = await get_address(ops_test, old_leader_name, APP_NAME, substrate)
     assert old_ip == current_ip
 
     await ops_test_vm.model.wait_for_idle(
@@ -334,7 +331,7 @@ async def test_network_cut_no_ip_change_leader_http(
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
     )
-    await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
@@ -348,16 +345,15 @@ async def test_network_cut_ip_change_application_http(
     test_flags: Flags,
 ):
     """Full network cut for the whole application, resulting in IP change."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     tls = test_flags.test_tls
     logger.info("Cutting all units from network...")
     unit_ip_map = {}
     if substrate == "k8s":
         k8s_units = []
-        for unit in ops_test.model.applications[app_name].units:
+        for unit in ops_test.model.applications[APP_NAME].units:
             pod_name = unit.name.replace("/", "-")
             namespace = ops_test.model.info.name
-            ip = await get_address(ops_test, unit.name, app_name, substrate)
+            ip = await get_address(ops_test, unit.name, APP_NAME, substrate)
 
             logger.info(f"Pod deleted on {unit.name} (Pod: {pod_name})...")
             ha_helpers.network_cut_k8s(pod_name, namespace)
@@ -372,9 +368,9 @@ async def test_network_cut_ip_change_application_http(
         ips = list(unit_ip_map.values())
     else:
         machines = []
-        for unit in ops_test.model.applications[app_name].units:
+        for unit in ops_test.model.applications[APP_NAME].units:
             machine_name = await ha_helpers.get_unit_machine_name(ops_test, unit.name)
-            ip = await get_address(ops_test, unit.name, app_name, substrate)
+            ip = await get_address(ops_test, unit.name, APP_NAME, substrate)
 
             logger.info(f"Cutting unit {unit.name} from network...")
             ha_helpers.cut_unit_network(machine_name)
@@ -396,7 +392,7 @@ async def test_network_cut_ip_change_application_http(
         await ops_test.model.block_until(
             lambda: all(
                 ["unknown", "lost"]
-                == ha_helpers.get_unit_state_from_status(ops_test, unit, app_name)
+                == ha_helpers.get_unit_state_from_status(ops_test, unit, APP_NAME)
                 for unit in units
             ),
             timeout=LONG_TIMEOUT,
@@ -416,8 +412,8 @@ async def test_network_cut_ip_change_application_http(
     logger.info("Waiting for Juju to detect new IPs...")
     await ops_test.model.block_until(
         lambda: all(
-            ha_helpers.get_hosts_from_status(ops_test, app_name).get(unit_name)
-            and ha_helpers.get_hosts_from_status(ops_test, app_name)[unit_name]
+            ha_helpers.get_hosts_from_status(ops_test, APP_NAME).get(unit_name)
+            and ha_helpers.get_hosts_from_status(ops_test, APP_NAME)[unit_name]
             != unit_ip_map[unit_name]
             for unit_name in unit_ip_map
         ),
@@ -426,7 +422,7 @@ async def test_network_cut_ip_change_application_http(
     )
 
     for unit, old_ip in unit_ip_map.items():
-        new_ip = await get_address(ops_test, unit, app_name, substrate)
+        new_ip = await get_address(ops_test, unit, APP_NAME, substrate)
         assert new_ip != old_ip
         logger.info(f"Old IP {old_ip} has changed to {new_ip}...")
 
@@ -435,7 +431,7 @@ async def test_network_cut_ip_change_application_http(
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
     )
-    await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
@@ -451,14 +447,13 @@ async def test_network_no_ip_change_application_http(
     """Network interrupt for the whole application without IP change."""
     logger.info("Cutting all units from network...")
     unit_ip_map = {}
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     tls = test_flags.test_tls
     if substrate == "k8s":
         k8s_units = []
-        for unit in ops_test.model.applications[app_name].units:
+        for unit in ops_test.model.applications[APP_NAME].units:
             pod_name = unit.name.replace("/", "-")
             namespace = ops_test.model.info.name
-            ip = await get_address(ops_test, unit.name, app_name, substrate)
+            ip = await get_address(ops_test, unit.name, APP_NAME, substrate)
 
             logger.info(f"Network throttle on {unit.name} (Pod: {pod_name})...")
             ha_helpers.network_throttle_k8s(pod_name, namespace)
@@ -470,9 +465,9 @@ async def test_network_no_ip_change_application_http(
         ips = list(unit_ip_map.values())
     else:
         machines = []
-        for unit in ops_test.model.applications[app_name].units:
+        for unit in ops_test.model.applications[APP_NAME].units:
             machine_name = await ha_helpers.get_unit_machine_name(ops_test, unit.name)
-            ip = await get_address(ops_test, unit.name, app_name, substrate)
+            ip = await get_address(ops_test, unit.name, APP_NAME, substrate)
 
             logger.info(f"Cutting unit {unit.name} from network...")
             ha_helpers.network_throttle(machine_name)
@@ -493,7 +488,7 @@ async def test_network_no_ip_change_application_http(
     logger.info(f"Waiting until unit {units} are 'lost'")
     await ops_test.model.block_until(
         lambda: all(
-            ["unknown", "lost"] == ha_helpers.get_unit_state_from_status(ops_test, unit, app_name)
+            ["unknown", "lost"] == ha_helpers.get_unit_state_from_status(ops_test, unit, APP_NAME)
             for unit in units
         ),
         timeout=LONG_TIMEOUT,
@@ -526,8 +521,8 @@ async def test_network_no_ip_change_application_http(
 
     # Double-checking that the network throttle didn't change the IP
     assert all(
-        ha_helpers.get_hosts_from_status(ops_test, app_name).get(unit)
-        and ha_helpers.get_hosts_from_status(ops_test, app_name)[unit] == unit_ip_map[unit]
+        ha_helpers.get_hosts_from_status(ops_test, APP_NAME).get(unit)
+        and ha_helpers.get_hosts_from_status(ops_test, APP_NAME)[unit] == unit_ip_map[unit]
         for unit in unit_ip_map
     )
 
@@ -536,7 +531,7 @@ async def test_network_no_ip_change_application_http(
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
     )
-    await ops_test.model.wait_for_idle(apps=[app_name], wait_for_active=True, timeout=LONG_TIMEOUT)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)

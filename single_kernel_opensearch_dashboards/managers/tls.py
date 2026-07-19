@@ -185,6 +185,9 @@ class TLSManager(BaseManager):
         """Compute the tls manager's statuses."""
         status_list: list[StatusObject] = []
 
+        if self.state.app_removal:
+            return status_list
+
         if self.state.unit_server:
             if not self.state.unit_server.tls_enabled and self.state.oauth_relation:
                 status_list.append(ServerStatuses.NO_TLS.value)

@@ -22,7 +22,6 @@ from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import is_app_removal
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +53,19 @@ class RequirerEvents(Object):
         if not self.state.stable:
             event.defer()
             return
+
+        if not self.charm.pre_restart_check():
+            event.defer()
+            return
+
+        # The opensearch fills the databag only after index creation;
+        # don't restart until it's finished, another relation-changed
+        # will fire once the index is created
+        server = self.state.opensearch_server
+        if not (server and server.password and server.endpoints and server.tls_ca):
+            logger.debug("OpenSearch relation data incomplete, not restarting")
+            return
+
         try:
             self.tls_manager.set_ca_opensearch()
             self.charm.emit_restart(event)
@@ -69,7 +81,11 @@ class RequirerEvents(Object):
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
         # do not bother reconfiguring/restarting a unit that is going down anyway
-        if is_app_removal(self.charm.base, event):
+        if self.charm.is_app_removal(event):
+            return
+
+        if not self.charm.pre_restart_check():
+            event.defer()
             return
 
         self.state.add_status_to_both(

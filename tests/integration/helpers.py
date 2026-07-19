@@ -34,11 +34,9 @@ from tenacity import (
 
 from .conftest import Flags
 
-METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
-K8s_APP_NAME = METADATA_K8S["name"]
+APP_NAME = METADATA["name"]
 
 OPENSEARCH_APP_NAME = "opensearch"
 CONFIG_OPTS = {"profile": "testing"}
@@ -61,7 +59,7 @@ COS_AGENT_RELATION_NAME = "cos-agent"
 DB_CLIENT_APP_NAME = "application"
 TRAEFIK_APP_NAME = "traefik-k8s"
 RESOURCE = {
-    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+    "opensearch-dashboards-image": METADATA["resources"]["opensearch-dashboards-image"][
         "upstream-source"
     ]
 }
@@ -172,7 +170,6 @@ async def deploy_base(
     """
     if resource is None:
         resource = RESOURCE
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     model_config = opensearch_config if opensearch_config is not None else OPENSEARCH_CONFIG
 
     await ops_test_vm.model.set_config(model_config)
@@ -190,12 +187,12 @@ async def deploy_base(
     await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
     deploy_kwargs: dict = {
-        "application_name": app_name,
+        "application_name": APP_NAME,
         "num_units": num_units_app,
     }
     # for upgrades test we need to pull dashboards from 2/stable and 2/edge, not local one
     if charm_channel:
-        charm = app_name
+        charm = APP_NAME
         deploy_kwargs["channel"] = charm_channel
         deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
     else:
@@ -217,9 +214,9 @@ async def deploy_base(
     await ops_test_vm.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
-    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, app_name)
+    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
 
-    return app_name
+    return APP_NAME
 
 
 def get_relations(ops_test: OpsTest, name: str, app_name: str = "remote-") -> list[Relation]:
@@ -318,7 +315,7 @@ async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
             )
 
     app_name = unit_name.split("/")[0]
-    if DUMMY_CHARM in ops_test.model.applications and app_name == K8s_APP_NAME:
+    if DUMMY_CHARM in ops_test.model.applications:
         unit_id = unit_name.split("/")[1]
         host = f"{app_name}-{unit_id}.{app_name}-endpoints"
     else:

@@ -175,6 +175,9 @@ class ConfigManager(BaseManager):
         """Compute the config manager's statuses."""
         status_list: list[StatusObject] = []
 
+        if self.state.app_removal:
+            return status_list
+
         if not self.state.peer_relation:
             status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)
 

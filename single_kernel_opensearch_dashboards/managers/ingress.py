@@ -43,6 +43,9 @@ class IngressManager(BaseManager):
 
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the ingress manager's statuses."""
+        if self.state.app_removal:
+            return []
+
         if self.state.substrate == Substrates.VM:
             if self.state.ingress_relation:
                 return [ServerStatuses.INGRESS_RELATION_IN_VM.value]

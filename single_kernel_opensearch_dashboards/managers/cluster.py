@@ -54,6 +54,9 @@ class ClusterManager(BaseManager):
         """Compute the server manager's statuses."""
         status_list: list[StatusObject] = []
 
+        if self.state.app_removal:
+            return [CharmStatuses.APP_BEING_DESTROYED.value]
+
         if not self.state.upgrade_idle:
             return status_list
 

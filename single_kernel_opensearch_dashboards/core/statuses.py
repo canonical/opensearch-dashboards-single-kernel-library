@@ -20,6 +20,11 @@ class CharmStatuses(Enum):
         message="Removing unit",
     )
 
+    APP_BEING_DESTROYED = StatusObject(
+        status="maintenance",
+        message="App is being destroyed",
+    )
+
 
 class ConfigStatuses(Enum):
     """Config related statuses."""
@@ -75,6 +80,12 @@ class HealthStatuses(Enum):
     STATUS_HANGING = StatusObject(
         status="blocked",
         message="API does not respond, request hanging",
+    )
+
+    FILE_OPERATION_FAILED = StatusObject(
+        status="blocked",
+        message="Cannot access workload files to check health",
+        short_message="Cannot access workload files",
     )
 
     STATUS_UNHEALTHY = StatusObject(
@@ -157,6 +168,12 @@ class ServerStatuses(Enum):
     COS_RELATION_IN_VM = StatusObject(
         status="blocked",
         message="The grafana-k8s, loki-k8s, prometheus-k8s relation is not supported for VM deployments.",
+    )
+
+    GRAFANA_DASHBOARD_INVALID = StatusObject(
+        status="blocked",
+        message="The Grafana dashboard file is unreadable or not a JSON object",
+        short_message="Grafana dashboard file is invalid",
     )
 
     WAITING_ON_RESTART = StatusObject(

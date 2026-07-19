@@ -5,7 +5,6 @@
 """Handler for General OpenSearch Dashboards charm events."""
 
 import logging
-from typing import Any, cast
 
 import ops
 from pydantic import ValidationError
@@ -13,32 +12,23 @@ from pydantic import ValidationError
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
-    CLUSTER_MANAGER_NAME,
     CONFIG_MANAGER_NAME,
-    COS_RELATION_NAME,
-    GRAFANA_RELATION_NAME,
-    LOKI_RELATION_NAME,
-    PROMETHEUS_RELATION_NAME,
-    UPGRADE_MANAGER_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
     ServerStatuses,
-    UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 from ops import (
-    CharmBase,
     ConfigChangedEvent,
     EventBase,
     InstallEvent,
     Object,
     RelationChangedEvent,
-    RelationCreatedEvent,
     RelationDepartedEvent,
     SecretChangedEvent,
     SecretNotFoundError,
@@ -46,10 +36,6 @@ from ops import (
 
 from single_kernel_opensearch_dashboards.common.literals import (
     PEERS_REL_NAME,
-)
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    is_app_removal,
-    update_grafana_dashboards_title,
 )
 
 
@@ -113,7 +99,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_start(self, event: EventBase) -> None:
         """Handle the `start` event."""
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -131,9 +117,9 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_update_status(self, event: EventBase) -> None:
         """Handle the `update-status` event."""
-        update_grafana_dashboards_title(cast(CharmBase, cast(Any, self.charm)))
+        self.charm.cos_manager.update_grafana_dashboards_title()
 
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -142,10 +128,10 @@ class OpenSearchDashboardsEvents(Object):
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Handle the peer `relation-departed` event."""
         # do not restart a unit that is dying, or an application going down
-        if is_app_removal(self.charm.base, event):
+        if self.charm.is_app_removal(event):
             return
 
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -153,7 +139,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_leader_elected(self, event: EventBase) -> None:
         """Handle the `leader-elected` event."""
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -161,7 +147,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         """Handle the `config-changed` event."""
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -178,10 +164,10 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle `relation-changed` and `relation-joined` events for peers."""
-        if is_app_removal(self.charm.base, event):
+        if self.charm.is_app_removal(event):
             return
 
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -189,7 +175,7 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         """Handle the `secret-changed` event."""
-        if not self.pre_restart_check():
+        if not self.charm.pre_restart_check():
             event.defer()
             return
 
@@ -201,28 +187,3 @@ class OpenSearchDashboardsEvents(Object):
         ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
             logger.info(f"Secret {event.secret.label} changed.")
             self.charm.emit_restart(event)
-
-    def pre_restart_check(self) -> bool:
-        """Perform pre-flight checks to determine if a restart can proceed."""
-        # CONTAINER CHECK
-        if not self.workload.ready():
-            return False
-
-        # PEER RELATION CHECK
-        if not self.state.peer_relation:
-            logger.debug("Waiting for peer relations")
-            self.state.add_status_to_both(
-                status=ConfigStatuses.WAITING_FOR_PEER.value, component=CONFIG_MANAGER_NAME
-            )
-            return False
-
-        # UPGRADE IDLE CHECK
-        if not self.state.upgrade_idle:
-            logger.debug("Waiting for upgrade relations to be idle")
-            self.state.add_status_to_both(
-                status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
-                component=UPGRADE_MANAGER_NAME,
-            )
-            return False
-
-        return True

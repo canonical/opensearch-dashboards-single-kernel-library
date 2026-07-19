@@ -101,6 +101,9 @@ class UpgradeManager(BaseManager):
         """Compute the upgrade manager's statuses."""
         status_list: list[StatusObject] = []
 
+        if self.state.app_removal:
+            return status_list
+
         if not self.version_compatible() and scope == "unit":
             status_list.append(UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value)
 

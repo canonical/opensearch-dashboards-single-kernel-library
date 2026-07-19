@@ -18,16 +18,20 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDNotTrusted,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
+    UPGRADE_MANAGER_NAME,
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
+    ConfigStatuses,
     HealthStatuses,
     ServerStatuses,
+    UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.events.cos import COSEvents
 from single_kernel_opensearch_dashboards.events.ingress import IngressEvents
@@ -151,6 +155,43 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
     def substrate(self) -> Substrates:
         """Access current substrate."""
         ...
+
+    def is_app_removal(self, event: EventBase) -> bool:
+        """Returns True if the local application, or this unit specifically, is going down.
+
+        Args:
+            event: the event being handled, if it carries a `departing_unit` (e.g. a
+                peer `relation-departed` event) this unit is checked against it.
+        """
+        if getattr(event, "departing_unit", None) == self.unit:
+            return True
+
+        return self.state.app_removal
+
+    def pre_restart_check(self) -> bool:
+        """Perform pre-flight checks to determine if a restart can proceed."""
+        # CONTAINER CHECK
+        if not self.workload.ready():
+            return False
+
+        # PEER RELATION CHECK
+        if not self.state.peer_relation:
+            logger.debug("Waiting for peer relations")
+            self.state.add_status_to_both(
+                status=ConfigStatuses.WAITING_FOR_PEER.value, component=CONFIG_MANAGER_NAME
+            )
+            return False
+
+        # UPGRADE IDLE CHECK
+        if not self.state.upgrade_idle:
+            logger.debug("Waiting for upgrade relations to be idle")
+            self.state.add_status_to_both(
+                status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
+                component=UPGRADE_MANAGER_NAME,
+            )
+            return False
+
+        return True
 
     def restart_on_lock_acquired(self, event: EventBase) -> None:
         """RollingOpsManager callback: apply config, restart, then verify health."""
