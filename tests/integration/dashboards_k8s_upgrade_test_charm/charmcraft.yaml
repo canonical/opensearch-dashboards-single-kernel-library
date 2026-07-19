@@ -85,5 +85,4 @@ parts:
     plugin: dump
     source: .
     stage:
-      - LICENSE
       - workload_version
