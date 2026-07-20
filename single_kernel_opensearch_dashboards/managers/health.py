@@ -109,10 +109,7 @@ class HealthManager(BaseManager):
     def check_unit_health(self) -> bool:
         """Returns true if OSD is healthy otherwise false"""
 
-        for _ in range(3):
-            if self.workload.healthy():
-                break
-        else:
+        if not self.workload.healthy():
             return False
 
         # Do not check health of OSD or OS if not connected to opensearch (no credentials)
@@ -176,10 +173,8 @@ class HealthManager(BaseManager):
 
         Returns true if OSD is healthy otherwise false
         """
-        for _ in range(3):
-            if self.workload.healthy():
-                break
-        else:
+
+        if not self.workload.healthy():
             self.state.add_status_to_both(
                 status=HealthStatuses.WORKLOAD_IS_DOWN.value, component=self.name
             )
@@ -213,7 +208,7 @@ class HealthManager(BaseManager):
         """Compute the health manager's statuses."""
         status_list: list[StatusObject] = []
 
-        if self.state.app_removal:
+        if self.state.unit_stopping or self.state.app_removal:
             return status_list
 
         if not self.state.upgrade_idle:

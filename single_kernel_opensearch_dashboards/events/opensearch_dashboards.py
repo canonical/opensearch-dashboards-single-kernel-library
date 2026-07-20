@@ -71,6 +71,7 @@ class OpenSearchDashboardsEvents(Object):
         )
 
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        self.framework.observe(self.charm.on.stop, self._on_stop)
         if self.state.substrate == Substrates.K8S:
             self.framework.observe(
                 self.charm.on.opensearch_dashboards_pebble_ready, self._on_pebble_ready
@@ -187,3 +188,7 @@ class OpenSearchDashboardsEvents(Object):
         ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
             logger.info(f"Secret {event.secret.label} changed.")
             self.charm.emit_restart(event)
+
+    def _on_stop(self, event: EventBase) -> None:
+        """Handle the `stop` event."""
+        self.state.unit_stopping = True

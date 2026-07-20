@@ -163,7 +163,7 @@ class COSManager(BaseManager):
         """Compute the cos manager's statuses."""
         status_list: list[StatusObject] = []
 
-        if self.state.app_removal:
+        if self.state.unit_stopping or self.state.app_removal:
             return status_list
 
         if self.state.substrate == Substrates.VM and (

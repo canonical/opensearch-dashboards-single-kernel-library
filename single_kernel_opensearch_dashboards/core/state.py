@@ -70,6 +70,11 @@ class ClusterState(Object, StatusesStateProtocol):
         self.substrate = substrate
         self.charm = charm
         self._servers_data = {}
+        # In-memory flag, set for the remainder of the `stop` hook dispatch so that
+        # status recomputation ( emitted by ops right after `stop`)
+        # can skip live health checks against a workload
+        # that is already being torn down.
+        self.unit_stopping = False
 
         self.peer_app_data = DataPeerData(
             self.model,

@@ -91,6 +91,13 @@ class K8sWorkload(WorkloadBase):
             raise
 
     @override
+    @retry(
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(5),
+        retry_error_callback=lambda state: state.outcome.result(),
+        # type: ignore
+        retry=retry_if_not_result(lambda result: True if result else False),
+    )
     def restart(self) -> bool:
         """Restarts the workload services and verifies their status.
 
@@ -168,6 +175,13 @@ class K8sWorkload(WorkloadBase):
         return stdout
 
     @override
+    @retry(
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(5),
+        retry_error_callback=lambda state: state.outcome.result(),
+        # type: ignore
+        retry=retry_if_not_result(lambda result: True if result else False),
+    )
     def healthy(self) -> bool:
         """Checks if the workload is healthy.
 

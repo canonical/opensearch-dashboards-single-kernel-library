@@ -45,6 +45,10 @@ class IngressEvents(Object):
 
     def _on_ingress_ready(self, event: IngressPerAppReadyEvent) -> None:
         """Handle ingress ready event."""
+        if not self.charm.pre_restart_check():
+            event.defer()
+            return
+
         logger.info("Ingress ready at: %s", event.url)
         self.charm.emit_restart(event)
 

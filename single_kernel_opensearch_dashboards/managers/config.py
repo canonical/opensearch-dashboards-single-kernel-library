@@ -175,7 +175,7 @@ class ConfigManager(BaseManager):
         """Compute the config manager's statuses."""
         status_list: list[StatusObject] = []
 
-        if self.state.app_removal:
+        if self.state.unit_stopping or self.state.app_removal:
             return status_list
 
         if not self.state.peer_relation:

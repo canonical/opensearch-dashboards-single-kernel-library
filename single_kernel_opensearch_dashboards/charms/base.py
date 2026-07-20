@@ -170,6 +170,9 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
 
     def pre_restart_check(self) -> bool:
         """Perform pre-flight checks to determine if a restart can proceed."""
+        if self.state.app_removal:
+            return False
+
         # CONTAINER CHECK
         if not self.workload.ready():
             return False

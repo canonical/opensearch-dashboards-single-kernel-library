@@ -8,6 +8,14 @@ import logging
 
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
+from lightkube import Client
+from lightkube.models.authorization_v1 import (
+    ResourceAttributes,
+    SelfSubjectAccessReviewSpec,
+)
+from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
+from ops import ModelError
+from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
@@ -97,11 +105,40 @@ class UpgradeManager(BaseManager):
         logger.info(f"{self.state.unit.name} upgrading workload...")
         self.workload.restart()
 
+    def is_charm_trusted(self, namespace: str) -> bool:
+        """Checks if the charm has RBAC permissions to patch StatefulSets."""
+        resource_attrs = ResourceAttributes(
+            namespace=namespace, verb="patch", group="apps", resource="statefulsets"
+        )
+
+        review = SelfSubjectAccessReview(
+            spec=SelfSubjectAccessReviewSpec(resourceAttributes=resource_attrs)
+        )
+
+        try:
+            for attempt in Retrying(
+                stop=stop_after_attempt(3),
+                wait=wait_fixed(1),
+                reraise=True,
+            ):
+                with attempt:
+                    response = Client().create(review)
+            return response.status.allowed
+        except Exception as e:
+            logger.error(f"Failed to check permissions: {e}")
+            return False
+
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the upgrade manager's statuses."""
         status_list: list[StatusObject] = []
 
-        if self.state.app_removal:
+        if self.state.unit_stopping or self.state.app_removal:
+            return status_list
+
+        try:
+            if self.state.model.name and not self.is_charm_trusted(self.state.model.name):
+                return status_list
+        except ModelError:
             return status_list
 
         if not self.version_compatible() and scope == "unit":

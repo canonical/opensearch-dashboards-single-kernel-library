@@ -31,6 +31,7 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
 )
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
+    UpgradeManager,
 )
 from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 
@@ -44,7 +45,7 @@ METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml"
 
 
 def _begin_k8s_harness(mocker):
-    mocker.patch.object(UpgradeEvents, "is_charm_trusted", return_value=True)
+    mocker.patch.object(UpgradeManager, "is_charm_trusted", return_value=True)
     harness = Harness(
         OpenSearchDashboardsK8sCharm,
         meta=METADATA,

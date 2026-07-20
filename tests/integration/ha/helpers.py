@@ -329,7 +329,7 @@ def network_cut_k8s(pod_name: str, namespace: str) -> None:
     v1.delete_namespaced_pod(
         name=pod_name,
         namespace=namespace,
-        body=k8s_client.V1DeleteOptions(grace_period_seconds=0),
+        body=k8s_client.V1DeleteOptions(grace_period_seconds=1),
     )
 
 
