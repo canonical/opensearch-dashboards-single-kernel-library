@@ -80,7 +80,7 @@ def dashboard_tester_charm() -> str:
 @pytest.fixture
 def dashboard_k8s_upgrade_charm(charm_base) -> str:
     """Path to the k8s upgrade test charm (old version to upgrade from)."""
-    return f"./tests/integration/dashboards_k8s_upgrade_test_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
+    return f"./tests/integration/dashboards_k8s_upgrade_test_charm/opensearch-dashboards_{charm_base}-amd64.charm"
 
 
 def pytest_addoption(parser):

@@ -21,7 +21,7 @@ from tests.integration.helpers import k8s_exec
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"
