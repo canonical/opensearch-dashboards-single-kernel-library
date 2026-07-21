@@ -122,15 +122,6 @@ class COSManager(BaseManager):
 
         return dashboard
 
-    def grafana_dashboard_valid(self) -> bool:
-        """Whether the Grafana dashboard file shipped with the charm is usable.
-
-        A charm packed without the dashboard file is not considered broken.
-        """
-        if not (self.charm.charm_dir / self.GRAFANA_DASHBOARD_PATH).exists():
-            return True
-        return self.load_grafana_dashboard() is not None
-
     def update_grafana_dashboards_title(self) -> None:
         """Update the title of the Grafana dashboard file to include the charm revision."""
         dashboard = self.load_grafana_dashboard()
@@ -174,8 +165,5 @@ class COSManager(BaseManager):
             status_list.append(ServerStatuses.COS_RELATION_IN_VM.value)
         elif self.state.substrate == Substrates.K8S and self.state.cos_agent_relation:
             status_list.append(ServerStatuses.COS_RELATION_IN_K8s.value)
-
-        if self.state.upgrade_idle and not self.grafana_dashboard_valid():
-            status_list.append(ServerStatuses.GRAFANA_DASHBOARD_INVALID.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

@@ -15,14 +15,9 @@ class CharmStatuses(Enum):
         message="",
     )
 
-    REMOVING_UNIT = StatusObject(
-        status="maintenance",
-        message="Removing unit",
-    )
-
     APP_BEING_DESTROYED = StatusObject(
         status="maintenance",
-        message="App is being destroyed",
+        message="Application removal...",
     )
 
 
@@ -157,23 +152,17 @@ class ServerStatuses(Enum):
     )
 
     INGRESS_RELATION_IN_VM = StatusObject(
-        status="blocked", message="The ingress relation is not supported for VM deployments."
+        status="blocked", message="The ingress relation are not supported for VM deployments."
     )
 
     COS_RELATION_IN_K8s = StatusObject(
         status="blocked",
-        message="The grafana-agent relation is not supported for K8s deployments.",
+        message="The grafana-agent relation are not supported for K8s deployments.",
     )
 
     COS_RELATION_IN_VM = StatusObject(
         status="blocked",
-        message="The grafana-k8s, loki-k8s, prometheus-k8s relation is not supported for VM deployments.",
-    )
-
-    GRAFANA_DASHBOARD_INVALID = StatusObject(
-        status="blocked",
-        message="The Grafana dashboard file is unreadable or not a JSON object",
-        short_message="Grafana dashboard file is invalid",
+        message="The grafana-k8s, loki-k8s, prometheus-k8s relation are not supported for VM deployments.",
     )
 
     WAITING_ON_RESTART = StatusObject(

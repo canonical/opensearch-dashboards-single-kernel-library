@@ -4,7 +4,7 @@
 
 import json
 
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, ServerStatuses
+from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
 
 
@@ -14,27 +14,6 @@ def _set_dashboard(harness, tmp_path, content: str | None):
         path = tmp_path / COSManager.GRAFANA_DASHBOARD_PATH
         path.parent.mkdir(parents=True)
         path.write_text(content)
-
-
-def test_grafana_dashboard_valid_when_file_missing(harness, tmp_path):
-    _set_dashboard(harness, tmp_path, None)
-    assert harness.charm.cos_manager.grafana_dashboard_valid() is True
-
-
-def test_grafana_dashboard_invalid_when_not_json(harness, tmp_path):
-    _set_dashboard(harness, tmp_path, "{not json")
-    assert harness.charm.cos_manager.grafana_dashboard_valid() is False
-    assert harness.charm.cos_manager.load_grafana_dashboard() is None
-
-
-def test_grafana_dashboard_invalid_when_not_an_object(harness, tmp_path):
-    _set_dashboard(harness, tmp_path, "[1, 2]")
-    assert harness.charm.cos_manager.grafana_dashboard_valid() is False
-
-
-def test_grafana_dashboard_valid_when_json_object(harness, tmp_path):
-    _set_dashboard(harness, tmp_path, '{"title": "Dash"}')
-    assert harness.charm.cos_manager.grafana_dashboard_valid() is True
 
 
 def test_update_grafana_dashboards_title(harness, tmp_path, mocker):
@@ -80,12 +59,4 @@ def test_cos_statuses_active_without_dashboard_file(harness, tmp_path):
 
     assert harness.charm.cos_manager.get_statuses("unit", recompute=True) == [
         CharmStatuses.ACTIVE_IDLE.value
-    ]
-
-
-def test_cos_statuses_report_invalid_dashboard_file(harness, tmp_path):
-    _set_dashboard(harness, tmp_path, "{not json")
-
-    assert harness.charm.cos_manager.get_statuses("unit", recompute=True) == [
-        ServerStatuses.GRAFANA_DASHBOARD_INVALID.value
     ]
