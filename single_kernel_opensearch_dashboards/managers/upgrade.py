@@ -19,7 +19,7 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
-    UPGRADE_MANAGER_NAME,
+    UPGRADE_MANAGER_NAME, Substrates,
 )
 from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -135,11 +135,12 @@ class UpgradeManager(BaseManager):
         if self.state.unit_stopping or self.state.app_removal:
             return status_list
 
-        try:
-            if self.state.model.name and not self.is_charm_trusted(self.state.model.name):
+        if self.state.substrate == Substrates.K8S:
+            try:
+                if self.state.model.name  and not self.is_charm_trusted(self.state.model.name):
+                    return status_list
+            except ModelError:
                 return status_list
-        except ModelError:
-            return status_list
 
         if not self.version_compatible() and scope == "unit":
             status_list.append(UpgradeStatuses.DB_INCOMPATIBLE_VERSION.value)
