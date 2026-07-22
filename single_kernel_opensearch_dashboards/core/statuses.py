@@ -152,17 +152,17 @@ class ServerStatuses(Enum):
     )
 
     INGRESS_RELATION_IN_VM = StatusObject(
-        status="blocked", message="The ingress relation are not supported for VM deployments."
+        status="blocked", message="The ingress relation is not supported for VM deployments."
     )
 
     COS_RELATION_IN_K8s = StatusObject(
         status="blocked",
-        message="The grafana-agent relation are not supported for K8s deployments.",
+        message="The grafana-agent relation is not supported for K8s deployments.",
     )
 
     COS_RELATION_IN_VM = StatusObject(
         status="blocked",
-        message="The grafana-k8s, loki-k8s, prometheus-k8s relation are not supported for VM deployments.",
+        message="The grafana-k8s, loki-k8s, prometheus-k8s relations are not supported for VM deployments.",
     )
 
     WAITING_ON_RESTART = StatusObject(
