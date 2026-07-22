@@ -34,9 +34,10 @@ from tenacity import (
 
 from .conftest import Flags
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
+METADATA_K8s = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA["name"]
+APP_NAME = METADATA_VM["name"] if SUBSTRATE == "vm" else METADATA_K8s["name"]
 
 OPENSEARCH_APP_NAME = "opensearch"
 CONFIG_OPTS = {"profile": "testing"}
@@ -59,7 +60,7 @@ COS_AGENT_RELATION_NAME = "cos-agent"
 DB_CLIENT_APP_NAME = "application"
 TRAEFIK_APP_NAME = "traefik-k8s"
 RESOURCE = {
-    "opensearch-dashboards-image": METADATA["resources"]["opensearch-dashboards-image"][
+    "opensearch-dashboards-image": METADATA_K8s["resources"]["opensearch-dashboards-image"][
         "upstream-source"
     ]
 }

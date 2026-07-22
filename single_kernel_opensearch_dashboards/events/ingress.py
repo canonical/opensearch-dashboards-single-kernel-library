@@ -32,9 +32,6 @@ class IngressEvents(Object):
         super().__init__(charm, "ingress_events")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
-        self.framework.observe(
-            self.charm.on[INGRESS_REL_NAME].relation_created, self._on_relation_created
-        )
         if self.state.substrate != Substrates.VM:
             self.framework.observe(
                 self.charm.ingress_manager.ingress_requirer.on.ready, self._on_ingress_ready
@@ -59,10 +56,3 @@ class IngressEvents(Object):
 
         logger.warning("Ingress revoked, falling back to direct access.")
         self.charm.emit_restart(event)
-
-    def _on_relation_created(self, event: RelationCreatedEvent) -> None:
-        """Handle ingress relation created event."""
-        if self.state.substrate != Substrates.VM:
-            return
-
-        logger.warning("Ingress on VM charm is not possible")

@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 from tests.integration.conftest import Flags
 
 from ..helpers import (
+    APP_NAME,
     DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -23,16 +24,14 @@ from ..helpers import (
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
-
 
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     charm_base: str,
     dashboard_tester_charm: str,
     substrate: str,
@@ -41,7 +40,7 @@ async def test_build_and_deploy(
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-
+    charm = charmvm if substrate == "vm" else charmk8s
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,

@@ -151,20 +151,6 @@ class ServerStatuses(Enum):
         status="waiting", message="Ingress relation not ready."
     )
 
-    INGRESS_RELATION_IN_VM = StatusObject(
-        status="blocked", message="The ingress relation is not supported for VM deployments."
-    )
-
-    COS_RELATION_IN_K8s = StatusObject(
-        status="blocked",
-        message="The grafana-agent relation is not supported for K8s deployments.",
-    )
-
-    COS_RELATION_IN_VM = StatusObject(
-        status="blocked",
-        message="The grafana-k8s, loki-k8s, prometheus-k8s relations are not supported for VM deployments.",
-    )
-
     WAITING_ON_RESTART = StatusObject(
         status="waiting", message="Waiting on lock for server start/restart"
     )

@@ -46,7 +46,8 @@ CHANNEL_EDGE = "2/edge"
 async def _run_upgrade_scenario(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     charm_base: str,
     substrate: str,
     dashboard_tester_charm: str,
@@ -64,7 +65,7 @@ async def _run_upgrade_scenario(
     """
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-
+    charm = charmvm if substrate == "vm" else charmk8s
     app_name = await deploy_base(
         ops_test_vm=ops_test_vm,
         ops_test=ops_test,

@@ -47,8 +47,6 @@ class IngressManager(BaseManager):
             return []
 
         if self.state.substrate == Substrates.VM:
-            if self.state.ingress_relation:
-                return [ServerStatuses.INGRESS_RELATION_IN_VM.value]
             return [CharmStatuses.ACTIVE_IDLE.value]
 
         if not self.ingress_requirer.relation:

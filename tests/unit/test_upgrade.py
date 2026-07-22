@@ -39,18 +39,21 @@ logger = logging.getLogger(__name__)
 
 OPENSEARCH_APP_NAME = "opensearch"
 
-CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_charm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_charm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text()))
 
+CONFIG_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/config.yaml").read_text()))
+ACTIONS_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/actions.yaml").read_text()))
+METADATA_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text()))
 
 def _begin_k8s_harness(mocker):
     mocker.patch.object(UpgradeManager, "is_charm_trusted", return_value=True)
     harness = Harness(
         OpenSearchDashboardsK8sCharm,
-        meta=METADATA,
-        config=CONFIG,
-        actions=ACTIONS,
+        meta=METADATA_K8s,
+        config=CONFIG_K8s,
+        actions=ACTIONS_K8s,
     )
     harness.begin()
     return harness

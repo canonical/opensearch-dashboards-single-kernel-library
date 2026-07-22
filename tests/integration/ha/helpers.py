@@ -17,12 +17,10 @@ from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, retry, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.literals import SERVER_PORT
-from tests.integration.helpers import k8s_exec
+from tests.integration.helpers import APP_NAME, k8s_exec
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
 PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"
 SERVICE_DEFAULT_PATH = (

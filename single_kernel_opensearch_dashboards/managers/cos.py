@@ -157,13 +157,4 @@ class COSManager(BaseManager):
         if self.state.unit_stopping or self.state.app_removal:
             return status_list
 
-        if self.state.substrate == Substrates.VM and (
-            self.state.loki_relation
-            or self.state.grafana_relation
-            or self.state.prometheus_relation
-        ):
-            status_list.append(ServerStatuses.COS_RELATION_IN_VM.value)
-        elif self.state.substrate == Substrates.K8S and self.state.cos_agent_relation:
-            status_list.append(ServerStatuses.COS_RELATION_IN_K8s.value)
-
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

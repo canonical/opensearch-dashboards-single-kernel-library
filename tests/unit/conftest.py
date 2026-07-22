@@ -17,14 +17,17 @@ from single_kernel_opensearch_dashboards.common.literals import (
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
 )
-from tests.charms.dashboards_charm.src.charm import (
+from tests.charms.dashboards_vm_charm.src.charm import (
     OpenSearchDashboardsVMCharm as TestCharm,
 )
 
-CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_charm/config.yaml").read_text()))
-ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_charm/actions.yaml").read_text()))
-METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text()))
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text()))
 
+CONFIG_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/config.yaml").read_text()))
+ACTIONS_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/actions.yaml").read_text()))
+METADATA_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text()))
 
 @pytest.fixture(autouse=True)
 def patched_wait(mocker):

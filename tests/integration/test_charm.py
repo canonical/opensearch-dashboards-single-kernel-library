@@ -14,6 +14,7 @@ from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
 from .helpers import (
+    APP_NAME,
     CONFIG_OPTS,
     DASHBOARD_QUERY_PARAMS,
     DUMMY_CHARM,
@@ -40,8 +41,6 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
 PROMETHEUS_APP = "prometheus-k8s"
 LOKI_APP = "loki-k8s"
 GRAFANA_APP = "grafana-k8s"
@@ -60,7 +59,8 @@ NUM_UNITS_DB = 3
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     application_charm: str,
     dashboard_tester_charm: str,
     charm_base: str,
@@ -71,7 +71,7 @@ async def test_build_and_deploy(
     tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
-
+    charm = charmvm if substrate == "vm" else charmk8s
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,

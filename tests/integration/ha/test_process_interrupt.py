@@ -80,14 +80,15 @@ async def restart_delay(ops_test_vm: OpsTest, ops_test: OpsTest, substrate: str)
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     charm_base: str,
     substrate: str,
     test_flags: Flags,
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-
+    charm = charmvm if substrate == "vm" else charmk8s
     if substrate == "k8s":
         await ops_test.model.set_config(K8s_CONFIG)
 

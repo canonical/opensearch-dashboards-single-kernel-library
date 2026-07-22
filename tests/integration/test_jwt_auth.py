@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
 from .helpers import (
+    APP_NAME,
     OPENSEARCH_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -25,8 +26,6 @@ from .helpers_jwt import generate_json_web_token
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -36,7 +35,8 @@ OPENSEARCH_RELATION_NAME = "opensearch-client"
 async def test_build_and_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     charm_base: str,
     substrate: str,
     test_flags: Flags,
@@ -47,7 +47,7 @@ async def test_build_and_deploy(
 
     # Deploy JWT on the VM model alongside OpenSearch before wiring everything
     await ops_test_vm.model.deploy(JWT_APP_NAME, channel="1/edge")
-
+    charm = charmvm if substrate == "vm" else charmk8s
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,

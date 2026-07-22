@@ -19,7 +19,8 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
-    UPGRADE_MANAGER_NAME, Substrates,
+    UPGRADE_MANAGER_NAME,
+    Substrates,
 )
 from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
@@ -137,7 +138,7 @@ class UpgradeManager(BaseManager):
 
         if self.state.substrate == Substrates.K8S:
             try:
-                if self.state.model.name  and not self.is_charm_trusted(self.state.model.name):
+                if self.state.model.name and not self.is_charm_trusted(self.state.model.name):
                     return status_list
             except ModelError:
                 return status_list

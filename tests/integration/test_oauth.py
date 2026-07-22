@@ -19,7 +19,9 @@ from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
 from .helpers import (
+    APP_NAME,
     CONFIG_OPTS,
+    RESOURCE,
     get_dashboard_routing,
 )
 
@@ -27,8 +29,6 @@ pytest_plugins = ["oauth_tools.fixtures"]
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
 OPENSEARCH_APP_NAME = "opensearch"
 TRAEFIK_APP_NAME = "traefik-k8s"
 OPENSEARCH_RELATION_NAME = "opensearch-client"
@@ -46,11 +46,6 @@ DATA_INTEGRATOR_CONFIG = {
     "index-name": "admin-index",
     "extra-user-roles": "admin",
 }
-RESOURCE = {
-    "opensearch-dashboards-image": METADATA["resources"]["opensearch-dashboards-image"][
-        "upstream-source"
-    ]
-}
 
 
 @pytest.mark.abort_on_fail
@@ -58,7 +53,8 @@ RESOURCE = {
 async def test_deploy(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
+    charmvm: str,
+    charmk8s: str,
     charm_base: str,
     substrate: str,
     dashboard_substrate: str,
@@ -66,7 +62,7 @@ async def test_deploy(
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
     await ops_test_vm.model.set_config(OPENSEARCH_CONFIG)
-
+    charm = charmvm if substrate == "vm" else charmk8s
     await ops_test_vm.model.deploy(
         OPENSEARCH_APP_NAME,
         channel="2/edge",
