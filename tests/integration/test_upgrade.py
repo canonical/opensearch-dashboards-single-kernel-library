@@ -150,7 +150,7 @@ async def _run_upgrade_scenario(
     else:
         await ops_test.model.applications[app_name].refresh(path=charm)
 
-    await wait_for_dashboard_idle(ops_test, traefik)
+    await wait_for_dashboard_idle(ops_test, traefik, idle_period=60)
     # Validate access
     assert await access_all_dashboards(
         ops_test_vm, ops_test, https=is_https_enabled(test_flags), verify=tls
