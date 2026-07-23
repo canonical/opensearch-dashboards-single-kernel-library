@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 name: opensearch-dashboards-k8s
-display-name: Opensearch Dashboards
+display-name: Opensearch Dashboards K8s
 description: |
   OpenSearch Dashboard is a community-driven, Apache 2.0-licensed open source 
   user interface that lets you visualize your OpenSearch data and run and scale

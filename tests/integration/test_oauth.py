@@ -62,7 +62,6 @@ async def test_deploy(
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
     await ops_test_vm.model.set_config(OPENSEARCH_CONFIG)
-    charm = charmvm if substrate == "vm" else charmk8s
     await ops_test_vm.model.deploy(
         OPENSEARCH_APP_NAME,
         channel="2/edge",
@@ -73,12 +72,12 @@ async def test_deploy(
 
     if dashboard_substrate == "k8s":
         await ops_test.model.deploy(
-            charm, application_name=APP_NAME, base=charm_base, resources=RESOURCE
+            charmk8s, application_name=APP_NAME, base=charm_base, resources=RESOURCE
         )
         if traefik:
             await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
     else:
-        await ops_test_vm.model.deploy(charm, application_name=APP_NAME, base=charm_base)
+        await ops_test_vm.model.deploy(charmvm, application_name=APP_NAME, base=charm_base)
 
 
 @pytest.mark.abort_on_fail
