@@ -79,9 +79,13 @@ jobs:
       - name: Install prometheus snap
         run: sudo snap install prometheus
 
-      - name: Check validity of prometheus alert rules for VM + K8s charms
+      - name: Check validity of prometheus alert rules for K8s charm
         run: |
-          promtool check rules tests/charms/dashboards_charm/src/alert_rules/prometheus/*.yaml
+          promtool check rules tests/charms/dashboards_k8s_charm/src/alert_rules/prometheus/*.yaml
+
+      - name: Check validity of prometheus alert rules for VM charm
+        run: |
+          promtool check rules tests/charms/dashboards_vm_charm/src/alert_rules/prometheus/*.yaml
 
       - name: Run unit tests for prometheus alert rules
         run: |
@@ -97,7 +101,8 @@ jobs:
           - tests/integration/dashboards_application_charm
           - tests/integration/dashboards_tester_charm
           - tests/integration/dashboards_k8s_upgrade_test_charm
-          - tests/charms/dashboards_charm
+          - tests/charms/dashboards_vm_charm
+          - tests/charms/dashboards_k8s_charm
     steps:
       - name: Install CLI
         run: pipx install git+https://github.com/canonical/data-platform-workflows@v50.0.0#subdirectory=_cli
