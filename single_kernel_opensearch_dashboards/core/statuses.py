@@ -77,12 +77,6 @@ class HealthStatuses(Enum):
         message="API does not respond, request hanging",
     )
 
-    FILE_OPERATION_FAILED = StatusObject(
-        status="blocked",
-        message="Cannot access workload files to check health",
-        short_message="Cannot access workload files",
-    )
-
     STATUS_UNHEALTHY = StatusObject(
         status="blocked",
         message="OpenSearch Dashboards is not in a green health state",

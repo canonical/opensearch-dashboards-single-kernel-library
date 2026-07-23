@@ -60,7 +60,7 @@ class HealthManager(BaseManager):
             return False, HealthStatuses.STATUS_HANGING.value
         except OSDFileOperationError as e:
             logger.warning(e)
-            return False, HealthStatuses.FILE_OPERATION_FAILED.value
+            return False, HealthStatuses.STATUS_UNKNOWN.value
         except (ConnectionError, OSDAPIError, RequestException):
             return False, HealthStatuses.STATUS_UNAVAILABLE.value
 
@@ -95,7 +95,7 @@ class HealthManager(BaseManager):
                 continue
             except OSDFileOperationError as e:
                 logger.warning(e)
-                return False, HealthStatuses.FILE_OPERATION_FAILED.value
+                return False, HealthStatuses.STATUS_UNKNOWN_OS.value
 
             if code == 200:
                 state = body.get("status")
@@ -120,7 +120,6 @@ class HealthManager(BaseManager):
                 return True
         except OSDFileOperationError as e:
             logger.warning(e)
-            self.state.statuses.add(HealthStatuses.FILE_OPERATION_FAILED.value, "unit", self.name)
             return False
 
         logger.info(f"Checking health")
@@ -198,7 +197,6 @@ class HealthManager(BaseManager):
                 return
         except OSDFileOperationError as e:
             logger.warning(e)
-            self.state.statuses.add(HealthStatuses.FILE_OPERATION_FAILED.value, "unit", self.name)
             return
 
         self.wait_for_unit_health()
@@ -238,6 +236,5 @@ class HealthManager(BaseManager):
                     status_list.append(status)
         except OSDFileOperationError as e:
             logger.warning(e)
-            status_list.append(HealthStatuses.FILE_OPERATION_FAILED.value)
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

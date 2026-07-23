@@ -10,7 +10,7 @@ import responses
 from requests import ReadTimeout
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
-from single_kernel_opensearch_dashboards.core.statuses import HealthStatuses
+from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, HealthStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -298,7 +298,7 @@ def test_health_status_file_operation_failed(harness, mocker):
 
     response = harness.charm.health_manager.dashboards_status()
     assert not response[0]
-    assert response[1] == HealthStatuses.FILE_OPERATION_FAILED.value
+    assert response[1] == HealthStatuses.STATUS_UNKNOWN.value
 
 
 @pytest.mark.parametrize(
@@ -323,7 +323,7 @@ def test_health_opensearch_file_operation_failed(harness, mocker):
 
     response = harness.charm.health_manager.opensearch_status()
     assert not response[0]
-    assert response[1] == HealthStatuses.FILE_OPERATION_FAILED.value
+    assert response[1] == HealthStatuses.STATUS_UNKNOWN_OS.value
 
 
 @pytest.mark.parametrize(
@@ -339,7 +339,7 @@ def test_health_opensearch_file_operation_failed(harness, mocker):
     ],
     indirect=True,
 )
-def test_get_statuses_recompute_file_operation_failed(harness):
+def test_get_statuses_recompute_file_operation_error(harness):
     properties = MagicMock()
     properties.exists.return_value = True
     properties.read_text.side_effect = OSDFileOperationError("cannot read certificate")
@@ -351,7 +351,7 @@ def test_get_statuses_recompute_file_operation_failed(harness):
     ):
         statuses = harness.charm.health_manager.get_statuses("unit", recompute=True)
 
-    assert statuses == [HealthStatuses.FILE_OPERATION_FAILED.value]
+    assert statuses == [CharmStatuses.ACTIVE_IDLE.value]
 
 
 @pytest.mark.parametrize(
