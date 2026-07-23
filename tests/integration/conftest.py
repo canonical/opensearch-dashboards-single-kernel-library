@@ -79,13 +79,13 @@ def charmk8s(charm_base):
 @pytest.fixture
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/integration/dashboards_application_charm/application_ubuntu@22.04-amd64.charm"
+    return "./tests/integration/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
 
 
 @pytest.fixture
 def dashboard_tester_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/integration/dashboards_tester_charm/dashboard-tester_amd64.charm"
+    return "./tests/integration/dashboards_tester_charm/dashboard-tester_ubuntu@24.04-amd64.charm"
 
 
 @pytest.fixture
