@@ -106,7 +106,7 @@ jobs:
         run: |
           VERSION_NUMBER="${VERSION#v}"
 
-          for dir in . kubernetes machines; do
+          for dir in . kubernetes machine; do
             (
               cd "${dir}"
               poetry remove "${DEP_NAME}"
@@ -130,7 +130,7 @@ jobs:
 
       - name: Poetry update
         run: |
-          for dir in . kubernetes machines; do
+          for dir in . kubernetes machine; do
             (cd "${dir}" && poetry update "${DEP_NAME}")
           done
 
@@ -157,7 +157,7 @@ jobs:
           fi
 
           git checkout -b "${PR_BRANCH}"
-          git add pyproject.toml poetry.lock kubernetes/pyproject.toml kubernetes/poetry.lock machines/pyproject.toml machines/poetry.lock
+          git add pyproject.toml poetry.lock kubernetes/pyproject.toml kubernetes/poetry.lock machine/pyproject.toml machine/poetry.lock
           git commit -m "Bump ${DEP_NAME} to version ${VERSION}"
 
       - name: Push branch
