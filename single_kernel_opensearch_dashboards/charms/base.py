@@ -6,6 +6,7 @@
 
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any, cast
 
 from data_platform_helpers.advanced_statuses import StatusHandler
@@ -17,16 +18,20 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDNotTrusted,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
+    CONFIG_MANAGER_NAME,
     DASHBOARDS_NAME,
     RESTART_REL_NAME,
     SERVER_PORT,
+    UPGRADE_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
+    ConfigStatuses,
     HealthStatuses,
     ServerStatuses,
+    UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.events.ingress import IngressEvents
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
@@ -101,11 +106,10 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             protocol_self, self.state, self.workload
         )
         self.jwt_events = JwtEvents(protocol_self, self.state)
-        self.tls_events = TLSEvents(protocol_self, self.state)
+        self.tls_events = TLSEvents(protocol_self, self.state, self.workload)
         self.requirer_events = RequirerEvents(protocol_self, self.state)
         self.oauth = OAuthEvents(protocol_self, self.state)
         self.ingress_events = IngressEvents(protocol_self, self.state)
-
         try:
             self.upgrade_events = UpgradeEvents(
                 self,
@@ -131,6 +135,8 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             self.cos_manager,
         )
 
+        self.unit.set_workload_version(Path("workload_version").read_text().strip())
+
     @property
     def base(self) -> "OpenSearchDashboardsBaseCharm":
         """Return self to satisfy the StatusHandlingCharm protocol."""
@@ -148,10 +154,55 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
         """Access current substrate."""
         ...
 
+    def is_app_removal(self, event: EventBase) -> bool:
+        """Returns True if the local application, or this unit specifically, is going down.
+
+        Args:
+            event: the event being handled, if it carries a `departing_unit` (e.g. a
+                peer `relation-departed` event) this unit is checked against it.
+        """
+        if getattr(event, "departing_unit", None) == self.unit:
+            return True
+
+        return self.state.app_removal
+
+    def pre_restart_check(self) -> bool:
+        """Perform pre-flight checks to determine if a restart can proceed."""
+        if self.state.app_removal:
+            return False
+
+        # CONTAINER CHECK
+        if not self.workload.ready():
+            return False
+
+        # PEER RELATION CHECK
+        if not self.state.peer_relation:
+            logger.debug("Waiting for peer relations")
+            self.state.add_status_to_both(
+                status=ConfigStatuses.WAITING_FOR_PEER.value, component=CONFIG_MANAGER_NAME
+            )
+            return False
+
+        # UPGRADE IDLE CHECK
+        if not self.state.upgrade_idle:
+            logger.debug("Waiting for upgrade relations to be idle")
+            self.state.add_status_to_both(
+                status=UpgradeStatuses.WAITING_FOR_UPGRADE.value,
+                component=UPGRADE_MANAGER_NAME,
+            )
+            return False
+
+        return True
+
     def restart_on_lock_acquired(self, event: EventBase) -> None:
         """RollingOpsManager callback: apply config, restart, then verify health."""
         logger.debug(f"Setting dashboards properties for {event.framework.model.unit.name}")
-        self.config_manager.set_dashboard_properties()
+        try:
+            self.config_manager.set_dashboard_properties()
+        except OSDFileOperationError as e:
+            logger.warning(e)
+            event.defer()
+            return
 
         self.state.delete_status_if_present(
             status=ServerStatuses.WAITING_ON_RESTART.value,

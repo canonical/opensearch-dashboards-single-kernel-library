@@ -13,10 +13,11 @@ from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDFileOperationError,
     OSDTLSMissingDataError,
 )
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ServerStatuses,
@@ -71,6 +72,19 @@ class TLSManager(BaseManager):
             self.workload.write_text(
                 self.state.opensearch_server.tls_ca, self.workload.paths.opensearch_ca
             )
+
+    def remove_ca_opensearch(self) -> bool:
+        """Removes the stored OpenSearch CA, if present.
+
+        Returns true if remove failed
+        """
+        try:
+            if self.workload.exists(self.workload.paths.opensearch_ca):
+                self.workload.unlink(self.workload.paths.opensearch_ca)
+        except OSDFileOperationError as e:
+            logger.error(f"Operation with files is failed: {e}. Deferring event.")
+            return True
+        return False
 
     def set_certificate(self) -> None:
         """Sets the unit certificate."""
@@ -170,6 +184,9 @@ class TLSManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the tls manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.unit_stopping or self.state.app_removal:
+            return status_list
 
         if self.state.unit_server:
             if not self.state.unit_server.tls_enabled and self.state.oauth_relation:

@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+import yaml
 from ops.model import BlockedStatus
 from ops.testing import Harness
 
@@ -30,6 +31,7 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
 )
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
+    UpgradeManager,
 )
 from single_kernel_opensearch_dashboards.workload.vm import VMWorkload
 
@@ -37,18 +39,26 @@ logger = logging.getLogger(__name__)
 
 OPENSEARCH_APP_NAME = "opensearch"
 
-K8S_CONFIG = Path("tests/charms/dashboards_k8s_charm/config.yaml").read_text()
-K8S_ACTIONS = Path("tests/charms/dashboards_k8s_charm/actions.yaml").read_text()
-K8S_METADATA = Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text()
+CONFIG = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/config.yaml").read_text()))
+ACTIONS = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/actions.yaml").read_text()))
+METADATA = str(yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text()))
+
+CONFIG_K8s = str(yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/config.yaml").read_text()))
+ACTIONS_K8s = str(
+    yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/actions.yaml").read_text())
+)
+METADATA_K8s = str(
+    yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
+)
 
 
 def _begin_k8s_harness(mocker):
-    mocker.patch.object(UpgradeEvents, "is_charm_trusted", return_value=True)
+    mocker.patch.object(UpgradeManager, "is_charm_trusted", return_value=True)
     harness = Harness(
         OpenSearchDashboardsK8sCharm,
-        meta=K8S_METADATA,
-        config=K8S_CONFIG,
-        actions=K8S_ACTIONS,
+        meta=METADATA_K8s,
+        config=CONFIG_K8s,
+        actions=ACTIONS_K8s,
     )
     harness.begin()
     return harness

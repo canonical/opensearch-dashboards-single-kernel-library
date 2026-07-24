@@ -5,10 +5,8 @@ name: dashboard-tester
 title: Charm Template
 summary: Dummy charm for internal k8s HTTP/HTTPS requests
 description: Deployed alongside k8s charms to test internal hostnames and API endpoints.
-base: ubuntu@24.04
 platforms:
-  amd64:
-  arm64:
+  ubuntu@24.04:amd64:
 
 parts:
   charm:

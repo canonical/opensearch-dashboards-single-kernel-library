@@ -10,7 +10,7 @@ from functools import cached_property
 
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
-from tenacity import retry, retry_if_exception_type, Retrying
+from tenacity import Retrying, retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed

@@ -1,4 +1,4 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 type: charm
@@ -54,9 +54,9 @@ parts:
     poetry-export-extra-args: ["--only", "main,charm-libs", "--without-hashes"]
     build-packages:
       - git # Needed for dunamai (dynamic versioning)
-      - libffi-dev # Needed to build Python dependencies with Rust from source
-      - libssl-dev # Needed to build Python dependencies with Rust from source
-      - pkg-config # Needed to build Python dependencies with Rust from source
+      - libffi-dev  # Needed to build Python dependencies with Rust from source
+      - libssl-dev  # Needed to build Python dependencies with Rust from source
+      - pkg-config  # Needed to build Python dependencies with Rust from source
     override-build: |
       # Workaround for https://github.com/canonical/charmcraft/issues/2068
       # rustup used to install rustc and cargo, which are needed to build Python dependencies with Rust from source
@@ -86,3 +86,4 @@ parts:
     source: .
     stage:
       - LICENSE
+      - workload_version

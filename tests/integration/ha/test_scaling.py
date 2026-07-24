@@ -12,6 +12,7 @@ from pytest_operator.plugin import OpsTest
 from tests.integration.conftest import Flags
 
 from ..helpers import (
+    APP_NAME,
     DUMMY_CHARM,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -22,9 +23,6 @@ from ..helpers import (
 )
 
 logger = logging.getLogger(__name__)
-
-METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 
 
 @pytest.mark.skip_if_deployed
@@ -42,12 +40,11 @@ async def test_build_and_deploy(
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-
+    charm = charmvm if substrate == "vm" else charmk8s
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_app=1,
@@ -101,35 +98,34 @@ async def scale_up(
     test_flags: Flags,
 ) -> None:
     """Testing that newly added units are functional."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
-    init_units_count = len(ops_test.model.applications[app_name].units)
+    init_units_count = len(ops_test.model.applications[APP_NAME].units)
     expected = init_units_count + amount
     https = is_https_enabled(test_flags)
 
     # scale up
     if substrate == "k8s":
         logger.info(f"Adding units to {expected}")
-        await ops_test.model.applications[app_name].scale(expected)
+        await ops_test.model.applications[APP_NAME].scale(expected)
     else:
         logger.info(f"Adding {amount} units")
-        await ops_test.model.applications[app_name].add_unit(count=amount)
+        await ops_test.model.applications[APP_NAME].add_unit(count=amount)
 
     logger.info(f"Waiting for {amount} units to be added and stable")
     if substrate == "k8s" and not traefik:
         await wait_for_ingress_blocked(
-            ops_test, app_name, timeout=1000, idle_period=30, wait_for_exact_units=expected
+            ops_test, APP_NAME, timeout=1000, idle_period=30, wait_for_exact_units=expected
         )
     else:
         await ops_test.model.wait_for_idle(
-            apps=[app_name],
+            apps=[APP_NAME],
             status="active",
             wait_for_exact_units=expected,
             timeout=1000,
             idle_period=30,
         )
 
-    num_units = len(ops_test.model.applications[app_name].units)
+    num_units = len(ops_test.model.applications[APP_NAME].units)
     assert num_units == expected
 
     logger.info("Checking the functionality of the new units")
@@ -144,37 +140,36 @@ async def scale_down(
     test_flags: Flags,
 ) -> None:
     """Testing that decreasing units keeps functionality."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
     traefik = test_flags.traefik
     https = is_https_enabled(test_flags)
-    init_units_count = len(ops_test.model.applications[app_name].units)
+    init_units_count = len(ops_test.model.applications[APP_NAME].units)
     amount = len(unit_ids)
     expected = init_units_count - amount
 
     # scale down
     if substrate == "k8s":
         logger.info(f"Removing units to {expected}")
-        await ops_test.model.applications[app_name].scale(expected)
+        await ops_test.model.applications[APP_NAME].scale(expected)
     else:
         logger.info(f"Removing units {unit_ids}")
-        await ops_test.model.applications[app_name].destroy_unit(
-            *[f"{app_name}/{cnt}" for cnt in unit_ids]
+        await ops_test.model.applications[APP_NAME].destroy_unit(
+            *[f"{APP_NAME}/{cnt}" for cnt in unit_ids]
         )
 
     logger.info(f"Waiting for units {unit_ids} to be removed safely")
     if substrate == "k8s" and not traefik and expected > 0:
         await wait_for_ingress_blocked(
-            ops_test, app_name, timeout=1000, idle_period=30, wait_for_exact_units=expected
+            ops_test, APP_NAME, timeout=1000, idle_period=30, wait_for_exact_units=expected
         )
     else:
         await ops_test.model.wait_for_idle(
-            apps=[app_name],
+            apps=[APP_NAME],
             wait_for_exact_units=expected,
             timeout=1000,
             idle_period=30,
         )
 
-    num_units = len(ops_test.model.applications[app_name].units)
+    num_units = len(ops_test.model.applications[APP_NAME].units)
     assert num_units == expected
 
     logger.info("Checking the functionality of the remaining units")

@@ -18,7 +18,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ConfigStatuses,
@@ -174,6 +174,9 @@ class ConfigManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the config manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.unit_stopping or self.state.app_removal:
+            return status_list
 
         if not self.state.peer_relation:
             status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)

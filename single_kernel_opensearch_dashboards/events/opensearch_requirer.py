@@ -16,14 +16,12 @@ from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperati
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
-    RelDepartureReason,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
     OpenSearchRequiresEventHandlers,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +53,19 @@ class RequirerEvents(Object):
         if not self.state.stable:
             event.defer()
             return
+
+        if not self.charm.pre_restart_check():
+            event.defer()
+            return
+
+        # The opensearch fills the databag only after index creation;
+        # don't restart until it's finished, another relation-changed
+        # will fire once the index is created
+        server = self.state.opensearch_server
+        if not (server and server.password and server.endpoints and server.tls_ca):
+            logger.debug("OpenSearch relation data incomplete, not restarting")
+            return
+
         try:
             self.tls_manager.set_ca_opensearch()
             self.charm.emit_restart(event)
@@ -69,12 +80,12 @@ class RequirerEvents(Object):
         Args:
             event: used for passing `RelationBrokenEvent` to subsequent methods
         """
-        departing_app = event.app.name if event.app else None
-        if (
-            departing_app
-            and relation_departure_reason(self.charm.base, event.relation.name, departing_app)
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        # do not bother reconfiguring/restarting a unit that is going down anyway
+        if self.charm.is_app_removal(event):
+            return
+
+        if not self.charm.pre_restart_check():
+            event.defer()
             return
 
         self.state.add_status_to_both(
@@ -82,5 +93,8 @@ class RequirerEvents(Object):
             component=CLUSTER_MANAGER_NAME,
         )
 
-        # call normal updated handler
-        self._on_client_relation_changed(event=event)
+        if self.tls_manager.remove_ca_opensearch():
+            event.defer()
+            return
+
+        self.charm.emit_restart(event)

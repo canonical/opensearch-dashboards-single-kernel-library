@@ -2,35 +2,30 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import json
 import logging
 import time
-from pathlib import Path
-from unittest.mock import MagicMock, PropertyMock, call, mock_open, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
 import responses
+from ops import ModelError
 
+from single_kernel_opensearch_dashboards.charms.base import OpenSearchDashboardsBaseCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     CHARM_KEY,
-    CLUSTER_MANAGER_NAME,
     HEALTH_MANAGER_NAME,
-    INGRESS_MANAGER_NAME,
     OPENSEARCH_REL_NAME,
     UPGRADE_MANAGER_NAME,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     HealthStatuses,
-    ServerStatuses,
     UpgradeStatuses,
 )
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
-)
-from single_kernel_opensearch_dashboards.utils.helpers import (
-    update_grafana_dashboards_title,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,27 +33,18 @@ logger = logging.getLogger(__name__)
 OPENSEARCH_APP_NAME = "opensearch"
 
 
-@pytest.fixture
-def mocked_dashboards():
-    mock_charm = MagicMock()
-    mock_charm.model.unit = MagicMock()
-    type(mock_charm).charm_dir = PropertyMock(return_value=Path("/fake/charm/dir"))
-
-    yield mock_charm
-
-
 @pytest.fixture(autouse=True)
 def patch_get_charm_revision():
     with patch(
-        "single_kernel_opensearch_dashboards.utils.helpers.get_charm_revision", return_value=167
+        "single_kernel_opensearch_dashboards.managers.cos.get_charm_revision", return_value=167
     ) as mock_func:
         yield mock_func
 
 
 @pytest.fixture(autouse=True)
-def patch_test_relation_changed_starts_units():
+def patch_update_grafana_dashboards_title():
     with patch(
-        "single_kernel_opensearch_dashboards.utils.helpers.update_grafana_dashboards_title"
+        "single_kernel_opensearch_dashboards.managers.cos.COSManager.update_grafana_dashboards_title"
     ) as mock_func:
         yield mock_func
 
@@ -137,27 +123,17 @@ def test_relation_changed_emitted_for_config_changed(harness):
 
 
 def test_relation_changed_emitted_for_relation_changed(harness):
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-        ) as patched,
-        patch(
-            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
-        ),
-    ):
+    with patch(
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+    ) as patched:
         harness.charm.on.dashboard_peers_relation_changed.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 
 
 def test_relation_changed_emitted_for_relation_joined(harness):
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
-        ) as patched,
-        patch(
-            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.relation_departure_reason"
-        ),
-    ):
+    with patch(
+        "single_kernel_opensearch_dashboards.charms.base.OpenSearchDashboardsBaseCharm.emit_restart"
+    ) as patched:
         harness.charm.on.dashboard_peers_relation_joined.emit(harness.charm.state.peer_relation)
         patched.assert_called_once()
 
@@ -183,7 +159,7 @@ def test_config_changed_event_emits_restart(harness):
             return_value=True,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.cluster.ClusterState.all_units_related",
+            "single_kernel_opensearch_dashboards.core.state.ClusterState.all_units_related",
             return_value=True,
         ),
         patch(
@@ -288,7 +264,7 @@ def test_relation_changed_restarts(harness):
             return_value=True,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.cluster.ClusterState.all_units_related",
+            "single_kernel_opensearch_dashboards.core.state.ClusterState.all_units_related",
             return_value=True,
         ),
     ):
@@ -560,11 +536,11 @@ def test_config_changed_applies_relation_data(harness):
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed"
         ) as patched,
         patch(
-            "single_kernel_opensearch_dashboards.core.cluster.ClusterState.stable",
+            "single_kernel_opensearch_dashboards.core.state.ClusterState.stable",
             return_value=True,
         ),
         patch(
-            "single_kernel_opensearch_dashboards.core.cluster.ClusterState.all_units_related",
+            "single_kernel_opensearch_dashboards.core.state.ClusterState.all_units_related",
             return_value=True,
         ),
         patch(
@@ -604,11 +580,8 @@ def test_workload_down_blocked_status(harness):
         patch(
             "single_kernel_opensearch_dashboards.managers.config.ConfigManager.set_dashboard_properties"
         ),
-        patch(
-            "single_kernel_opensearch_dashboards.events.opensearch_dashboards.update_grafana_dashboards_title"
-        ),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch("single_kernel_opensearch_dashboards.managers.tls.TLSManager.write_tls_files"),
     ):
         mock_event = MagicMock()
@@ -660,7 +633,7 @@ def test_service_unavailable_blocked_status(harness):
         ),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch(
             "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
             return_value="1",
@@ -756,7 +729,7 @@ def test_service_unhealthy(harness):
         ),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch(
             "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
             return_value="1",
@@ -848,7 +821,7 @@ def test_service_error(harness):
         ),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch(
             "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
             return_value="1",
@@ -936,7 +909,7 @@ def test_service_available(harness):
         ),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
         patch(
             "single_kernel_opensearch_dashboards.core.models.OpensearchServer.password",
             return_value="1",
@@ -995,7 +968,7 @@ def test_wrong_opensearch_version(harness):
         ),
         patch("single_kernel_opensearch_dashboards.managers.health.SERVICE_AVAILABLE_TIMEOUT", 3),
         patch("single_kernel_opensearch_dashboards.charms.base.StatusHandler.set_running_status"),
-        patch("single_kernel_opensearch_dashboards.core.cluster.StatusesState.add") as add,
+        patch("single_kernel_opensearch_dashboards.core.state.StatusesState.add") as add,
     ):
         with pytest.raises(ClusterNotReadyError):
             harness.charm.upgrade_events.post_upgrade_check()
@@ -1010,35 +983,67 @@ def test_wrong_opensearch_version(harness):
         add.assert_has_calls(expected_calls, any_order=False)
 
 
-@patch(
-    "builtins.open",
-    new_callable=mock_open,
-    read_data=json.dumps({"title": "Charmed OpenSearch Dashboards"}),
-)
-@patch("json.dump")
-def test_update_grafana_dashboards_title_no_prior_revision(
-    mock_json_dump, mock_open_func, mocked_dashboards
-):
-
-    update_grafana_dashboards_title(mocked_dashboards)
-
-    expected_updated_dashboard = {"title": "Charmed OpenSearch Dashboards - Rev 167"}
-    mock_json_dump.assert_called_once_with(expected_updated_dashboard, mock_open_func(), indent=4)
+def _removal_state(planned_units: int) -> MagicMock:
+    state = MagicMock()
+    state.charm.app.planned_units.return_value = planned_units
+    return state
 
 
-@patch(
-    "builtins.open",
-    new_callable=mock_open,
-    read_data=json.dumps({"title": "Charmed OpenSearch - Rev 166"}),
-)
-@patch("json.dump")
-def test_update_grafana_dashboards_title_prior_revision(
-    mock_json_dump, mock_open_func, mocked_dashboards
-):
-    update_grafana_dashboards_title(mocked_dashboards)
+def _removal_event() -> MagicMock:
+    return MagicMock(departing_unit=None)
 
-    expected_updated_dashboard = {"title": "Charmed OpenSearch - Rev 167"}
-    mock_json_dump.assert_called_once_with(expected_updated_dashboard, mock_open_func(), indent=4)
+
+def test_app_removal_true_when_no_units_planned():
+    assert ClusterState.app_removal.fget(_removal_state(0)) is True
+
+
+def test_app_removal_false_when_units_planned():
+    assert ClusterState.app_removal.fget(_removal_state(2)) is False
+
+
+def test_app_removal_true_when_planned_units_raises_model_error():
+    state = _removal_state(2)
+    state.charm.app.planned_units.side_effect = ModelError("saas application not found")
+    assert ClusterState.app_removal.fget(state) is True
+
+
+def test_app_going_down_true_when_this_unit_is_departing():
+    charm = MagicMock()
+    charm.state.app_removal = False
+    event = MagicMock(departing_unit=charm.unit)
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, event) is True
+
+
+def test_app_going_down_false_when_other_unit_is_departing():
+    charm = MagicMock()
+    charm.state.app_removal = False
+    event = MagicMock(departing_unit=MagicMock())
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, event) is False
+
+
+def test_app_going_down_delegates_to_state():
+    charm = MagicMock()
+    charm.state.app_removal = True
+    assert OpenSearchDashboardsBaseCharm.is_app_removal(charm, _removal_event()) is True
+
+
+def test_get_statuses_report_app_removal(harness):
+    with harness.hooks_disabled():
+        harness.set_planned_units(0)
+
+    assert harness.charm.cluster_manager.get_statuses("unit", recompute=True) == [
+        CharmStatuses.APP_BEING_DESTROYED.value
+    ]
+
+    for manager in (
+        harness.charm.config_manager,
+        harness.charm.health_manager,
+        harness.charm.ingress_manager,
+        harness.charm.tls_manager,
+        harness.charm.upgrade_manager,
+        harness.charm.cos_manager,
+    ):
+        assert manager.get_statuses("unit", recompute=True) == []
 
 
 # def test_port_updates_if_tls(harness):
@@ -1139,7 +1144,7 @@ def test_update_grafana_dashboards_title_prior_revision(
 #         )
 #
 #     with (
-#         patch("core.cluster.ClusterState.ready", new_callable=PropertyMock, return_value=True),
+#         patch("core.state.ClusterState.ready", new_callable=PropertyMock, return_value=True),
 #     ):
 #         harness.charm.update_client_data()
 #

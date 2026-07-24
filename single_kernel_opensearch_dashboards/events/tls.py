@@ -10,7 +10,7 @@ import re
 from subprocess import CalledProcessError
 from typing import Any, cast
 
-from ops import Object
+from ops import Object, SecretNotFoundError
 from ops.charm import ActionEvent, CharmBase
 from ops.framework import EventBase
 
@@ -23,10 +23,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CERTS_REL_NAME,
     SERVER_PORT,
     TLS_MANAGER_NAME,
-    RelDepartureReason,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ServerStatuses,
     TLSStatuses,
@@ -37,7 +36,7 @@ from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v
     generate_csr,
     generate_private_key,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
+from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +45,12 @@ class TLSEvents(Object):
     """Event handlers for related applications on the `certificates` relation interface."""
 
     def __init__(
-        self,
-        charm: StatusHandlingCharm,
-        state: ClusterState,
+        self, charm: StatusHandlingCharm, state: ClusterState, workload: WorkloadBase
     ) -> None:
         super().__init__(charm, "tls")  # type: ignore[arg-type]
         self.charm = charm
         self.state = state
+        self.workload = workload
         self.tls_manager = self.charm.tls_manager
         self.ingress_manager = self.charm.ingress_manager
         self.certificates = TLSCertificatesRequiresV3(
@@ -120,6 +118,10 @@ class TLSEvents(Object):
 
     def _on_certificate_available(self, event: "CertificateAvailableEvent") -> None:
         """Handler for `certificates_available` event after provider updates signed certs."""
+        if not self.charm.pre_restart_check():
+            event.defer()
+            return
+
         self.state.delete_status_if_present(
             TLSStatuses.WAITING_FOR_TLS.value, scope="unit", component=self.tls_manager.name
         )
@@ -138,11 +140,14 @@ class TLSEvents(Object):
             self.tls_manager.set_private_key()
             self.tls_manager.set_ca()
             self.tls_manager.set_certificate()
+            # Restore any other TLS files missing after a pod recreation
+            # (e.g. the OpenSearch CA), so we don't restart with partial TLS data
+            self.tls_manager.write_tls_files()
         except OSDTLSMissingDataError as e:
             logger.warning("TLS data incomplete: %s. Deferring event.", e)
             event.defer()
             return
-        except OSDFileOperationError as e:
+        except (OSDFileOperationError, SecretNotFoundError) as e:
             logger.error("Operation with files is failed: %s. Deferring event.", e)
             event.defer()
             return
@@ -179,6 +184,11 @@ class TLSEvents(Object):
 
     def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
+        # CONTAINER CHECK
+        if not self.workload.ready():
+            event.defer()
+            return
+
         if self.state.unit_server.tls_enabled and not self.tls_manager.certificate_valid():
             self._remove_certificates(event)
             self._request_certificates(event)
@@ -186,12 +196,11 @@ class TLSEvents(Object):
     def _on_certs_relation_broken(self, event: EventBase) -> None:
         """Handler for `certificates_relation_broken` event."""
         # In case we have valid certificates, we keep them for smooth service function
-        if (
-            relation_departure_reason(
-                self.charm.base, self.state.peer_relation.name, self.charm.base.app.name
-            )
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        if self.charm.is_app_removal(event):
+            return
+
+        if not self.charm.pre_restart_check():
+            event.defer()
             return
 
         if self.state.oauth_relation:

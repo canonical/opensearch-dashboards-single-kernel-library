@@ -4,8 +4,12 @@
 
 """Manager for handling COS"""
 
+import json
+import logging
+
 from data_platform_helpers.advanced_statuses import StatusObject
 from data_platform_helpers.advanced_statuses.types import Scope
+from data_platform_helpers.version_check import get_charm_revision
 
 from single_kernel_opensearch_dashboards.common.literals import (
     COS_MANAGER_NAME,
@@ -13,9 +17,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     COS_RELATION_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
+from single_kernel_opensearch_dashboards.core.state import ClusterState
+from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
 )
@@ -34,9 +38,13 @@ from single_kernel_opensearch_dashboards.lib.charms.prometheus_k8s.v0.prometheus
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
+logger = logging.getLogger(__name__)
+
 
 class COSManager(BaseManager):
     """Include the right cos."""
+
+    GRAFANA_DASHBOARD_PATH = "src/grafana_dashboards/dashboard.json"
 
     def __init__(
         self,
@@ -95,8 +103,58 @@ class COSManager(BaseManager):
             }
         ]
 
+    def load_grafana_dashboard(self) -> dict | None:
+        """Read and parse the charm's Grafana dashboard file.
+
+        Returns None if the file cannot be read or does not contain a JSON object.
+        """
+        dashboard_path = self.charm.charm_dir / self.GRAFANA_DASHBOARD_PATH
+
+        try:
+            dashboard = json.loads(dashboard_path.read_text())
+        except (OSError, json.JSONDecodeError) as e:
+            logger.error("Failed to read dashboard %s: %s", dashboard_path.name, e)
+            return None
+
+        if not isinstance(dashboard, dict):
+            logger.error("Dashboard %s is not a JSON object", dashboard_path.name)
+            return None
+
+        return dashboard
+
+    def update_grafana_dashboards_title(self) -> None:
+        """Update the title of the Grafana dashboard file to include the charm revision."""
+        dashboard = self.load_grafana_dashboard()
+        if dashboard is None:
+            return
+
+        revision = get_charm_revision(self.charm.model.unit)
+        dashboard_path = self.charm.charm_dir / self.GRAFANA_DASHBOARD_PATH
+
+        old_title = dashboard.get("title", "Charmed OpenSearch Dashboards")
+        if not isinstance(old_title, str):
+            old_title = "Charmed OpenSearch Dashboards"
+        title_prefix = old_title.split(" - Rev")[0]
+        new_title = f"{title_prefix} - Rev {revision}"
+        dashboard["title"] = new_title
+
+        logger.info(
+            "Changing the title of dashboard %s from %s to %s",
+            dashboard_path.name,
+            old_title,
+            new_title,
+        )
+
+        try:
+            dashboard_path.write_text(json.dumps(dashboard, indent=4))
+        except OSError as e:
+            logger.error("Failed to update the title of dashboard %s: %s", dashboard_path.name, e)
+
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the cos manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.unit_stopping or self.state.app_removal:
+            return status_list
 
         return status_list or [CharmStatuses.ACTIVE_IDLE.value]

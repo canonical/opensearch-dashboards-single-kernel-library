@@ -12,8 +12,7 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 from tests.integration.conftest import Flags, test_flags
 
 from ..helpers import (
-    METADATA_K8S,
-    METADATA_VM,
+    APP_NAME,
     OPENSEARCH_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -69,10 +68,10 @@ async def restart_delay(ops_test_vm: OpsTest, ops_test: OpsTest, substrate: str)
     if substrate == "k8s":
         yield
         return
-    for unit in ops_test.model.applications[METADATA_VM["name"]].units:
+    for unit in ops_test.model.applications[APP_NAME].units:
         await patch_restart_delay(ops_test=ops_test, unit_name=unit.name, delay=RESTART_DELAY)
     yield
-    for unit in ops_test.model.applications[METADATA_VM["name"]].units:
+    for unit in ops_test.model.applications[APP_NAME].units:
         await remove_restart_delay(ops_test=ops_test, unit_name=unit.name)
 
 
@@ -89,15 +88,14 @@ async def test_build_and_deploy(
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-
+    charm = charmvm if substrate == "vm" else charmk8s
     if substrate == "k8s":
         await ops_test.model.set_config(K8s_CONFIG)
 
     app_name = await deploy_base(
         ops_test_vm,
         ops_test,
-        charmvm,
-        charmk8s,
+        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,
@@ -167,8 +165,7 @@ async def _recover_from_signal(
     https: bool = False,
     verify: bool = False,
 ):
-    dash_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    is_dashboards = app_name == dash_name
+    is_dashboards = app_name == APP_NAME
     # dashboards always deploys to ops_test model; opensearch always to ops_test_vm
     app_ops_test = ops_test if is_dashboards else ops_test_vm
     container = ""
@@ -215,7 +212,7 @@ async def _recover_from_signal(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
     # Always wait for dashboards to reconnect, not just when we were testing dashboards directly.
-    await ops_test.model.wait_for_idle(apps=[dash_name], wait_for_active=True, timeout=1000)
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=1000)
 
     logger.info("Checking OSD access...")
     assert await access_all_dashboards(ops_test_vm, ops_test, https, verify=verify)
@@ -282,14 +279,13 @@ async def test_signal_dashboard_process_leader(
     restart_delay,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    leader_name = await get_leader_name(ops_test, app_name)
+    leader_name = await get_leader_name(ops_test, APP_NAME)
     await _recover_from_signal(
         ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=[leader_name],
-        app_name=app_name,
+        app_name=APP_NAME,
         https=test_flags.test_tls,
         verify=test_flags.test_tls,
         substrate=substrate,
@@ -352,14 +348,13 @@ async def test_signal_dashboard_process_cluster(
     restart_delay,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
-    units = [unit.name for unit in ops_test.model.applications[app_name].units]
+    units = [unit.name for unit in ops_test.model.applications[APP_NAME].units]
     await _recover_from_signal(
         ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=units,
-        app_name=app_name,
+        app_name=APP_NAME,
         https=test_flags.test_tls,
         verify=test_flags.test_tls,
         substrate=substrate,

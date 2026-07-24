@@ -11,11 +11,9 @@ from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandli
 from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     JWT_REL_NAME,
-    RelDepartureReason,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import ConfigStatuses
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +51,7 @@ class JwtEvents(Object):
 
     def _on_jwt_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle broken relation data."""
-        if (
-            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        if self.charm.is_app_removal(event):
             return
+
         self.charm.emit_restart(event)

@@ -18,7 +18,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     RESTART_TIMEOUT,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     CharmStatuses,
     ServerStatuses,
@@ -53,6 +53,12 @@ class ClusterManager(BaseManager):
     def get_statuses(self, scope: Scope, recompute: bool = False) -> list[StatusObject]:
         """Compute the server manager's statuses."""
         status_list: list[StatusObject] = []
+
+        if self.state.unit_stopping:
+            return status_list
+
+        if self.state.app_removal:
+            return [CharmStatuses.APP_BEING_DESTROYED.value]
 
         if not self.state.upgrade_idle:
             return status_list

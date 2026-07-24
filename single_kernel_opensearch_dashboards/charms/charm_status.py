@@ -11,6 +11,7 @@ from data_platform_helpers.advanced_statuses import StatusHandler
 from ops import CharmBase, CharmEvents, EventBase, Unit
 
 from single_kernel_opensearch_dashboards.managers.cluster import ClusterManager
+from single_kernel_opensearch_dashboards.managers.cos import COSManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
 from single_kernel_opensearch_dashboards.managers.ingress import IngressManager
 from single_kernel_opensearch_dashboards.managers.tls import TLSManager
@@ -30,6 +31,7 @@ class StatusHandlingCharm(Protocol):
     cluster_manager: ClusterManager
     upgrade_manager: UpgradeManager
     health_manager: HealthManager
+    cos_manager: COSManager
     base: CharmBase
 
     def __init__(self, *args):
@@ -37,3 +39,9 @@ class StatusHandlingCharm(Protocol):
 
     @abstractmethod
     def emit_restart(self, event: EventBase) -> None: ...
+
+    @abstractmethod
+    def is_app_removal(self, event: EventBase) -> bool: ...
+
+    @abstractmethod
+    def pre_restart_check(self) -> bool: ...

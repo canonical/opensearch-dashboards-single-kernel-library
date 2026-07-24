@@ -13,14 +13,12 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
     CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
-    RelDepartureReason,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import (
     ConfigStatuses,
     ServerStatuses,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -81,10 +79,8 @@ class OAuthEvents(Object):
 
     def _on_oauth_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handler for `_on_oauth_relation_changed` event."""
-        if (
-            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        if self.charm.is_app_removal(event):
             return
+
         self.state.cluster.update({"oauth-client-secret": ""})
         self.charm.emit_restart(event)

@@ -11,15 +11,16 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import yaml
+from kubernetes import client as k8s_client
+from kubernetes import config as k8s_config
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, retry, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.literals import SERVER_PORT
+from tests.integration.helpers import APP_NAME, k8s_exec
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-APP_NAME = METADATA["name"]
 PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"
 SERVICE_DEFAULT_PATH = (
@@ -270,7 +271,7 @@ def network_throttle_k8s(pod_name: str, namespace: str) -> None:
 
     try:
         result = subprocess.run(
-            ["microk8s", "kubectl", "apply", "-f", "-"],
+            ["sudo", "k8s", "kubectl", "apply", "-f", "-"],
             input=chaos_yaml,
             text=True,
             capture_output=True,
@@ -294,7 +295,8 @@ def network_restore_throttle_k8s(pod_name: str, namespace: str) -> None:
     try:
         result = subprocess.run(
             [
-                "microk8s",
+                "sudo",
+                "k8s",
                 "kubectl",
                 "delete",
                 "networkchaos",
@@ -320,19 +322,12 @@ def network_cut_k8s(pod_name: str, namespace: str) -> None:
         namespace: The Kubernetes namespace
     """
     logger.info(f"Force deleting pod {pod_name} to simulate network cut...")
-    subprocess.run(
-        [
-            "microk8s",
-            "kubectl",
-            "delete",
-            "pod",
-            pod_name,
-            "-n",
-            namespace,
-            "--force",
-            "--grace-period=0",
-        ],
-        check=True,
+    k8s_config.load_kube_config()
+    v1 = k8s_client.CoreV1Api()
+    v1.delete_namespaced_pod(
+        name=pod_name,
+        namespace=namespace,
+        body=k8s_client.V1DeleteOptions(grace_period_seconds=1),
     )
 
 
@@ -365,17 +360,23 @@ async def send_control_signal(
         k8s: if substrate is k8s
     """
     if k8s:
-        kill_cmd = f"ssh --container opensearch-dashboards {unit_name} pebble signal {signal} opensearch-dashboards"
+        app, unit_index = unit_name.split("/")
+        namespace = ops_test.model_full_name.split(":")[-1]
+        pod_name = f"{app}-{unit_index}"
+        k8s_exec(
+            namespace,
+            pod_name,
+            "opensearch-dashboards",
+            ["pebble", "signal", signal, "opensearch-dashboards"],
+        )
     else:
         process = PROCESS if app_name == APP_NAME else DB_PROCESS
         kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"
-
-    return_code, stdout, stderr = await ops_test.juju(*kill_cmd.split())
-
-    if return_code != 0:
-        raise Exception(
-            f"Expected kill command {kill_cmd} to succeed instead it failed: {return_code}, {stdout}, {stderr}"
-        )
+        return_code, stdout, stderr = await ops_test.juju(*kill_cmd.split())
+        if return_code != 0:
+            raise Exception(
+                f"Expected kill command {kill_cmd} to succeed instead it failed: {return_code}, {stdout}, {stderr}"
+            )
 
 
 async def get_password(
@@ -423,12 +424,13 @@ async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> boo
 
 async def get_service_pid(ops_test: OpsTest, unit_name: str) -> str:
     """Gets the exact PID of the running pebble service."""
-    cmd = f"ssh --container opensearch-dashboards {unit_name} pgrep -x node"
-    return_code, stdout, stderr = await ops_test.juju(*cmd.split())
-    if return_code != 0:
-        logger.info(
-            f"PID command failed. Return_code:{return_code}, stdout: {stdout}, stderr: {stderr}"
-        )
+    app, unit_index = unit_name.split("/")
+    namespace = ops_test.model_full_name.split(":")[-1]
+    pod_name = f"{app}-{unit_index}"
+    try:
+        stdout = k8s_exec(namespace, pod_name, "opensearch-dashboards", ["pgrep", "-x", "node"])
+    except Exception as err:
+        logger.info(f"PID command failed: {err}")
         return ""
     return stdout.strip()
 

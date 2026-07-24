@@ -2,12 +2,16 @@
 # Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Charmed Operator for Apache Opensearch Dashboards."""
+
 import logging
+import os
 
 from ops.log import JujuLogHandler
 from ops.main import main
 
 from single_kernel_opensearch_dashboards.charms.k8s import OpenSearchDashboardsK8sCharm
+from single_kernel_opensearch_dashboards.charms.vm import OpenSearchDashboardsVMCharm
 
 # Show logger name (module name) in logs
 root_logger = logging.getLogger()

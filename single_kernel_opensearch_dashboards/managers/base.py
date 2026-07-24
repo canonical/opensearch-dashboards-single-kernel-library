@@ -14,13 +14,15 @@ from data_platform_helpers.advanced_statuses import ManagerStatusProtocol
 from requests import RequestException
 from tenacity import Retrying, stop_after_attempt, wait_fixed
 
-from single_kernel_opensearch_dashboards.common.exceptions import OSDAPIError
+from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDAPIError,
+    OSDFileOperationError,
+)
 from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
-    REQUEST_TIMEOUT,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 from single_kernel_opensearch_dashboards.workload.k8s import K8sWorkload
 
@@ -164,7 +166,7 @@ class BaseManager(ManagerStatusProtocol):
             "method": method.upper(),
             "verify": cert_path.as_posix(),
             "headers": headers,
-            "timeout": REQUEST_TIMEOUT,
+            "timeout": (5, 5),
             "data": json.dumps(payload),
         }
         path = None

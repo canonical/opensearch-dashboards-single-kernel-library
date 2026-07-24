@@ -17,6 +17,9 @@ import pytest
 import requests
 import yaml
 from juju.relation import Relation
+from kubernetes import client as k8s_client
+from kubernetes import config as k8s_config
+from kubernetes.stream import stream as k8s_stream
 from pytest_operator.plugin import OpsTest
 from requests.exceptions import ConnectionError, SSLError, Timeout
 from tenacity import (
@@ -31,11 +34,10 @@ from tenacity import (
 
 from .conftest import Flags
 
+METADATA_K8s = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
-METADATA_K8S = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
-APP_NAME = METADATA_K8S["name"] if SUBSTRATE == "k8s" else METADATA_VM["name"]
-K8s_APP_NAME = METADATA_K8S["name"]
+APP_NAME = METADATA_VM["name"] if SUBSTRATE == "vm" else METADATA_K8s["name"]
 
 OPENSEARCH_APP_NAME = "opensearch"
 CONFIG_OPTS = {"profile": "testing"}
@@ -58,7 +60,7 @@ COS_AGENT_RELATION_NAME = "cos-agent"
 DB_CLIENT_APP_NAME = "application"
 TRAEFIK_APP_NAME = "traefik-k8s"
 RESOURCE = {
-    "opensearch-dashboards-image": METADATA_K8S["resources"]["opensearch-dashboards-image"][
+    "opensearch-dashboards-image": METADATA_K8s["resources"]["opensearch-dashboards-image"][
         "upstream-source"
     ]
 }
@@ -149,22 +151,26 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
 async def deploy_base(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
+    charm: str,
     charm_base: str,
     substrate: str,
     num_units_app: int = 1,
     num_units_db: int = 2,
     opensearch_channel: str = "2/stable",
-    trust_charm: bool = False,
+    trust_charm: bool = True,
     opensearch_config: dict | None = None,
+    resource: dict | None = None,
+    charm_channel: str | None = None,
 ) -> str:
     """Deploy OpenSearch+TLS on the VM model and dashboards on ops_test, wired together.
 
-    Returns app_name. Callers are responsible for traefik, TLS for dashboards,
-    cross-model TLS offers, and the final wait_for_idle on the dashboards app.
+    The dashboards charm is pulled from `charm_channel` on Charmhub when given (used by the
+    upgrade tests to install an old release), otherwise it's built from the local
+    `charmvm`/`charmk8s` path. Returns app_name. Callers are responsible for traefik, TLS for
+    dashboards, cross-model TLS offers, and the final wait_for_idle on the dashboards app.
     """
-    app_name = METADATA_K8S["name"] if substrate == "k8s" else METADATA_VM["name"]
+    if resource is None:
+        resource = RESOURCE
     model_config = opensearch_config if opensearch_config is not None else OPENSEARCH_CONFIG
 
     await ops_test_vm.model.set_config(model_config)
@@ -182,28 +188,36 @@ async def deploy_base(
     await ops_test_vm.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
     deploy_kwargs: dict = {
-        "application_name": app_name,
+        "application_name": APP_NAME,
         "num_units": num_units_app,
-        "base": charm_base,
     }
+    # for upgrades test we need to pull dashboards from 2/stable and 2/edge, not local one
+    if charm_channel:
+        charm = APP_NAME
+        deploy_kwargs["channel"] = charm_channel
+        deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
+    else:
+        deploy_kwargs["base"] = charm_base
+
     if substrate == "k8s":
-        deploy_kwargs["resources"] = RESOURCE
         if trust_charm:
             deploy_kwargs["trust"] = True
-        await ops_test.model.deploy(charmk8s, **deploy_kwargs)
+        if not charm_channel:
+            deploy_kwargs["resources"] = resource
+        await ops_test.model.deploy(charm, **deploy_kwargs)
         await ops_test_vm.model.create_offer(
             "opensearch-client", OPENSEARCH_APP_NAME, "opensearch"
         )
         await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{OPENSEARCH_APP_NAME}")
     else:
-        await ops_test.model.deploy(charmvm, **deploy_kwargs)
+        await ops_test.model.deploy(charm, **deploy_kwargs)
 
     await ops_test_vm.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
-    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, app_name)
+    pytest.relation = await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
 
-    return app_name
+    return APP_NAME
 
 
 def get_relations(ops_test: OpsTest, name: str, app_name: str = "remote-") -> list[Relation]:
@@ -302,7 +316,7 @@ async def get_dashboard_routing(ops_test: OpsTest, unit_name: str):
             )
 
     app_name = unit_name.split("/")[0]
-    if DUMMY_CHARM in ops_test.model.applications and app_name == K8s_APP_NAME:
+    if DUMMY_CHARM in ops_test.model.applications:
         unit_id = unit_name.split("/")[1]
         host = f"{app_name}-{unit_id}.{app_name}-endpoints"
     else:
@@ -487,7 +501,7 @@ async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> 
     unavail = True
     for unit in ops_test.model.applications[APP_NAME].units:
         if https:
-            if not get_dashboard_ca_cert(ops_test.model.name, unit):
+            if not get_dashboard_ca_cert(ops_test.model.name, unit.name):
                 logger.info(f"Couldn't retrieve host certificate for unit {unit}")
                 continue
 
@@ -510,10 +524,21 @@ async def all_dashboards_unavailable(ops_test: OpsTest, https: bool = False) -> 
 )
 def get_dashboard_ca_cert(model_full_name: str, unit: str) -> bool:
     if SUBSTRATE == "k8s":
-        cmd = (
-            f"JUJU_MODEL={model_full_name} juju scp --container opensearch-dashboards "
-            f"{unit}:/etc/opensearch-dashboards/certificates/ca.pem ./ca.pem"
-        )
+        app, unit_index = unit.split("/")
+        namespace = model_full_name.split(":")[-1]
+        pod_name = f"{app}-{unit_index}"
+        try:
+            cert = k8s_exec(
+                namespace,
+                pod_name,
+                "opensearch-dashboards",
+                ["cat", "/etc/opensearch-dashboards/certificates/ca.pem"],
+            )
+            Path("ca.pem").write_text(cert)
+        except Exception as err:
+            logger.error(f"Failed to read CA cert: {err}")
+            return False
+        return True
     else:
         cmd = (
             f"JUJU_MODEL={model_full_name} juju scp "
@@ -534,20 +559,127 @@ def get_dashboard_ca_cert(model_full_name: str, unit: str) -> bool:
     return output.returncode == 0
 
 
-def get_file_contents(model_name: str, unit_name: str, filename: str) -> str:
-    if SUBSTRATE == "k8s":
-        cmd = f"JUJU_MODEL={model_name} juju ssh --container opensearch-dashboards {unit_name} cat {filename}"
-    else:
-        cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo cat {filename}"
+def k8s_exec(namespace: str, pod_name: str, container: str, command: list[str]) -> str:
+    """Execute a command in a Kubernetes pod container and return stdout."""
+    k8s_config.load_kube_config()
+    v1 = k8s_client.CoreV1Api()
+    resp = k8s_stream(
+        v1.connect_get_namespaced_pod_exec,
+        pod_name,
+        namespace,
+        container=container,
+        command=command,
+        stderr=False,
+        stdin=False,
+        stdout=True,
+        tty=False,
+    )
+    return resp
 
+
+def get_charm_workload_version(model_name: str, unit_name: str, substrate: str = "vm") -> str:
+    """Read the workload_version file from the charm container."""
+    unit_dir = unit_name.replace("/", "-")
+    path = f"/var/lib/juju/agents/unit-{unit_dir}/charm/workload_version"
+    if substrate == "vm":
+        cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo cat {path}"
+        try:
+            output = subprocess.check_output(
+                ["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT
+            )
+            return output.strip()
+        except subprocess.CalledProcessError as err:
+            output = err.output.strip() if err.output else ""
+            logger.error(f"Failed to read workload_version: {output or err}")
+            if "No such file or directory" in output:
+                return "2.19.2"
+            return ""
+    elif substrate == "k8s":
+        app, unit_index = unit_name.split("/")
+        namespace = model_name.split(":")[-1]
+        pod_name = f"{app}-{unit_index}"
+        try:
+            output = k8s_exec(namespace, pod_name, "charm", ["cat", path])
+        except Exception as err:
+            logger.error(f"Failed to read workload_version: {err}")
+            return ""
+        return output.strip()
+    return ""
+
+
+def get_dashboards_snap_version_vm(model_name: str, unit_name: str) -> str:
+    """Return the installed opensearch-dashboards snap version from a VM unit.
+
+    Returns "2.19.2" if the snap is not yet installed (pre-workload_version charmhub releases).
+    """
+    cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo snap list opensearch-dashboards --unicode=never"
     try:
-        logger.info(f"Getting content of file with command:{cmd}")
         output = subprocess.check_output(["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT)
+        for line in output.splitlines():
+            if line.startswith("opensearch-dashboards"):
+                return line.split()[1]
+        logger.error(f"opensearch-dashboards snap not found in snap list output: {output!r}")
+        return ""
     except subprocess.CalledProcessError as err:
-        logger.error(f"Failed to read {filename}: {err.output.strip() if err.output else err}")
+        output = err.output.strip() if err.output else ""
+        if "no matching snaps" in output or "snap not installed" in output.lower():
+            return "2.19.2"
+        logger.error(f"Failed to get snap version: {output or err}")
         return ""
 
-    return output
+
+def get_dashboards_version(model_name: str, unit_name: str, substrate: str) -> str:
+    """Return the installed dashboards version, dispatching by substrate."""
+    if substrate == "k8s":
+        return get_dashboards_bin_version(model_name, unit_name)
+    return get_dashboards_snap_version_vm(model_name, unit_name)
+
+
+def get_dashboards_bin_version(model_name: str, unit_name: str) -> str:
+    """Run opensearch-dashboards --version in the container and return the version string."""
+    app, unit_index = unit_name.split("/")
+    namespace = model_name.split(":")[-1]
+    pod_name = f"{app}-{unit_index}"
+    try:
+        output = k8s_exec(
+            namespace,
+            pod_name,
+            "opensearch-dashboards",
+            [
+                "/usr/share/opensearch-dashboards/bin/opensearch-dashboards",
+                "--version",
+                "-c",
+                "/etc/opensearch-dashboards/opensearch_dashboards.yml",
+            ],
+        )
+    except Exception as err:
+        logger.error(f"Failed to get dashboards version: {err}")
+        return ""
+    return output.strip()
+
+
+def get_file_contents(model_name: str, unit_name: str, filename: str) -> str:
+    if SUBSTRATE == "k8s":
+        app, unit_index = unit_name.split("/")
+        namespace = model_name.split(":")[-1]
+        pod_name = f"{app}-{unit_index}"
+        try:
+            logger.info(f"Getting content of {filename} from pod {pod_name} via kubernetes client")
+            return k8s_exec(namespace, pod_name, "opensearch-dashboards", ["cat", filename])
+        except Exception as err:
+            logger.error(f"Failed to read {filename}: {err}")
+            return ""
+    else:
+        cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo cat {filename}"
+        try:
+            logger.info(f"Getting content of file with command:{cmd}")
+            output = subprocess.check_output(
+                ["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT
+            )
+        except subprocess.CalledProcessError as err:
+            logger.error(f"Failed to read {filename}: {err.output.strip() if err.output else err}")
+            return ""
+        return output
 
 
 async def get_address(
@@ -694,14 +826,25 @@ async def check_full_status(
 def count_lines_with(
     model_full_name: str, unit: str, file: str, pattern: str, container_name: str = ""
 ) -> int:
-    container = f"--container={container_name}" if container_name else ""
-    sudo = "" if container else "sudo -i"
-    result = check_output(
-        f"JUJU_MODEL={model_full_name} juju ssh {container} {unit} {sudo} 'grep \"{pattern}\" {file} | wc -l'",
-        stderr=PIPE,
-        shell=True,
-        universal_newlines=True,
-    )
+    if container_name and SUBSTRATE == "k8s":
+        app, unit_index = unit.split("/")
+        namespace = model_full_name.split(":")[-1]
+        pod_name = f"{app}-{unit_index}"
+        result = k8s_exec(
+            namespace,
+            pod_name,
+            container_name,
+            ["sh", "-c", f'grep "{pattern}" {file} | wc -l'],
+        )
+    else:
+        container = f"--container={container_name}" if container_name else ""
+        sudo = "" if container else "sudo -i"
+        result = check_output(
+            f"JUJU_MODEL={model_full_name} juju ssh {container} {unit} {sudo} 'grep \"{pattern}\" {file} | wc -l'",
+            stderr=PIPE,
+            shell=True,
+            universal_newlines=True,
+        )
 
     return int(result)
 

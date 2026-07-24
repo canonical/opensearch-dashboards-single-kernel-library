@@ -66,6 +66,11 @@ class ClusterState(Object, StatusesStateProtocol):
         self.substrate = substrate
         self.charm = charm
         self._servers_data = {}
+        # In-memory flag, set for the remainder of the `stop` hook dispatch so that
+        # status recomputation ( emitted by ops right after `stop`)
+        # can skip live health checks against a workload
+        # that is already being torn down.
+        self.unit_stopping = False
 
         self.peer_app_data = DataPeerData(
             self.model,
@@ -300,6 +305,18 @@ class ClusterState(Object, StatusesStateProtocol):
             return self.ingress.url
 
         return self.url
+
+    @property
+    def app_removal(self) -> bool:
+        """Whether the whole application is going down."""
+        try:
+            return self.charm.app.planned_units() == 0
+        except ModelError:
+            # juju check planned units for charm using `goal-state` for all model
+            # `goal-state` can fail to resolve the full model state (e.g. a cross-model
+            # relation's remote offer is already gone), even though we only care about
+            # our own app. Assume the app is going down because that can happen only if model is being destroyed.
+            return True
 
     # --- UPGRADE RELATED ---
     @property

@@ -15,9 +15,9 @@ class CharmStatuses(Enum):
         message="",
     )
 
-    REMOVING_UNIT = StatusObject(
+    APP_BEING_DESTROYED = StatusObject(
         status="maintenance",
-        message="Removing unit",
+        message="Application removal...",
     )
 
 
@@ -63,6 +63,12 @@ class HealthStatuses(Enum):
     STATUS_UNKNOWN = StatusObject(
         status="blocked",
         message="OpenSearch Dashboards health status is unknown",
+        short_message="Health status is unknown",
+    )
+
+    STATUS_UNKNOWN_OS = StatusObject(
+        status="blocked",
+        message="OpenSearch health status is unknown",
         short_message="Health status is unknown",
     )
 

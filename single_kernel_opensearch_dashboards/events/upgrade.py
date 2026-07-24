@@ -6,6 +6,8 @@
 
 import logging
 
+from lightkube import ApiError, Client
+from lightkube.resources.apps_v1 import StatefulSet
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
@@ -16,8 +18,8 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
@@ -50,6 +52,11 @@ class UpgradeEvents(DataUpgrade):
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
     ) -> None:
+        if osd_state.substrate == Substrates.K8S and not upgrade_manager.is_charm_trusted(
+            charm.model.name
+        ):
+            raise OSDNotTrusted
+
         DataUpgrade.__init__(
             self,
             charm,
@@ -59,10 +66,6 @@ class UpgradeEvents(DataUpgrade):
         )
         self.osd_state = osd_state
         self.workload = workload
-        if self.osd_state.substrate == Substrates.K8S and not self.is_charm_trusted(
-            self.charm.model.name
-        ):
-            raise OSDNotTrusted
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
 
@@ -118,6 +121,7 @@ class UpgradeEvents(DataUpgrade):
         Raises:
             ClusterNotReadyError: If the workload is not running.
         """
+
         if not self.workload.healthy():
             raise ClusterNotReadyError(
                 message="Pre-upgrade check failed and cannot safely upgrade",
@@ -179,9 +183,6 @@ class UpgradeEvents(DataUpgrade):
         if self.substrate == Substrates.VM:
             return
 
-        from lightkube import ApiError, Client
-        from lightkube.resources.apps_v1 import StatefulSet
-
         try:
             patch = {"spec": {"updateStrategy": {"rollingUpdate": {"partition": partition}}}}
             Client().patch(
@@ -198,29 +199,3 @@ class UpgradeEvents(DataUpgrade):
             else:
                 cause = str(e)
             raise KubernetesClientError(message="Kubernetes StatefulSet patch failed", cause=cause)
-
-    def is_charm_trusted(self, namespace: str) -> bool:
-        """Checks if the charm has RBAC permissions to patch StatefulSets."""
-        from lightkube import Client
-        from lightkube.models.authorization_v1 import (
-            ResourceAttributes,
-            SelfSubjectAccessReviewSpec,
-        )
-        from lightkube.resources.authorization_v1 import SelfSubjectAccessReview
-
-        client = Client()
-
-        resource_attrs = ResourceAttributes(
-            namespace=namespace, verb="patch", group="apps", resource="statefulsets"
-        )
-
-        review = SelfSubjectAccessReview(
-            spec=SelfSubjectAccessReviewSpec(resourceAttributes=resource_attrs)
-        )
-
-        try:
-            response = client.create(review)
-            return response.status.allowed
-        except Exception as e:
-            logger.error(f"Failed to check permissions: {e}")
-            return False

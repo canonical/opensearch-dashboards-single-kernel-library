@@ -5,19 +5,18 @@
 
 import logging
 
-from ops import Object
+from ops import Object, RelationCreatedEvent
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.literals import (
-    RelDepartureReason,
+    INGRESS_REL_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.cluster import ClusterState
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
     IngressPerAppReadyEvent,
     IngressPerAppRevokedEvent,
 )
-from single_kernel_opensearch_dashboards.utils.helpers import relation_departure_reason
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +42,17 @@ class IngressEvents(Object):
 
     def _on_ingress_ready(self, event: IngressPerAppReadyEvent) -> None:
         """Handle ingress ready event."""
+        if not self.charm.pre_restart_check():
+            event.defer()
+            return
+
         logger.info("Ingress ready at: %s", event.url)
         self.charm.emit_restart(event)
 
     def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent) -> None:
         """Handle ingress revoked event."""
-        if (
-            relation_departure_reason(self.charm.base, event.relation.name, event.app.name)
-            == RelDepartureReason.APP_REMOVAL
-        ):
+        if self.charm.is_app_removal(event):
             return
+
         logger.warning("Ingress revoked, falling back to direct access.")
         self.charm.emit_restart(event)

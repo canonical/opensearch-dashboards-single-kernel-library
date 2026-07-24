@@ -4,6 +4,8 @@
 
 """OpenSearch Dashboards Machine Charm."""
 
+from pathlib import Path
+
 from single_kernel_opensearch_dashboards.charms.base import (
     OpenSearchDashboardsBaseCharm,
 )
