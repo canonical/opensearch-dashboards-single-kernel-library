@@ -18,6 +18,7 @@ from .helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
+    assert_no_downgrade,
     deploy_base,
     get_app_relation_data,
     get_charm_workload_version,
@@ -144,6 +145,9 @@ async def _run_upgrade_scenario(
     logger.info(f"Old Workload Version: {old_workload_version}")
     logger.info(f"Old Dashboards Version: {old_dashboards_version}")
 
+    old_charm_url = ops_test.model.applications[app_name].safe_data["charm-url"]
+    logger.info(f"Old Charm URL: {old_charm_url}")
+
     if substrate == "k8s":
         await ops_test.model.applications[app_name].refresh(path=charm, resources=RESOURCE)
     else:
@@ -166,8 +170,12 @@ async def _run_upgrade_scenario(
     logger.info(f"New Workload Version: {new_workload_version}")
     logger.info(f"New Dashboards Version: {new_dashboards_version}")
 
-    assert new_workload_version != old_workload_version
-    assert new_dashboards_version != old_dashboards_version
+    new_charm_url = ops_test.model.applications[app_name].safe_data["charm-url"]
+    logger.info(f"New Charm URL: {new_charm_url}")
+
+    assert new_charm_url != old_charm_url
+    assert_no_downgrade(old_workload_version, new_workload_version)
+    assert_no_downgrade(old_dashboards_version, new_dashboards_version)
 
 
 @pytest.mark.vm_only
