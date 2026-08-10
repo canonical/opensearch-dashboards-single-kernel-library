@@ -15,11 +15,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     ConfigStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -140,6 +140,12 @@ class OpenSearchDashboardsEvents(Object):
 
     def _on_leader_elected(self, event: EventBase) -> None:
         """Handle the `leader-elected` event."""
+        # Force creation of the peer secret groups up front so the v1 lib stops logging
+        # "secret not found" on every read of an as-yet-unset field.
+        if self.charm.unit.is_leader():
+            self.state.cluster.initialize_empty_secrets()
+        self.state.unit_server.initialize_empty_secrets()
+
         if not self.charm.pre_restart_check():
             event.defer()
             return
@@ -183,9 +189,7 @@ class OpenSearchDashboardsEvents(Object):
         if not event.secret.label:
             return
 
-        if self.state.cluster.data_interface.secrets.get(
-            event.secret.label
-        ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
+        if event.secret.label.startswith(f"{PEERS_REL_NAME}."):
             logger.info(f"Secret {event.secret.label} changed.")
             self.charm.emit_restart(event)
 

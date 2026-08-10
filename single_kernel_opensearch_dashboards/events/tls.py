@@ -25,11 +25,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     TLS_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     ServerStatuses,
     TLSStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     CertificateAvailableEvent,
     TLSCertificatesRequiresV3,
@@ -80,7 +80,7 @@ class TLSEvents(Object):
 
         csr = self.tls_manager.generate_csr()
 
-        self.state.unit_server.update({"csr": csr.decode("utf-8").strip()})
+        self.state.unit_server.csr = csr.decode("utf-8").strip()
         self.certificates.request_certificate_creation(certificate_signing_request=csr)
 
         self.charm.status_handler.set_running_status(
@@ -92,7 +92,7 @@ class TLSEvents(Object):
 
     def _remove_certificates(self, event: EventBase) -> None:
         """Cleanup any existing certificates."""
-        if self.state.cluster.tls_enabled and self.state.unit_server.csr:
+        if self.state.unit_server.tls_enabled and self.state.unit_server.csr:
             self.certificates.request_certificate_revocation(
                 self.state.unit_server.csr.encode("utf-8")
             )
@@ -103,7 +103,10 @@ class TLSEvents(Object):
                 component_name=self.tls_manager.name,
             )
 
-        self.state.unit_server.update({"csr": "", "certificate": "", "ca-cert": ""})
+        with self.state.unit_server.update() as server:
+            server.csr = ""
+            server.certificate = ""
+            server.ca_cert = ""
 
         try:
             self.tls_manager.remove_cert_files()
@@ -130,7 +133,9 @@ class TLSEvents(Object):
             logger.error("Can't use certificate, found unknown CSR")
             return
 
-        self.state.unit_server.update({"certificate": event.certificate, "ca-cert": event.ca})
+        with self.state.unit_server.update() as server:
+            server.certificate = event.certificate
+            server.ca_cert = event.ca
         if self.state.substrate == Substrates.K8S and self.state.ingress_relation:
             self.charm.ingress_manager.ingress_requirer.provide_ingress_requirements(
                 scheme="https", port=SERVER_PORT
@@ -163,9 +168,9 @@ class TLSEvents(Object):
 
         new_csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
-            subject=self.state.unit_server.host,
-            sans_ip=self.state.unit_server.sans.get("sans_ip"),
-            sans_dns=self.state.unit_server.sans.get("sans_dns"),
+            subject=self.state.network.host,
+            sans_ip=self.state.network.sans.get("sans_ip"),
+            sans_dns=self.state.network.sans.get("sans_dns"),
         )
 
         self.certificates.request_certificate_renewal(
@@ -180,7 +185,7 @@ class TLSEvents(Object):
             component_name=self.tls_manager.name,
         )
 
-        self.state.unit_server.update({"csr": new_csr.decode("utf-8").strip()})
+        self.state.unit_server.csr = new_csr.decode("utf-8").strip()
 
     def _on_config_changed(self, event: EventBase) -> None:
         """If system configuration (such as IP) changes, certs have to be re-issued."""
@@ -229,5 +234,5 @@ class TLSEvents(Object):
             else base64.b64decode(key).decode("utf-8")
         )
 
-        self.state.unit_server.update({"private-key": private_key})
+        self.state.unit_server.private_key = private_key
         self._on_certificate_expiring(event)

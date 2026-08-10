@@ -17,9 +17,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     COS_RELATION_NAME,
     Substrates,
 )
+from single_kernel_opensearch_dashboards.common.statuses import CharmStatuses
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, ServerStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
 )
@@ -90,9 +90,7 @@ class COSManager(BaseManager):
     def scrape_config(self) -> list[dict]:
         """Generates the scrape config as needed."""
         target_ip = (
-            f"{self.state.unit_server.private_ip}"
-            if self.state.substrate == Substrates.VM
-            else "*"
+            f"{self.state.network.private_ip}" if self.state.substrate == Substrates.VM else "*"
         )
 
         return [

@@ -21,7 +21,7 @@ from single_kernel_opensearch_dashboards.common.literals import (
     UPGRADE_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
+from single_kernel_opensearch_dashboards.common.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.events.upgrade import UpgradeEvents
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     ClusterNotReadyError,
@@ -50,6 +50,26 @@ ACTIONS_K8s = str(
 METADATA_K8s = str(
     yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 )
+
+
+def _publish_opensearch_data(harness, relation_id, data):
+    """Publish OpenSearch provider data."""
+    secret_groups = {"secret-user": {}, "secret-tls": {}}
+    databag = {}
+    for key, value in data.items():
+        if key == "password":
+            secret_groups["secret-user"]["password"] = value
+        elif key == "tls-ca":
+            secret_groups["secret-tls"]["tls-ca"] = value
+        else:
+            databag[key] = value
+    for secret_field, content in secret_groups.items():
+        if content:
+            uri = harness.add_model_secret(OPENSEARCH_APP_NAME, content)
+            harness.grant_secret(uri, CHARM_KEY)
+            databag[secret_field] = uri
+    with harness.hooks_disabled():
+        harness.update_relation_data(relation_id, OPENSEARCH_APP_NAME, databag)
 
 
 def _begin_k8s_harness(mocker):
@@ -155,8 +175,8 @@ def test_post_upgrade_check_succeeds(version, harness, mocker):
         ),
     ):
         opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": version}
+        _publish_opensearch_data(
+            harness, opensearch_rel_id, {"password": "test", "version": version}
         )
         assert harness.charm.upgrade_events.post_upgrade_check() is None
         assert harness.charm.upgrade_manager.version_compatible() is True
@@ -167,7 +187,7 @@ def test_post_upgrade_check_succeeds(version, harness, mocker):
 )
 def test_post_upgrade_check_fails_major(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
+    _publish_opensearch_data(harness, opensearch_rel_id, {"password": "test", "version": "3.1.0"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -179,9 +199,6 @@ def test_post_upgrade_check_fails_major(harness, mocker):
             return_value=True,
         ),
     ):
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "3.1"}
-        )
         assert harness.charm.upgrade_events.post_upgrade_check() is None
         assert harness.charm.upgrade_manager.version_compatible() is False
         assert isinstance(harness.model.unit.status, BlockedStatus)
@@ -192,7 +209,7 @@ def test_post_upgrade_check_fails_major(harness, mocker):
 )
 def test_post_upgrade_check_fails_minor(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
+    _publish_opensearch_data(harness, opensearch_rel_id, {"password": "test", "version": "2.13.1"})
     with (
         pytest.raises(ClusterNotReadyError),
         patch(
@@ -204,9 +221,6 @@ def test_post_upgrade_check_fails_minor(harness, mocker):
             return_value=True,
         ),
     ):
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.13.1"}
-        )
         assert harness.charm.upgrade_events.post_upgrade_check() is None
         assert harness.charm.upgrade_manager.version_compatible() is False
         assert isinstance(harness.model.unit.status, BlockedStatus)
@@ -282,20 +296,7 @@ def test_upgrade_granted_sets_failed_if_failed_snap(harness, mocker):
 )
 def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-    harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
-            return_value=False,
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_unit_health",
-            return_value=True,
-        ),
-    ):
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "5.12.1"}
-        )
+    _publish_opensearch_data(harness, opensearch_rel_id, {"password": "test", "version": "5.12.1"})
 
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")
@@ -318,19 +319,7 @@ def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
 )
 def test_upgrade_granted_succeeds(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
-            return_value=False,
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_unit_health",
-            return_value=True,
-        ),
-    ):
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.12.1"}
-        )
+    _publish_opensearch_data(harness, opensearch_rel_id, {"password": "test", "version": "2.12.1"})
 
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")
@@ -355,19 +344,7 @@ def test_upgrade_granted_succeeds(harness, mocker):
 )
 def test_upgrade_granted_recurses_upgrade_changed_on_leader(harness, mocker):
     opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, OPENSEARCH_APP_NAME)
-    with (
-        patch(
-            "single_kernel_opensearch_dashboards.managers.config.ConfigManager.config_changed",
-            return_value=False,
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.managers.health.HealthManager.check_unit_health",
-            return_value=True,
-        ),
-    ):
-        harness.update_relation_data(
-            opensearch_rel_id, f"{OPENSEARCH_APP_NAME}", {"version": "2.12.1"}
-        )
+    _publish_opensearch_data(harness, opensearch_rel_id, {"password": "test", "version": "2.12.1"})
 
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")

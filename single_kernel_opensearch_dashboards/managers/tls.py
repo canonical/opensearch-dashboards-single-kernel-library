@@ -17,11 +17,11 @@ from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDTLSMissingDataError,
 )
 from single_kernel_opensearch_dashboards.common.literals import TLS_MANAGER_NAME
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     CharmStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.tls_certificates_interface.v3.tls_certificates import (
     generate_csr,
     generate_private_key,
@@ -130,25 +130,25 @@ class TLSManager(BaseManager):
 
         logger.debug(f"Response of openssl cert decode: {response}")
         logger.debug(
-            f"Currently recognized IP using 'gethostbyname': {self.state.unit_server.private_ip}"
+            f"Currently recognized IP using 'gethostbyname': {self.state.network.private_ip}"
         )
         return str(self.state.bind_address) in response
 
     def generate_csr(self) -> bytes:
         if not self.state.unit_server.private_key:
-            self.state.unit_server.update({"private-key": generate_private_key().decode("utf-8")})
+            self.state.unit_server.private_key = generate_private_key().decode("utf-8")
 
         csr = generate_csr(
             private_key=self.state.unit_server.private_key.encode("utf-8"),
-            subject=self.state.unit_server.host,
-            sans_ip=self.state.unit_server.sans.get("sans_ip"),
-            sans_dns=self.state.unit_server.sans.get("sans_dns"),
+            subject=self.state.network.host,
+            sans_ip=self.state.network.sans.get("sans_ip"),
+            sans_dns=self.state.network.sans.get("sans_dns"),
         )
         logger.debug(
             "Requesting certificate for: host: %s, with sans_ip: %s, sans_dns: %s",
-            self.state.unit_server.host,
-            self.state.unit_server.sans.get("sans_ip"),
-            self.state.unit_server.sans.get("sans_dns"),
+            self.state.network.host,
+            self.state.network.sans.get("sans_ip"),
+            self.state.network.sans.get("sans_dns"),
         )
 
         return csr
