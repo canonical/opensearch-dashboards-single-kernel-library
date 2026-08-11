@@ -114,7 +114,7 @@ def test_certificates_broken(harness):
         ) as workload_config,
         patch(
             "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"
-        ),
+        ) as request_revocation,
     ):
         harness.remove_relation(certs_rel_id)
 
@@ -123,6 +123,7 @@ def test_certificates_broken(harness):
         assert not harness.charm.state.unit_server.ca
         assert not harness.charm.state.unit_server.csr
         assert not harness.charm.state.unit_server.tls_enabled
+        request_revocation.assert_not_called()
 
         assert workload_config.assert_called_once
 

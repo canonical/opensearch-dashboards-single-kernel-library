@@ -92,7 +92,11 @@ class TLSEvents(Object):
 
     def _remove_certificates(self, event: EventBase) -> None:
         """Cleanup any existing certificates."""
-        if self.state.unit_server.tls_enabled and self.state.unit_server.csr:
+        if (
+            self.state.tls_relation
+            and self.state.unit_server.tls_enabled
+            and self.state.unit_server.csr
+        ):
             self.certificates.request_certificate_revocation(
                 self.state.unit_server.csr.encode("utf-8")
             )
