@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import socket
 import subprocess
 from pathlib import Path
@@ -656,6 +657,26 @@ def get_dashboards_bin_version(model_name: str, unit_name: str) -> str:
         logger.error(f"Failed to get dashboards version: {err}")
         return ""
     return output.strip()
+
+
+def version_key(version: str) -> tuple[int, ...]:
+    """Parse a dotted version string (e.g. "2.19.4") into a comparable tuple of ints"""
+    parts: list[int] = []
+    for segment in version.strip().split("."):
+        match = re.match(r"\d+", segment)
+        if not match:
+            break
+        parts.append(int(match.group()))
+    return tuple(parts)
+
+
+def assert_no_downgrade(old: dict[str, str], new: dict[str, str]) -> None:
+    """Assert each unit's workload version did not decrease across an upgrade."""
+    for unit_name, old_version in old.items():
+        new_version = new[unit_name]
+        assert version_key(new_version) >= version_key(old_version), (
+            f"{unit_name} downgraded: {old_version!r} -> {new_version!r}"
+        )
 
 
 def get_file_contents(model_name: str, unit_name: str, filename: str) -> str:
