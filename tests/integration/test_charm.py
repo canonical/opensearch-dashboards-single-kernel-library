@@ -174,7 +174,9 @@ async def test_dashboard_tls_lifecycle(
 
     # Breaking the relation shouldn't impact service availability
     # A new certificate is requested when the relation is joined again
-    await ops_test.juju("remove-relation", APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.applications[APP_NAME].remove_relation(
+        "certificates", TLS_CERTIFICATES_APP_NAME, block_until_done=True
+    )
     await ops_test_vm.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
@@ -232,7 +234,7 @@ async def test_dashboard_client_data_access(
     payload = "\n".join([json.dumps(d) for d in dicts]) + "\n"
 
     unit_name = ops_test_vm.model.applications[DB_CLIENT_APP_NAME].units[0].name
-    await client_run_db_request(
+    bulk_data = await client_run_db_request(
         ops_test_vm,
         unit_name,
         client_relation,
@@ -240,11 +242,15 @@ async def test_dashboard_client_data_access(
         "/_bulk?refresh=true",
         re.escape(payload),
     )
+    logging.info(f"Bulk load response: {bulk_data}")
+    bulk_results = json.loads(bulk_data["results"])
+    assert not bulk_results.get("errors", True), f"Bulk load reported errors: {bulk_results}"
 
     # Checking if data got to the DB indeed
     read_db_data = await client_run_db_request(
         ops_test_vm, unit_name, client_relation, "GET", "/albums/_search"
     )
+    logging.info(f"Raw search response: {read_db_data}")
     results = json.loads(read_db_data["results"])
     logging.info(f"Loaded into the database: {results}")
 
@@ -402,7 +408,9 @@ async def test_dashboard_status_changes(
     tls = test_flags.test_tls
     traefik = test_flags.traefik
     logger.info("Breaking opensearch connection")
-    await ops_test.juju("remove-relation", "opensearch", APP_NAME)
+    await ops_test.model.applications[APP_NAME].remove_relation(
+        OPENSEARCH_RELATION_NAME, OPENSEARCH_APP_NAME, block_until_done=True
+    )
     await ops_test_vm.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
     )

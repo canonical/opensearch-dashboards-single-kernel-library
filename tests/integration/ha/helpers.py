@@ -37,6 +37,24 @@ class ProcessRunningError(Exception):
     """Raised when a process is running when it is not expected to be."""
 
 
+async def _exec_on_unit(ops_test: OpsTest, unit_name: str, command: str, check: bool = False):
+    """Run a command on a unit via the model API (replaces `juju exec`).
+
+    Returns ``(return_code, stdout, stderr)`` to mirror the previous CLI tuple.
+    """
+    unit = ops_test.model.units[unit_name]
+    action = await unit.run(command, block=True)
+    results = action.results
+    return_code = results.get("return-code")
+    stdout = results.get("stdout") or ""
+    stderr = results.get("stderr") or ""
+    if check and return_code != 0:
+        raise ProcessError(
+            f"Command {command!r} failed on {unit_name}: {return_code}, {stdout}, {stderr}"
+        )
+    return return_code, stdout, stderr
+
+
 @retry(
     wait=wait_fixed(5),
     stop=stop_after_attempt(60),
@@ -194,7 +212,7 @@ async def get_unit_machine_name(ops_test: OpsTest, unit_name: str) -> str:
         String of LXD machine name
             e.g juju-123456-0
     """
-    _, raw_hostname, _ = await ops_test.juju("ssh", unit_name, "hostname")
+    raw_hostname = await ops_test.model.units[unit_name].ssh("hostname")
     return raw_hostname.strip()
 
 
@@ -327,7 +345,7 @@ def network_cut_k8s(pod_name: str, namespace: str) -> None:
     v1.delete_namespaced_pod(
         name=pod_name,
         namespace=namespace,
-        body=k8s_client.V1DeleteOptions(grace_period_seconds=1),
+        body=k8s_client.V1DeleteOptions(grace_period_seconds=2),
     )
 
 
@@ -371,8 +389,8 @@ async def send_control_signal(
         )
     else:
         process = PROCESS if app_name == APP_NAME else DB_PROCESS
-        kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"
-        return_code, stdout, stderr = await ops_test.juju(*kill_cmd.split())
+        kill_cmd = f"pkill --signal {signal} -f {process}"
+        return_code, stdout, stderr = await _exec_on_unit(ops_test, unit_name, kill_cmd)
         if return_code != 0:
             raise Exception(
                 f"Expected kill command {kill_cmd} to succeed instead it failed: {return_code}, {stdout}, {stderr}"
@@ -389,18 +407,13 @@ async def get_password(
 
 
 async def get_secret_by_label(ops_test, label: str, owner: Optional[str] = None) -> Dict[str, str]:
-    secrets_meta_raw = await ops_test.juju("list-secrets", "--format", "json")
-    secrets_meta = json.loads(secrets_meta_raw[1])
-
-    for secret_id in secrets_meta:
-        if owner and not secrets_meta[secret_id]["owner"] == owner:
+    secrets = await ops_test.model.list_secrets(show_secrets=True)
+    for secret in secrets:
+        if owner and secret.owner_tag != f"application-{owner}":
             continue
-        if secrets_meta[secret_id]["label"] == label:
-            break
-
-    secret_data_raw = await ops_test.juju("show-secret", "--format", "json", "--reveal", secret_id)
-    secret_data = json.loads(secret_data_raw[1])
-    return secret_data[secret_id]["content"]["Data"]
+        if secret.label == label:
+            return secret.value.data
+    raise KeyError(f"No secret found with label {label!r} (owner={owner!r})")
 
 
 async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> bool:
@@ -409,8 +422,7 @@ async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> boo
     try:
         for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(5)):
             with attempt:
-                search_db_process = f"exec --unit {unit} pgrep -x {process}"
-                _, processes, _ = await ops_test.juju(*search_db_process.split())
+                _, processes, _ = await _exec_on_unit(ops_test, unit, f"pgrep -x {process}")
                 # splitting processes by "\n" results in one or more empty lines, hence we
                 # need to process these lines accordingly.
                 processes = [proc for proc in processes.split("\n") if len(proc) > 0]
@@ -436,10 +448,7 @@ async def get_service_pid(ops_test: OpsTest, unit_name: str) -> str:
 
 
 async def is_service_down(ops_test: OpsTest, unit: str) -> bool:
-    result = subprocess.check_output(
-        ["bash", "-c", f"JUJU_MODEL={ops_test.model.name} juju ssh {unit} snap status {APP_NAME}"],
-        text=True,
-    )
+    result = await ops_test.model.units[unit].ssh(f"snap status {APP_NAME}")
     return True if "running" in result else False
 
 
@@ -449,8 +458,7 @@ async def all_db_processes_down(ops_test: OpsTest) -> bool:
         for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(5)):
             with attempt:
                 for unit in ops_test.model.applications[APP_NAME].units:
-                    search_db_process = f"exec --unit {unit.name} pgrep -x java"
-                    _, processes, _ = await ops_test.juju(*search_db_process.split())
+                    _, processes, _ = await _exec_on_unit(ops_test, unit.name, "pgrep -x java")
                     # splitting processes by "\n" results in one or more empty lines, hence we
                     # need to process these lines accordingly.
                     processes = [proc for proc in processes.split("\n") if len(proc) > 0]
@@ -467,25 +475,17 @@ async def patch_restart_delay(ops_test: OpsTest, unit_name: str, delay: int) -> 
 
     When the DB service fails it will now wait for `delay` number of seconds.
     """
-    add_delay_cmd = (
-        f"exec --unit {unit_name} -- "
-        f"sudo sed -i -e '/^[Service]/a RestartSec={delay}' "
-        f"{SERVICE_DEFAULT_PATH}"
-    )
-    await ops_test.juju(*add_delay_cmd.split(), check=True)
+    add_delay_cmd = f"sudo sed -i -e '/^[Service]/a RestartSec={delay}' {SERVICE_DEFAULT_PATH}"
+    await _exec_on_unit(ops_test, unit_name, add_delay_cmd, check=True)
 
     # reload the daemon for systemd to reflect changes
-    reload_cmd = f"exec --unit {unit_name} -- sudo systemctl daemon-reload"
-    await ops_test.juju(*reload_cmd.split(), check=True)
+    await _exec_on_unit(ops_test, unit_name, "sudo systemctl daemon-reload", check=True)
 
 
 async def remove_restart_delay(ops_test: OpsTest, unit_name: str) -> None:
     """Removes the restart delay from the service."""
-    remove_delay_cmd = (
-        f"exec --unit {unit_name} -- sed -i -e '/^RestartSec=.*/d' {SERVICE_DEFAULT_PATH}"
-    )
-    await ops_test.juju(*remove_delay_cmd.split(), check=True)
+    remove_delay_cmd = f"sed -i -e '/^RestartSec=.*/d' {SERVICE_DEFAULT_PATH}"
+    await _exec_on_unit(ops_test, unit_name, remove_delay_cmd, check=True)
 
     # reload the daemon for systemd to reflect changes
-    reload_cmd = f"exec --unit {unit_name} -- sudo systemctl daemon-reload"
-    await ops_test.juju(*reload_cmd.split(), check=True)
+    await _exec_on_unit(ops_test, unit_name, "sudo systemctl daemon-reload", check=True)

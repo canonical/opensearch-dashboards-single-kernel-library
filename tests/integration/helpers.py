@@ -775,11 +775,9 @@ def get_unit_relation_data(model_full_name: str, unit: str, endpoint: str):
 
 async def get_secret_data_by_uri(ops_test: OpsTest, secret_uri: str) -> Dict[str, str]:
     """Retrieve a secret's content by its URI."""
-    secret_unique_id = secret_uri.split("/")[-1]
-    secret_data_raw = await ops_test.juju(
-        "show-secret", "--format", "json", "--reveal", secret_uri
-    )
-    return json.loads(secret_data_raw[1])[secret_unique_id]["content"]["Data"]
+    secret_id = secret_uri.rsplit("/", 1)[-1]
+    _, stdout, _ = await ops_test.juju("show-secret", "--format", "json", "--reveal", secret_uri)
+    return json.loads(stdout)[secret_id]["content"]["Data"]
 
 
 def _extract_user_secret_uri(app_data: Dict[str, str]) -> str | None:
@@ -800,11 +798,14 @@ def _extract_user_secret_uri(app_data: Dict[str, str]) -> str | None:
 
 
 async def get_opensearch_client_credentials(
-    ops_test: OpsTest, relation_name: str = OPENSEARCH_RELATION_NAME
+    ops_test: OpsTest,
+    relation_name: str = OPENSEARCH_RELATION_NAME,
+    unit_name: str | None = None,
 ) -> Dict[str, str]:
     """Return the opensearch-client credentials the OpenSearch provider published."""
-    dashboards_unit = ops_test.model.applications[APP_NAME].units[0].name
-    app_data = get_app_relation_data(ops_test.model.name, dashboards_unit, relation_name)
+    if unit_name is None:
+        unit_name = ops_test.model.applications[APP_NAME].units[0].name
+    app_data = get_app_relation_data(ops_test.model.name, unit_name, relation_name)
 
     # v0 provider: credentials are inlined in the databag.
     if app_data.get("password"):
@@ -1014,7 +1015,9 @@ async def client_run_all_dashboards_request(
         logger.debug(f"No units for application {APP_NAME}")
         return False
 
-    dashboard_credentials = await get_opensearch_client_credentials(ops_test)
+    dashboard_credentials = await get_opensearch_client_credentials(
+        ops_test_vm, unit_name=unit_name
+    )
     username = dashboard_credentials.get("username")
     password = dashboard_credentials.get("password")
 
@@ -1093,24 +1096,27 @@ async def client_run_all_dashboards_request(
 
 async def destroy_cluster(ops_test, app: str = OPENSEARCH_APP_NAME, consumer_ops_test=None):
     """Destroy cluster in a forceful way."""
+    relation_model = consumer_ops_test or ops_test
+    await relation_model.model.applications[APP_NAME].remove_relation(
+        OPENSEARCH_RELATION_NAME,
+        f"{app}:{OPENSEARCH_RELATION_NAME}",
+        block_until_done=True,
+    )
+    await ops_test.model.applications[TLS_CERTIFICATES_APP_NAME].remove_relation(
+        "certificates", app, block_until_done=True
+    )
+    await ops_test.model.applications[DB_CLIENT_APP_NAME].remove_relation(
+        OPENSEARCH_RELATION_NAME, app, block_until_done=True
+    )
     if consumer_ops_test:
-        await consumer_ops_test.juju("remove-relation", APP_NAME, app, check=False)
-    else:
-        await ops_test.juju("remove-relation", APP_NAME, app, check=False)
-    await ops_test.juju("remove-relation", TLS_CERTIFICATES_APP_NAME, app, check=False)
-    await ops_test.juju("remove-relation", DB_CLIENT_APP_NAME, app, check=False)
-    if consumer_ops_test:
-        await consumer_ops_test.juju("remove-saas", app, check=False)
-        await ops_test.juju("remove-offer", f"admin/testing-vm.{app}", "--force", check=False)
+        await consumer_ops_test.model.remove_saas(app)
+        await ops_test.model.remove_offer(f"admin/testing-vm.{app}", force=True)
         # Wait until the offer shows 0 connected consumers on the provider side.
         for attempt in Retrying(stop=stop_after_attempt(30), wait=wait_fixed(10), reraise=True):
             with attempt:
-                _, stdout, _ = await ops_test.juju(
-                    "status", "--format=json", "--model", ops_test.model.name
-                )
-                status = json.loads(stdout) if stdout.strip() else {}
-                offers = status.get("offers", {})
-                connected = offers.get(app, {}).get("total-connected-count", 0)
+                status = await ops_test.model.get_status()
+                offer = status.offers.get(app)
+                connected = offer.total_connected_count if offer else 0
                 assert connected == 0, f"offer '{app}' still has {connected} consumer(s)"
     else:
         await asyncio.sleep(30)
