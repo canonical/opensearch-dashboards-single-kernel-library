@@ -417,16 +417,22 @@ async def get_secret_by_label(ops_test, label: str, owner: Optional[str] = None)
 
 
 async def is_down(ops_test: OpsTest, unit: str, app_name: str = APP_NAME) -> bool:
-    """Check if a unit zookeeper process is down."""
+    """Check if a unit's workload process is down (absent or stopped)."""
     process = "node" if app_name == APP_NAME else "java"
     try:
         for attempt in Retrying(stop=stop_after_attempt(10), wait=wait_fixed(5)):
             with attempt:
-                _, processes, _ = await _exec_on_unit(ops_test, unit, f"pgrep -x {process}")
-                # splitting processes by "\n" results in one or more empty lines, hence we
-                # need to process these lines accordingly.
-                processes = [proc for proc in processes.split("\n") if len(proc) > 0]
-                if len(processes) > 0:
+                # `ps -o stat= -C <process>` prints the state of each matching
+                # process (empty output if none are running).
+                _, states, _ = await _exec_on_unit(ops_test, unit, f"ps -o stat= -C {process}")
+                # A process is considered "up" only if it is not in a stopped
+                # (T/t) state; absent or stopped processes count as down.
+                running = [
+                    state
+                    for state in states.split("\n")
+                    if state.strip() and state.strip()[0] not in ("T", "t")
+                ]
+                if running:
                     raise ProcessRunningError
     except RetryError:
         return False
