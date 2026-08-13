@@ -20,8 +20,6 @@ from single_kernel_opensearch_dashboards.common.literals import (
     JWT_REL_NAME,
     OAUTH_REL_NAME,
     OPENSEARCH_REL_NAME,
-    PEER_APP_SECRETS,
-    PEER_UNIT_SECRETS,
     PEERS_REL_NAME,
     SERVER_PORT,
     STATUS_PEERS_REL_NAME,
@@ -29,19 +27,19 @@ from single_kernel_opensearch_dashboards.common.literals import (
     Substrates,
 )
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.core.models import (
-    JWT,
-    Ingress,
-    OAuth,
-    OpensearchServer,
-    OSDCluster,
-    OSDServer,
-)
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
-    DataPeerData,
-    DataPeerOtherUnitData,
-    DataPeerUnitData,
-    OpenSearchRequiresData,
+from single_kernel_opensearch_dashboards.core.ingress import IngressModel
+from single_kernel_opensearch_dashboards.core.jwt import JWTAuthConfiguration
+from single_kernel_opensearch_dashboards.core.network import Network
+from single_kernel_opensearch_dashboards.core.oauth import OAuthModel
+from single_kernel_opensearch_dashboards.core.opensearch import OpensearchServer
+from single_kernel_opensearch_dashboards.core.peer_app import OSDClusterModel
+from single_kernel_opensearch_dashboards.core.peer_unit import OSDServerModel
+from single_kernel_opensearch_dashboards.core.relation_base import bind_model_to_repository
+from single_kernel_opensearch_dashboards.core.upgrades import UpgradeUnitModel
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_interfaces import (
+    OpsOtherPeerUnitRepositoryInterface,
+    OpsPeerRepositoryInterface,
+    OpsPeerUnitRepositoryInterface,
 )
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
@@ -65,32 +63,36 @@ class ClusterState(Object, StatusesStateProtocol):
         super().__init__(parent=charm, key="osd_charm_state")
         self.substrate = substrate
         self.charm = charm
-        self._servers_data = {}
         # In-memory flag, set for the remainder of the `stop` hook dispatch so that
         # status recomputation ( emitted by ops right after `stop`)
         # can skip live health checks against a workload
         # that is already being torn down.
         self.unit_stopping = False
 
-        self.peer_app_data = DataPeerData(
-            self.model,
-            relation_name=PEERS_REL_NAME,
-            additional_secret_fields=PEER_APP_SECRETS,
+        # Repository interfaces for the peer databags (models built lazily below).
+        self.peer_app_interface = OpsPeerRepositoryInterface(
+            model=self.model, relation_name=PEERS_REL_NAME, data_model=OSDClusterModel
         )
-        self.peer_unit_data = DataPeerUnitData(
-            self.model,
-            relation_name=PEERS_REL_NAME,
-            additional_secret_fields=PEER_UNIT_SECRETS,
-        )
-
-        self.client_requires_data = OpenSearchRequiresData(
-            self.model,
-            relation_name=OPENSEARCH_REL_NAME,
-            index=DASHBOARD_INDEX,
-            extra_user_roles=DASHBOARD_ROLE,
+        self.peer_unit_interface = OpsPeerUnitRepositoryInterface(
+            model=self.model, relation_name=PEERS_REL_NAME, data_model=OSDServerModel
         )
 
         self.statuses = StatusesState(self, STATUS_PEERS_REL_NAME)
+
+    def _bind(
+        self, interface, relation: Relation | None, model_cls, component, read_only: bool = False
+    ):
+        """Build a fresh model bound to its relation databag.
+
+        Every access rebuilds and rebinds, so a model always reflects the current databag
+        """
+        if not relation:
+            return model_cls()
+        return bind_model_to_repository(
+            interface, relation.id, model_cls, component, read_only=read_only
+        )
+
+    # --- RELATIONS ---
 
     @property
     def peer_relation(self) -> Relation | None:
@@ -120,7 +122,7 @@ class ClusterState(Object, StatusesStateProtocol):
     @property
     def jwt_relation(self) -> Relation | None:
         """Return the jwt relation if present."""
-        return self.jwt.jwt_relation
+        return self.model.get_relation(JWT_REL_NAME)
 
     @property
     def ingress_relation(self) -> Relation | None:
@@ -141,108 +143,83 @@ class ClusterState(Object, StatusesStateProtocol):
         return self.charm.config
 
     @property
-    def unit_server(self) -> OSDServer:
+    def unit_server(self) -> OSDServerModel:
         """The server state of the current running Unit."""
-        return OSDServer(
-            relation=self.peer_relation,
-            data_interface=self.peer_unit_data,
-            component=self.model.unit,
-            substrate=self.substrate,
-            bind_address=self.bind_address,
+        return self._bind(
+            self.peer_unit_interface, self.peer_relation, OSDServerModel, self.model.unit
         )
 
     @property
-    def peer_units_data(self) -> dict[Unit, DataPeerOtherUnitData]:
-        """The cluster peer relation."""
-        if not self.peer_relation or not self.peer_relation.units:
-            return {}
-
-        for unit in self.peer_relation.units:
-            if unit not in self._servers_data:
-                self._servers_data[unit] = DataPeerOtherUnitData(
-                    model=self.model, unit=unit, relation_name=PEERS_REL_NAME
-                )
-        return self._servers_data
+    def network(self) -> Network:
+        """Host/network address resolution for the current running Unit."""
+        return Network(self.model.unit, self.substrate, self.bind_address)
 
     @property
-    def cluster(self) -> OSDCluster:
+    def cluster(self) -> OSDClusterModel:
         """The cluster state of the current running App."""
-        return OSDCluster(
-            relation=self.peer_relation,
-            data_interface=self.peer_app_data,
-            component=self.model.app,
-            substrate=self.substrate,
-            tls=bool(self.tls_relation),
+        return self._bind(
+            self.peer_app_interface, self.peer_relation, OSDClusterModel, self.model.app
         )
 
     @property
-    def servers(self) -> set[OSDServer]:
-        """Grabs all servers in the current peer relation, including the running unit server.
-
-        Returns:
-            Set of ODServers in the current peer relation, including the running unit server.
-        """
+    def servers(self) -> list[OSDServerModel]:
+        """Grabs all servers in the current peer relation, including the running unit server."""
         if not self.peer_relation:
-            return set()
+            return []
 
-        servers = set()
-        for unit, data_interface in self.peer_units_data.items():
-            servers.add(
-                OSDServer(
-                    relation=self.peer_relation,
-                    data_interface=data_interface,
-                    component=unit,
-                    substrate=self.substrate,
-                    bind_address=self.bind_address,
-                )
+        servers: list[OSDServerModel] = []
+        for unit in self.peer_relation.units:
+            # The running unit is added separately below
+            if unit == self.model.unit:
+                continue
+            interface = OpsOtherPeerUnitRepositoryInterface(
+                model=self.model,
+                relation_name=PEERS_REL_NAME,
+                unit=unit,
+                data_model=OSDServerModel,
             )
-        servers.add(self.unit_server)
+            model = self._bind(interface, self.peer_relation, OSDServerModel, unit, read_only=True)
+            servers.append(model)
+        servers.append(self.unit_server)
 
         return servers
 
     @property
     def opensearch_server(self) -> OpensearchServer | None:
-        """The state for all related client Applications."""
-        if not self.opensearch_relation or not self.opensearch_relation.app:
-            return None
-
-        # We assume no more than 1 server relation
-        return OpensearchServer(
-            relation=self.opensearch_relation,
-            data_interface=self.client_requires_data,
-            component=self.opensearch_relation.app,
-            substrate=self.substrate,
-            local_app=self.cluster.app,
-        )
+        """The state for the related OpenSearch server Application."""
+        return OpensearchServer.from_relation(self.model, self.opensearch_relation)
 
     @property
-    def jwt(self) -> JWT:
-        """The jwt relation state."""
-        return JWT(model=self.model, relation_name=JWT_REL_NAME)
+    def jwt(self) -> JWTAuthConfiguration | None:
+        """JWT configuration published by the provider on the JWT relation, if any."""
+        return JWTAuthConfiguration.from_relation(self.model, self.jwt_relation)
 
     @property
-    def ingress(self) -> Ingress:
+    def ingress(self) -> IngressModel:
         """The ingress relation state."""
-        return Ingress(relation=self.ingress_relation)
+        return IngressModel.from_relation(self.ingress_relation)
 
     @property
     def bind_address(self) -> str | None:
         """The network binding address from the peer relation."""
-        if not self.peer_relation:
+        if not (relation := self.peer_relation):
             return None
 
-        if not (binding := self.model.get_binding(self.peer_relation)):
+        if not (binding := self.model.get_binding(relation)):
             return None
 
-        return str(binding.network.bind_address)
+        if (address := binding.network.bind_address) is None:
+            return None
+
+        return f"{address}"
 
     # --- OAUTH ---
     @property
-    def oauth(self) -> OAuth:
+    def oauth(self) -> OAuthModel:
         """The oauth relation state."""
-        return OAuth(
+        return OAuthModel.from_relation(
             relation=self.oauth_relation,
-            client_secret=self.cluster.oauth_client_secret,
+            client_secret=self.cluster.oauth_client_secret or "",
         )
 
     @property
@@ -252,13 +229,7 @@ class ClusterState(Object, StatusesStateProtocol):
 
     def oauth_client_config(self) -> ClientConfig:
         """Generates actual client config for the OAuth."""
-        return ClientConfig(
-            audience=["opensearch"],
-            redirect_uri=f"{self.oauth_url}/auth/openid/login",
-            scope="openid profile email phone offline address",
-            grant_types=["authorization_code"],
-            token_endpoint_auth_method="client_secret_post",
-        )
+        return OAuthModel.client_config(self.oauth_url)
 
     # --- CLUSTER INIT ---
 
@@ -294,9 +265,9 @@ class ClusterState(Object, StatusesStateProtocol):
             return f"{scheme}://{self.bind_address}:{SERVER_PORT}"
 
         if self.ingress_relation and self.ingress.url:
-            return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}{self.ingress.base_path}"
+            return f"{scheme}://{self.network.host}:{SERVER_PORT}{self.ingress.base_path}"
 
-        return f"{scheme}://{self.unit_server.host}:{SERVER_PORT}"
+        return f"{scheme}://{self.network.host}:{SERVER_PORT}"
 
     @property
     def oauth_url(self) -> str:
@@ -330,7 +301,8 @@ class ClusterState(Object, StatusesStateProtocol):
             return []
 
         return [
-            self.upgrade_relation.data[unit].get("state", "") for unit in self.upgrade_app_units
+            UpgradeUnitModel.from_relation(self.upgrade_relation, unit).state
+            for unit in self.upgrade_app_units
         ]
 
     @property
@@ -340,7 +312,7 @@ class ClusterState(Object, StatusesStateProtocol):
         Returns:
             True if all application units in idle state. Otherwise False
         """
-        return not self.upgrade_unit_states or set(self.upgrade_unit_states) <= {"", "idle"}
+        return UpgradeUnitModel.all_idle(self.upgrade_unit_states)
 
     @property
     def upgrade_app_units(self) -> set[Unit]:

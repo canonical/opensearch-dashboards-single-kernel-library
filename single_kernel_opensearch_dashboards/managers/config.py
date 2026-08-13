@@ -18,11 +18,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     CharmStatuses,
     ConfigStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
@@ -103,7 +103,7 @@ class ConfigManager(BaseManager):
         # We are using the address exposed by Juju as service address
         properties |= {
             "server.host": (
-                self.state.unit_server.host if self.state.substrate == Substrates.VM else "0.0.0.0"
+                self.state.network.host if self.state.substrate == Substrates.VM else "0.0.0.0"
             )
         }
 
@@ -154,7 +154,11 @@ class ConfigManager(BaseManager):
                 properties["opensearch_security.auth.type"] = ["basicauth", "jwt"]
 
             properties["opensearch_security.auth.multiple_auth_enabled"] = True
-            properties |= {"opensearch_security.jwt.url_param": self.state.jwt.get_jwt_url()}
+            properties |= {
+                "opensearch_security.jwt.url_param": (
+                    self.state.jwt.jwt_url_parameter if self.state.jwt else None
+                )
+            }
 
         # Log-level
         config_log_level = self.state.unit_server.log_level
@@ -182,7 +186,7 @@ class ConfigManager(BaseManager):
             status_list.append(ConfigStatuses.WAITING_FOR_PEER.value)
 
         if self.state.jwt_relation:
-            if self.state.jwt.get_jwt_url() is None:
+            if not self.state.jwt or self.state.jwt.jwt_url_parameter is None:
                 status_list.append(ConfigStatuses.JWT_RELATIONS_DATA_FAILED.value)
 
         try:

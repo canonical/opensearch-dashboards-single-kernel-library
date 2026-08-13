@@ -144,10 +144,14 @@ async def test_dashboard_access(
     logger.info("Access with JWT successful")
 
     logger.info(f"Remove relation of {JWT_APP_NAME} with {APP_NAME}")
-    await ops_test.juju("remove-relation", JWT_APP_NAME, APP_NAME)
+    await ops_test.model.applications[APP_NAME].remove_relation(
+        JWT_REL_NAME, JWT_APP_NAME, block_until_done=True
+    )
 
     logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
-    await ops_test_vm.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test_vm.model.applications[JWT_APP_NAME].remove_relation(
+        JWT_REL_NAME, OPENSEARCH_APP_NAME, block_until_done=True
+    )
 
     await wait_for_dashboard_idle(ops_test, traefik, 60)
     logger.info("Test access with JWT after disabling")

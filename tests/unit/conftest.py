@@ -121,10 +121,26 @@ def harness(request):
     if options["add_opensearch"]:
         opensearch_rel_id = harness.add_relation(OPENSEARCH_REL_NAME, "opensearch")
         harness.add_relation_unit(opensearch_rel_id, "opensearch/0")
-        harness.update_relation_data(opensearch_rel_id, "opensearch", {"password": "test"})
+        # data-interfaces v1 delivers `password` and `tls-ca` through
+        # Juju secrets rather than plain databag keys.
+        data = {"password": "test"}
         if options["opensearch_data"]:
-            for key, value in options["opensearch_data"].items():
-                harness.update_relation_data(opensearch_rel_id, "opensearch", {key: value})
+            data.update(options["opensearch_data"])
+        secret_groups: dict[str, dict[str, str]] = {"secret-user": {}, "secret-tls": {}}
+        databag: dict[str, str] = {}
+        for key, value in data.items():
+            if key == "password":
+                secret_groups["secret-user"]["password"] = value
+            elif key == "tls-ca":
+                secret_groups["secret-tls"]["tls-ca"] = value
+            else:
+                databag[key] = value
+        for secret_field, content in secret_groups.items():
+            if content:
+                uri = harness.add_model_secret("opensearch", content)
+                harness.grant_secret(uri, CHARM_KEY)
+                databag[secret_field] = uri
+        harness.update_relation_data(opensearch_rel_id, "opensearch", databag)
 
     harness._update_config({"log_level": options["log_level"]})
 

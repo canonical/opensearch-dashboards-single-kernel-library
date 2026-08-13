@@ -25,14 +25,14 @@ from single_kernel_opensearch_dashboards.common.literals import (
     UPGRADE_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.config import CharmConfig
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     ConfigStatuses,
     HealthStatuses,
     ServerStatuses,
     UpgradeStatuses,
 )
+from single_kernel_opensearch_dashboards.core.config import CharmConfig
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.events.ingress import IngressEvents
 from single_kernel_opensearch_dashboards.events.jwt_auth import JwtEvents
 from single_kernel_opensearch_dashboards.events.oauth import OAuthEvents
@@ -224,7 +224,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             )
 
         self.cluster_manager.restart_server()
-        self.state.unit_server.update({"state": "started"})
+        self.state.unit_server.started = True
         self.unit.open_port(protocol="tcp", port=SERVER_PORT)
 
         # Checking health after restart

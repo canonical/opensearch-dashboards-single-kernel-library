@@ -18,9 +18,9 @@ from single_kernel_opensearch_dashboards.common.literals import (
     DEPENDENCIES,
     Substrates,
 )
+from single_kernel_opensearch_dashboards.common.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.core.config import CharmConfig
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import UpgradeStatuses
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_models import (
     TypedCharmBase,
 )

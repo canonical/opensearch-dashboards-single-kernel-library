@@ -16,7 +16,6 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDAPIError,
-    OSDFileOperationError,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,

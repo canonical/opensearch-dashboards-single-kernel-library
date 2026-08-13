@@ -22,11 +22,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     UPGRADE_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     CharmStatuses,
     UpgradeStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrade import (
     BaseModel,
     DependencyModel,

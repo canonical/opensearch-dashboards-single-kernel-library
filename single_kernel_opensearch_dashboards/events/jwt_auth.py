@@ -12,8 +12,8 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     JWT_REL_NAME,
 )
+from single_kernel_opensearch_dashboards.common.statuses import ConfigStatuses
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import ConfigStatuses
 
 logger = logging.getLogger(__name__)
 

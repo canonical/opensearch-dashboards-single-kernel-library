@@ -8,22 +8,93 @@ import logging
 from typing import cast
 
 from ops import CharmBase, Object
-from ops.charm import RelationBrokenEvent, RelationEvent
+from ops.charm import (
+    RelationBrokenEvent,
+    RelationChangedEvent,
+    RelationCreatedEvent,
+    RelationEvent,
+    SecretChangedEvent,
+)
+from ops.model import Application, Relation
 from typing_extensions import Any
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
+    DASHBOARD_INDEX,
+    DASHBOARD_ROLE,
     OPENSEARCH_REL_NAME,
 )
+from single_kernel_opensearch_dashboards.common.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
-    OpenSearchRequiresEventHandlers,
+from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.data_interfaces import (
+    OpsRelationRepository,
+    RequirerCommonModel,
+    ResourceProviderModel,
+    ResourceRequirerEventHandler,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class V0CompatibleResourceRequirer(ResourceRequirerEventHandler):
+    """Requirer handler that tolerates a legacy data-interfaces v0 OpenSearch provider.
+
+    The v1 relation-changed / secret-changed handlers build a ``DataContractV1`` from the
+    provider's application databag and raise ``ValidationError`` on a flat v0 databag —
+    where the ``version`` field is the OpenSearch *workload* version rather
+    than the ``"v1"`` contract marker. An unhandled error there puts the whole hook into an
+    error state.
+    OpenSearch Dashboards still supports v0 providers: it consumes their response through
+    :class:`OpensearchServer`, and it reacts to that
+    data in ``RequirerEvents._on_client_relation_changed``
+    Support is bidirectional.
+    """
+
+    def _on_relation_created_event(self, event: RelationCreatedEvent) -> None:
+        super()._on_relation_created_event(event)
+
+        # The parent already wrote the v1 request (leader only). Mirror it in the flat v0
+        # shape so a provider still on data-interfaces v0 can read and fulfil the request.
+        if not self.charm.unit.is_leader():
+            return
+
+        repository = OpsRelationRepository(self.model, event.relation, self.charm.app)
+        for request in self._requests:
+            if request.resource:
+                repository.write_field("index", request.resource)
+            if request.extra_user_roles:
+                repository.write_field("extra-user-roles", request.extra_user_roles)
+            if request.extra_group_roles:
+                repository.write_field("extra-group-roles", request.extra_group_roles)
+
+    def _provider_speaks_v0(self, relation: Relation, app: Application | None) -> bool:
+        """True when the provider's databag is a flat, pre-v1 payload with data present."""
+        if app is None:
+            return False
+        version = OpsRelationRepository(self.model, relation, component=app).get_field("version")
+        return version is not None and version != "v1"
+
+    def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
+        if self._provider_speaks_v0(event.relation, event.app):
+            logger.debug(
+                "Legacy v0 opensearch provider databag detected; skipping v1 requirer "
+                "processing (data is consumed through OpensearchServer)."
+            )
+            return
+        super()._on_relation_changed_event(event)
+
+    def _on_secret_changed_event(self, event: SecretChangedEvent) -> None:
+        if event.secret.label:
+            relation = self._relation_from_secret_label(event.secret.label)
+            if relation and self._provider_speaks_v0(relation, relation.app):
+                logger.debug(
+                    "Legacy v0 opensearch secret change detected; skipping v1 requirer "
+                    "processing (data is consumed through OpensearchServer)."
+                )
+                return
+        super()._on_secret_changed_event(event)
 
 
 class RequirerEvents(Object):
@@ -38,8 +109,13 @@ class RequirerEvents(Object):
         self.charm = charm
         self.state = state
         self.tls_manager = self.charm.tls_manager
-        self.requirer_events = OpenSearchRequiresEventHandlers(
-            cast(CharmBase, cast(Any, charm)), self.state.client_requires_data
+        self.requirer_events = V0CompatibleResourceRequirer(
+            cast(CharmBase, cast(Any, charm)),
+            relation_name=OPENSEARCH_REL_NAME,
+            requests=[
+                RequirerCommonModel(resource=DASHBOARD_INDEX, extra_user_roles=DASHBOARD_ROLE),
+            ],
+            response_model=ResourceProviderModel,
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed
