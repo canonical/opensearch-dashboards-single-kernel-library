@@ -204,6 +204,23 @@ async def _recover_from_signal(
                     )
                 )
 
+    # Opensearch does not restart a SIGSTOP-frozen process,
+    # so it never recovers on its own.
+    # un-freeze it and let the system recover, so we can verify
+    # the dashboards reconnect once the node is responsive again.
+    if signal == "SIGSTOP" and not is_dashboards:
+        logger.info(f"Holding {app_name}:{units} frozen so the outage is registered...")
+        await asyncio.sleep(UPDATE_STATUS_INTERVAL + 2)
+        logger.info(f"Sending SIGCONT to un-freeze {app_name}:{units}...")
+        await asyncio.gather(
+            *[
+                send_control_signal(
+                    app_ops_test, unit, "SIGCONT", app_name, True if container else False
+                )
+                for unit in units
+            ]
+        )
+
     logger.info("Waiting a bit, so the process could safely restart...")
     await asyncio.sleep(UPDATE_STATUS_INTERVAL + 2)
     if signal == "SIGSTOP":
@@ -247,14 +264,13 @@ async def test_signal_opensearch_process_leader_https(
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 async def test_sigstop_opensearch_process_leader(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
-    """Signals Opensearch leader process and checks recovery + re-election."""
+    """Freezes the Opensearch leader with SIGSTOP, un-freezes it, and checks recovery."""
     db_leader_name = await get_leader_name(ops_test_vm, app_name=OPENSEARCH_APP_NAME)
     await _recover_from_signal(
         ops_test_vm=ops_test_vm,
@@ -316,14 +332,13 @@ async def test_signal_opensearch_process_cluster(
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 async def test_sigstop_opensearch_process_cluster(
     ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
-    """Signals Opensearch leader process and checks recovery + re-election."""
+    """Freezes the whole Opensearch cluster with SIGSTOP, un-freezes it, and checks recovery."""
     db_units = [unit.name for unit in ops_test_vm.model.applications[OPENSEARCH_APP_NAME].units]
     await _recover_from_signal(
         ops_test_vm=ops_test_vm,
