@@ -163,5 +163,6 @@ jobs:
     uses: ./.github/workflows/integration_test.yaml
     with:
       artifact-prefix: packed-charm
+      run-on-all-bases: ${{ github.event_name == 'schedule' }}
     permissions:
       contents: write # Needed for Allure Report
