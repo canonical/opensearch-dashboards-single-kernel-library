@@ -10,6 +10,7 @@ from pytest_operator.plugin import OpsTest
 logger = logging.getLogger(__name__)
 
 K8S_CLOUD_NAME = "uk8s"
+SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -23,57 +24,13 @@ def opensearch_sysctl_settings():
 
 
 @pytest.fixture(scope="session")
-def dashboard_substrate() -> Literal["k8s", "vm"]:
-    """Returns the substrate for the dashboards charm.
-
-    Normally equals SUBSTRATE, but for VM OAuth tests the identity bundle runs on K8S
-    (SUBSTRATE=k8s) while the dashboards charm is still the VM variant
-    (DASHBOARD_SUBSTRATE=vm).
-    """
-    sub = os.environ.get("DASHBOARD_SUBSTRATE", os.environ.get("SUBSTRATE", "vm")).lower()
-    if sub not in ("k8s", "vm"):
-        raise ValueError(
-            f"DASHBOARD_SUBSTRATE has invalid value. Correct values are k8s, vm. Current value {sub}."
-        )
-    return sub
-
-
-@pytest.fixture(scope="session")
 def substrate() -> Literal["k8s", "vm"]:
     """Returns the substrate"""
-    sub = os.environ.get("SUBSTRATE", "vm").lower()
-    if sub not in ("k8s", "vm"):
+    if SUBSTRATE not in ("k8s", "vm"):
         raise ValueError(
-            f"Substrate has invalid value. Correct values are k8s, vm. Current value {sub}."
+            f"Substrate has invalid value. Correct values are k8s, vm. Current value {SUBSTRATE}."
         )
-    return sub
-
-
-@pytest.fixture
-def charm_base():
-    """Returns the base in the modern format, e.g., 'ubuntu@22.04'."""
-    base_version = os.environ.get("CHARM_UBUNTU_BASE", "22.04")
-    return f"ubuntu@{base_version}"
-
-
-@pytest.fixture
-def charmvm(charm_base):
-    """Path to the vm charm file to use for testing."""
-    # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
-    # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
-    # Charmhub charms.
-    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
-
-
-@pytest.fixture
-def charmk8s(charm_base):
-    """Path to the vm charm file to use for testing."""
-    # Return str instead of pathlib.Path since python-lib juju's model.deploy(), juju deploy, and
-    # juju bundle files expect local charms to begin with `./` or `/` to distinguish them from
-    # Charmhub charms.
-    return (
-        f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
-    )
+    return SUBSTRATE
 
 
 @pytest.fixture
@@ -82,44 +39,22 @@ def application_charm() -> str:
     return "./tests/integration/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
 
 
-@pytest.fixture
-def dashboard_tester_charm() -> str:
-    """Path to the application charm to use for testing."""
-    return "./tests/integration/dashboards_tester_charm/dashboard-tester_ubuntu@24.04-amd64.charm"
-
-
-@pytest.fixture
-def dashboard_k8s_upgrade_charm(charm_base) -> str:
-    """Path to the k8s upgrade test charm (old version to upgrade from)."""
-    return f"./tests/integration/dashboards_k8s_upgrade_test_charm/opensearch-dashboards_{charm_base}-amd64.charm"
-
-
-def pytest_addoption(parser):
-    parser.addoption(
-        "--k8s-charm",
-        action="store_true",
-        default=False,
-        help="Run tests targeting the Kubernetes charm.",
-    )
-
-
 def pytest_collection_modifyitems(config, items):
-    substrate = os.environ.get("SUBSTRATE", "vm").lower()
     tls = os.environ.get("TEST_TLS", "false").lower() == "true"
     skip_vm_only = pytest.mark.skip(reason="VM-only scenario.")
     skip_k8s_only = pytest.mark.skip(reason="K8s-only scenario.")
     skip_tls_only = pytest.mark.skip(reason="TLS is disabled in this matrix run.")
     for item in items:
-        if substrate != "vm" and "vm_only" in item.keywords:
+        if SUBSTRATE != "vm" and "vm_only" in item.keywords:
             item.add_marker(skip_vm_only)
-        if substrate != "k8s" and "k8s_only" in item.keywords:
+        if SUBSTRATE != "k8s" and "k8s_only" in item.keywords:
             item.add_marker(skip_k8s_only)
         if not tls and "tls_only" in item.keywords:
             item.add_marker(skip_tls_only)
 
 
 def pytest_configure(config):
-    if os.environ.get("SUBSTRATE", "vm").lower() == "k8s":
+    if SUBSTRATE == "k8s":
         k8s_cloud = os.environ.get("K8S_CLOUD", "uk8s")
         if not getattr(config.option, "cloud", None):
             config.option.cloud = k8s_cloud
@@ -130,6 +65,7 @@ class Flags:
         self.test_tls = os.environ.get("TEST_TLS", "false").lower() == "true"
         self.traefik = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
         self.transfer_traefik_ca = os.environ.get("TRANSFER_TRAEFIK_CA", "false").lower() == "true"
+        self.charm_base = f"ubuntu@{os.environ.get('CHARM_UBUNTU_BASE', '24.04')}"
         if self.transfer_traefik_ca and not self.traefik:
             raise ValueError("TRANSFER_TRAEFIK_CA=true requires TEST_TRAEFIK=true.")
 
@@ -141,27 +77,22 @@ def test_flags() -> Flags:
 
 
 @pytest.fixture(scope="module")
-async def ops_test_vm(
+async def ops_test_k8s(
     request, tmp_path_factory, ops_test: OpsTest
 ) -> AsyncGenerator[OpsTest, Any]:
-    """Returns a VM OpsTest.
-
-    When the primary substrate is k8s (ops_test points to k8s), this fixture creates and
-    manages a secondary VM model for OpenSearch. When the primary substrate is vm, this
-    fixture simply yields the same ops_test.
-    """
-    if os.environ.get("SUBSTRATE", "vm").lower() != "k8s":
+    """Returns the k8s OpsTest hosting the identity/IAM bundle."""
+    if SUBSTRATE != "vm":
         yield ops_test
         return
 
-    model_name = f"{ops_test.model_name}-vm"
+    model_name = f"{ops_test.model_name}-k8s"
 
     orig_cloud = getattr(request.config.option, "cloud", None)
     orig_model = getattr(request.config.option, "model", None)
     orig_alias = getattr(request.config.option, "model_alias", None)
 
     request.config.option.controller = ops_test.controller_name
-    request.config.option.cloud = "localhost"
+    request.config.option.cloud = K8S_CLOUD_NAME
     request.config.option.model = model_name
     request.config.option.model_alias = model_name
 

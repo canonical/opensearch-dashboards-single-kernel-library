@@ -99,8 +99,6 @@ jobs:
       matrix:
         path:
           - tests/integration/dashboards_application_charm
-          - tests/integration/dashboards_tester_charm
-          - tests/integration/dashboards_k8s_upgrade_test_charm
           - tests/charms/dashboards_vm_charm
           - tests/charms/dashboards_k8s_charm
     steps:
