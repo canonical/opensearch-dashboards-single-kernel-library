@@ -11,7 +11,9 @@ import pytest
 from pytest_operator.plugin import OpsTest
 
 import tests.integration.ha.helpers as ha_helpers
+from single_kernel_opensearch_dashboards.common.literals import SERVER_PORT
 from tests.integration.conftest import Flags
+from tests.integration.ha.helpers import LONG_TIMEOUT, LONG_WAIT
 from tests.integration.helpers import (
     APP_NAME,
     OPENSEARCH_APP_NAME,
@@ -28,22 +30,13 @@ from tests.integration.helpers import (
 logger = logging.getLogger(__name__)
 
 
-CLIENT_TIMEOUT = 10
-RESTART_DELAY = 60
-
-PEER = "dashboard_peers"
-SERVER_PORT = 5601
-
 NUM_UNITS_APP = 2
 NUM_UNITS_DB = 2
 
-LONG_TIMEOUT = 3000
-LONG_WAIT = 30
-
 
 @pytest.fixture(scope="module", autouse=True)
-async def chaos_mesh(ops_test_vm: OpsTest, ops_test: OpsTest):
-    if ops_test_vm.model.name == ops_test.model.name:
+async def chaos_mesh(ops_test: OpsTest, substrate: str):
+    if substrate == "vm":
         yield
         return
 
@@ -76,21 +69,15 @@ async def chaos_mesh(ops_test_vm: OpsTest, ops_test: OpsTest):
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
-    charm_base: str,
     substrate: str,
     test_flags: Flags,
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-    charm = charmvm if substrate == "vm" else charmk8s
+    charm_base = test_flags.charm_base
     app_name = await deploy_base(
-        ops_test_vm,
         ops_test,
-        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,
@@ -116,14 +103,6 @@ async def test_build_and_deploy(
 
     if tls:
         logger.info("Initializing TLS Charm connections")
-        if substrate == "k8s":
-            await ops_test_vm.model.create_offer(
-                "certificates", TLS_CERTIFICATES_APP_NAME, "self-signed-certificates"
-            )
-            await ops_test.model.consume(
-                f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}"
-            )
-
         await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
 
         if substrate == "k8s":
@@ -131,7 +110,7 @@ async def test_build_and_deploy(
                 TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
             )
 
-        await ops_test_vm.model.wait_for_idle(
+        await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
         )
         await ops_test.model.wait_for_idle(
@@ -139,7 +118,7 @@ async def test_build_and_deploy(
         )
 
         logger.info("Checking Dashboard access after TLS is configured")
-        assert await access_all_dashboards(ops_test_vm, ops_test, https=True, verify=True)
+        assert await access_all_dashboards(ops_test, https=True, verify=True)
 
 
 ##############################################################################
@@ -149,7 +128,6 @@ async def test_build_and_deploy(
 
 @pytest.mark.abort_on_fail
 async def test_network_cut_ip_change_leader_http(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
@@ -179,21 +157,21 @@ async def test_network_cut_ip_change_leader_http(
 
     else:
         # VM
-        machine_name = await ha_helpers.get_unit_machine_name(ops_test_vm, old_leader_name)
+        machine_name = await ha_helpers.get_unit_machine_name(ops_test, old_leader_name)
         logger.info(
             f"Cutting leader unit from network from {old_leader_name} ({machine_name}/{old_ip})..."
         )
         ha_helpers.cut_unit_network(machine_name)
 
         logger.info(f"Waiting until unit {old_leader_name} is not reachable")
-        await ops_test_vm.model.block_until(
+        await ops_test.model.block_until(
             lambda: not ha_helpers.reachable(old_ip, SERVER_PORT),
             timeout=LONG_TIMEOUT,
             wait_period=LONG_WAIT,
         )
 
         logger.info(f"Waiting until unit {old_leader_name} is 'lost'")
-        await ops_test_vm.model.block_until(
+        await ops_test.model.block_until(
             lambda: (
                 ["unknown", "lost"]
                 == ha_helpers.get_unit_state_from_status(ops_test, old_leader_name, APP_NAME)
@@ -214,9 +192,7 @@ async def test_network_cut_ip_change_leader_http(
 
         # Check all nodes but the old leader
         logger.info("Checking Dashboard access for the rest of the nodes...")
-        assert await access_all_dashboards(
-            ops_test_vm, ops_test, skip=[old_leader_name], https=tls, verify=tls
-        )
+        assert await access_all_dashboards(ops_test, skip=[old_leader_name], https=tls, verify=tls)
 
         logger.info(f"Restoring network for {old_leader_name}...")
         try:
@@ -235,7 +211,7 @@ async def test_network_cut_ip_change_leader_http(
     assert new_ip != old_ip
     logger.info(f"Old IP {old_ip} has changed to {new_ip}...")
 
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME, OPENSEARCH_APP_NAME],
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
@@ -243,12 +219,11 @@ async def test_network_cut_ip_change_leader_http(
     await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
+    assert await access_all_dashboards(ops_test, https=tls, verify=tls)
 
 
 @pytest.mark.abort_on_fail
 async def test_network_cut_no_ip_change_leader_http(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
@@ -299,9 +274,7 @@ async def test_network_cut_no_ip_change_leader_http(
     )
 
     logger.info("Checking Dashboard access for the rest of the nodes...")
-    assert await access_all_dashboards(
-        ops_test_vm, ops_test, skip=[old_leader_name], https=tls, verify=tls
-    )
+    assert await access_all_dashboards(ops_test, skip=[old_leader_name], https=tls, verify=tls)
 
     logger.info("Restoring network...")
     try:
@@ -327,7 +300,7 @@ async def test_network_cut_no_ip_change_leader_http(
     current_ip = await get_address(ops_test, old_leader_name, APP_NAME, substrate)
     assert old_ip == current_ip
 
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME, OPENSEARCH_APP_NAME],
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
@@ -335,12 +308,11 @@ async def test_network_cut_no_ip_change_leader_http(
     await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
+    assert await access_all_dashboards(ops_test, https=tls, verify=tls)
 
 
 @pytest.mark.abort_on_fail
 async def test_network_cut_ip_change_application_http(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
@@ -427,7 +399,7 @@ async def test_network_cut_ip_change_application_http(
         assert new_ip != old_ip
         logger.info(f"Old IP {old_ip} has changed to {new_ip}...")
 
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME, OPENSEARCH_APP_NAME],
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
@@ -435,12 +407,11 @@ async def test_network_cut_ip_change_application_http(
     await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
+    assert await access_all_dashboards(ops_test, https=tls, verify=tls)
 
 
 @pytest.mark.abort_on_fail
 async def test_network_no_ip_change_application_http(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
@@ -527,7 +498,7 @@ async def test_network_no_ip_change_application_http(
         for unit in unit_ip_map
     )
 
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME, OPENSEARCH_APP_NAME],
         wait_for_active=True,
         timeout=LONG_TIMEOUT,
@@ -535,4 +506,4 @@ async def test_network_no_ip_change_application_http(
     await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT)
 
     logger.info("Checking Dashboard access...")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=tls, verify=tls)
+    assert await access_all_dashboards(ops_test, https=tls, verify=tls)

@@ -99,8 +99,6 @@ jobs:
       matrix:
         path:
           - tests/integration/dashboards_application_charm
-          - tests/integration/dashboards_tester_charm
-          - tests/integration/dashboards_k8s_upgrade_test_charm
           - tests/charms/dashboards_vm_charm
           - tests/charms/dashboards_k8s_charm
     steps:
@@ -163,5 +161,6 @@ jobs:
     uses: ./.github/workflows/integration_test.yaml
     with:
       artifact-prefix: packed-charm
+      run-on-all-bases: ${{ github.event_name == 'schedule' }}
     permissions:
       contents: write # Needed for Allure Report

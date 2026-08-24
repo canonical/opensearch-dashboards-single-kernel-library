@@ -4,15 +4,15 @@
 
 import json
 import logging
-from pathlib import Path
 
 import pytest
-import yaml
 from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
 from .helpers import (
-    DUMMY_CHARM,
+    DB_CLIENT_APP_NAME,
+    NUM_UNITS_APP,
+    NUM_UNITS_DB,
     OPENSEARCH_APP_NAME,
     RESOURCE,
     TLS_CERTIFICATES_APP_NAME,
@@ -24,57 +24,35 @@ from .helpers import (
     get_charm_workload_version,
     get_dashboards_version,
     is_https_enabled,
+    local_dashboards_charm,
     wait_for_dashboard_idle,
 )
 
 logger = logging.getLogger(__name__)
-
-METADATA_UPGRADE_TEST_K8S = yaml.safe_load(
-    Path("tests/integration/dashboards_k8s_upgrade_test_charm/metadata.yaml").read_text()
-)
-RESOURCE_OLD = {
-    "opensearch-dashboards-image": METADATA_UPGRADE_TEST_K8S["resources"][
-        "opensearch-dashboards-image"
-    ]["upstream-source"]
-}
-NUM_UNITS_APP = 3
-NUM_UNITS_DB = 3
 
 CHANNEL_STABLE = "2/stable"
 CHANNEL_EDGE = "2/edge"
 
 
 async def _run_upgrade_scenario(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charm: str,
-    charm_base: str,
     substrate: str,
-    dashboard_tester_charm: str,
+    application_charm: str,
     test_flags: Flags,
     old_charm_channel: str | None = None,
-    old_charm_local: str | None = None,
-    old_charm_resource: dict | None = None,
 ) -> None:
-    """Deploy an old dashboards release, upgrade it to the local charm, and check the workload version changed.
-
-    The old release is pulled from Charmhub (`old_charm_channel`) or built locally
-    (`old_charm_local`, e.g. the k8s upgrade test charm pinned to an old workload version).
-    Handles both substrates; k8s additionally needs ingress (Traefik or the dashboard tester
-    charm) and a cross-model TLS offer, since OpenSearch/TLS live in a separate VM model there.
-    """
+    """Deploy an old dashboards release, upgrade it to the local charm, and check the workload version changed."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
+    charm_base = test_flags.charm_base
+    charm = local_dashboards_charm(charm_base)
     app_name = await deploy_base(
-        ops_test_vm=ops_test_vm,
-        ops_test=ops_test,
-        charm=old_charm_local or charm,
+        ops_test,
         charm_base=charm_base,
         substrate=substrate,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
         trust_charm=True,
-        resource=old_charm_resource,
         charm_channel=old_charm_channel,
     )
 
@@ -90,15 +68,9 @@ async def _run_upgrade_scenario(
             await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
             await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
         else:
-            await ops_test.model.deploy(dashboard_tester_charm, application_name=DUMMY_CHARM)
+            await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
 
         if tls:
-            await ops_test_vm.model.create_offer(
-                "certificates", TLS_CERTIFICATES_APP_NAME, "self-signed-certificates"
-            )
-            await ops_test.model.consume(
-                f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}"
-            )
             await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
             if traefik:
                 await ops_test.model.integrate(
@@ -106,7 +78,7 @@ async def _run_upgrade_scenario(
                 )
 
         await wait_for_dashboard_idle(ops_test, traefik)
-        await ops_test_vm.model.wait_for_idle(
+        await ops_test.model.wait_for_idle(
             apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000
         )
     else:
@@ -155,9 +127,7 @@ async def _run_upgrade_scenario(
 
     await wait_for_dashboard_idle(ops_test, traefik, idle_period=60)
     # Validate access
-    assert await access_all_dashboards(
-        ops_test_vm, ops_test, https=is_https_enabled(test_flags), verify=tls
-    )
+    assert await access_all_dashboards(ops_test, https=is_https_enabled(test_flags), verify=tls)
 
     new_workload_version = {
         unit.name: get_charm_workload_version(ops_test.model_full_name, unit.name, substrate)
@@ -181,22 +151,16 @@ async def _run_upgrade_scenario(
 @pytest.mark.vm_only
 @pytest.mark.abort_on_fail
 async def test_vm_upgrade_from_stable(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charm_base: str,
     substrate: str,
-    dashboard_tester_charm: str,
+    application_charm: str,
     test_flags: Flags,
 ):
     """VM: upgrade from the 2/stable Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
-        ops_test_vm,
         ops_test,
-        charmvm,
-        charm_base,
         substrate,
-        dashboard_tester_charm,
+        application_charm,
         test_flags,
         old_charm_channel=CHANNEL_STABLE,
     )
@@ -205,22 +169,16 @@ async def test_vm_upgrade_from_stable(
 @pytest.mark.vm_only
 @pytest.mark.abort_on_fail
 async def test_vm_upgrade_from_edge(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charm_base: str,
     substrate: str,
-    dashboard_tester_charm: str,
+    application_charm: str,
     test_flags: Flags,
 ):
     """VM: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
-        ops_test_vm,
         ops_test,
-        charmvm,
-        charm_base,
         substrate,
-        dashboard_tester_charm,
+        application_charm,
         test_flags,
         old_charm_channel=CHANNEL_EDGE,
     )
@@ -228,56 +186,17 @@ async def test_vm_upgrade_from_edge(
 
 @pytest.mark.k8s_only
 @pytest.mark.abort_on_fail
-async def test_k8s_upgrade_from_local_2_19_4_charm(
-    ops_test_vm: OpsTest,
-    ops_test: OpsTest,
-    charmk8s: str,
-    charm_base: str,
-    substrate: str,
-    dashboard_tester_charm: str,
-    dashboard_k8s_upgrade_charm: str,
-    test_flags: Flags,
-):
-    """K8s: upgrade from the locally built old-version test charm to the locally built current charm.
-
-    Used in place of a Charmhub 2/stable release, which doesn't exist yet for the k8s charm.
-    """
-    await _run_upgrade_scenario(
-        ops_test_vm,
-        ops_test,
-        charmk8s,
-        charm_base,
-        substrate,
-        dashboard_tester_charm,
-        test_flags,
-        old_charm_local=dashboard_k8s_upgrade_charm,
-        old_charm_resource=RESOURCE_OLD,
-    )
-
-
-@pytest.mark.skip(reason="opensearch-dashboards-k8s has not been published to 2/edge yet")
-@pytest.mark.k8s_only
-@pytest.mark.abort_on_fail
 async def test_k8s_upgrade_from_edge(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmk8s: str,
-    charm_base: str,
     substrate: str,
-    dashboard_tester_charm: str,
+    application_charm: str,
     test_flags: Flags,
 ):
-    """K8s: upgrade from the 2/edge Charmhub release to the locally built charm.
-
-    Disabled until opensearch-dashboards-k8s is published to 2/edge
-    """
+    """K8s: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
-        ops_test_vm,
         ops_test,
-        charmk8s,
-        charm_base,
         substrate,
-        dashboard_tester_charm,
+        application_charm,
         test_flags,
         old_charm_channel=CHANNEL_EDGE,
     )

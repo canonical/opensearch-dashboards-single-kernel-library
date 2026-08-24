@@ -13,7 +13,7 @@ from tests.integration.conftest import Flags
 
 from ..helpers import (
     APP_NAME,
-    DUMMY_CHARM,
+    DB_CLIENT_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
@@ -28,35 +28,22 @@ logger = logging.getLogger(__name__)
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
-    charm_base: str,
-    dashboard_tester_charm: str,
+    application_charm: str,
     substrate: str,
     test_flags: Flags,
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-    charm = charmvm if substrate == "vm" else charmk8s
+    charm_base = test_flags.charm_base
     app_name = await deploy_base(
-        ops_test_vm,
         ops_test,
-        charm,
         charm_base,
         substrate,
         num_units_app=1,
         num_units_db=2,
     )
-
-    if substrate == "k8s":
-        await ops_test_vm.model.create_offer(
-            endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
-            offer_name="self-signed-certificates",
-        )
-        await ops_test.model.consume(f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}")
 
     if traefik:
         await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
@@ -77,7 +64,7 @@ async def test_build_and_deploy(
         elif not substrate == "k8s" or traefik:
             await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
         else:
-            await ops_test.model.deploy(dashboard_tester_charm, application_name=DUMMY_CHARM)
+            await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
             await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
     elif substrate == "k8s" and not traefik:
         await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
@@ -91,7 +78,6 @@ async def test_build_and_deploy(
 
 
 async def scale_up(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     amount: int,
     substrate: str,
@@ -129,11 +115,10 @@ async def scale_up(
     assert num_units == expected
 
     logger.info("Checking the functionality of the new units")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https=https, verify=https)
+    assert await access_all_dashboards(ops_test, https=https, verify=https)
 
 
 async def scale_down(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     unit_ids: list[int],
     substrate: str,
@@ -174,7 +159,7 @@ async def scale_down(
 
     logger.info("Checking the functionality of the remaining units")
     if expected > 0:
-        assert await access_all_dashboards(ops_test_vm, ops_test, https=https, verify=https)
+        assert await access_all_dashboards(ops_test, https=https, verify=https)
 
 
 ##############################################################################
@@ -184,14 +169,12 @@ async def scale_down(
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_up(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ) -> None:
     """Testing that newly added units are functional."""
     await scale_up(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         amount=2,
         substrate=substrate,
@@ -201,14 +184,12 @@ async def test_horizontal_scale_up(
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_down(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ) -> None:
     """Testing that decreasing units keeps functionality."""
     await scale_down(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         unit_ids=[1, 2],
         substrate=substrate,
@@ -218,14 +199,12 @@ async def test_horizontal_scale_down(
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_down_to_zero(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ) -> None:
     """Testing that scaling down to 0 units is possible."""
     await scale_down(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         unit_ids=[0],
         substrate=substrate,
@@ -235,14 +214,12 @@ async def test_horizontal_scale_down_to_zero(
 
 @pytest.mark.abort_on_fail
 async def test_horizontal_scale_up_from_zero(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ) -> None:
     """Testing that scaling up from zero units works."""
     await scale_up(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         amount=3,
         substrate=substrate,
