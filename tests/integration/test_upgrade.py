@@ -19,12 +19,11 @@ from .helpers import (
     TRAEFIK_APP_NAME,
     access_all_dashboards,
     assert_no_downgrade,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     get_app_relation_data,
     get_charm_workload_version,
     get_dashboards_version,
     is_https_enabled,
-    local_dashboards_charm,
     wait_for_dashboard_idle,
 )
 
@@ -39,15 +38,16 @@ async def _run_upgrade_scenario(
     substrate: str,
     application_charm: str,
     test_flags: Flags,
+    charm_base: str,
+    charm: str,
     old_charm_channel: str | None = None,
 ) -> None:
     """Deploy an old dashboards release, upgrade it to the local charm, and check the workload version changed."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-    charm_base = test_flags.charm_base
-    charm = local_dashboards_charm(charm_base)
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm=charm,
         charm_base=charm_base,
         substrate=substrate,
         num_units_app=NUM_UNITS_APP,
@@ -155,6 +155,8 @@ async def test_vm_upgrade_from_stable(
     substrate: str,
     application_charm: str,
     test_flags: Flags,
+    charm_base: str,
+    charm: str,
 ):
     """VM: upgrade from the 2/stable Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -162,6 +164,8 @@ async def test_vm_upgrade_from_stable(
         substrate,
         application_charm,
         test_flags,
+        charm_base,
+        charm,
         old_charm_channel=CHANNEL_STABLE,
     )
 
@@ -173,6 +177,8 @@ async def test_vm_upgrade_from_edge(
     substrate: str,
     application_charm: str,
     test_flags: Flags,
+    charm_base: str,
+    charm: str,
 ):
     """VM: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -180,6 +186,8 @@ async def test_vm_upgrade_from_edge(
         substrate,
         application_charm,
         test_flags,
+        charm_base,
+        charm,
         old_charm_channel=CHANNEL_EDGE,
     )
 
@@ -191,6 +199,8 @@ async def test_k8s_upgrade_from_edge(
     substrate: str,
     application_charm: str,
     test_flags: Flags,
+    charm_base: str,
+    charm: str,
 ):
     """K8s: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -198,5 +208,7 @@ async def test_k8s_upgrade_from_edge(
         substrate,
         application_charm,
         test_flags,
+        charm_base,
+        charm,
         old_charm_channel=CHANNEL_EDGE,
     )

@@ -17,7 +17,7 @@ from ..helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     get_leader_name,
     wait_for_ingress_blocked,
 )
@@ -74,15 +74,17 @@ async def test_build_and_deploy(
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-    charm_base = test_flags.charm_base
     if substrate == "k8s":
         await ops_test.model.set_config(K8s_CONFIG)
 
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,
@@ -146,8 +148,6 @@ async def _recover_from_signal(
     verify: bool = False,
 ):
     is_dashboards = app_name == APP_NAME
-    # dashboards and opensearch share the same model
-    app_ops_test = ops_test
     container = ""
     if is_dashboards and substrate == "k8s":
         container = "opensearch-dashboards"
@@ -164,7 +164,7 @@ async def _recover_from_signal(
             await asyncio.gather(
                 *[
                     send_control_signal(
-                        app_ops_test, unit, signal, app_name, True if container else False
+                        ops_test, unit, signal, app_name, True if container else False
                     )
                     for unit in units
                 ]
@@ -179,9 +179,7 @@ async def _recover_from_signal(
                 # Check that process is down
                 logger.info(f"Waiting for {app_name}:{units} to be down...")
                 assert all(
-                    await asyncio.gather(
-                        *[is_down(app_ops_test, unit, app_name) for unit in units]
-                    )
+                    await asyncio.gather(*[is_down(ops_test, unit, app_name) for unit in units])
                 )
 
     # Opensearch does not restart a SIGSTOP-frozen process,
@@ -195,7 +193,7 @@ async def _recover_from_signal(
         await asyncio.gather(
             *[
                 send_control_signal(
-                    app_ops_test, unit, "SIGCONT", app_name, True if container else False
+                    ops_test, unit, "SIGCONT", app_name, True if container else False
                 )
                 for unit in units
             ]

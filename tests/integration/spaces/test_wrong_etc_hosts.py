@@ -8,7 +8,6 @@ import subprocess
 import pytest
 from pytest_operator.plugin import OpsTest
 
-from ..conftest import Flags
 from ..helpers import (
     APP_NAME,
     CONFIG_OPTS,
@@ -18,7 +17,6 @@ from ..helpers import (
     access_all_dashboards,
     access_all_prometheus_exporters,
     for_machines,
-    local_dashboards_charm,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,9 @@ DEFAULT_NUM_UNITS = 3
 
 @pytest.mark.abort_on_fail
 @pytest.mark.skip_if_deployed
-async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, test_flags: Flags) -> None:
+async def test_build_and_deploy(
+    ops_test: OpsTest, lxd_spaces, charm_base: str, charm: str
+) -> None:
     """Build and deploy OpenSearch Dashboards.
 
     For this test, we will create a machine in multiple spaces and inject
@@ -38,8 +38,6 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, test_flags: Flags
 
     More information: gh:canonical/opensearch-dashboards-operator#121
     """
-    charm_base = test_flags.charm_base
-
     for _ in range(DEFAULT_NUM_UNITS):
         subprocess.check_output(
             [
@@ -72,7 +70,7 @@ async def test_build_and_deploy(ops_test: OpsTest, lxd_spaces, test_flags: Flags
         )
 
     await ops_test.model.deploy(
-        local_dashboards_charm(charm_base),
+        charm,
         num_units=DEFAULT_NUM_UNITS,
         base=charm_base,
         constraints="spaces=alpha,client,cluster,backup",

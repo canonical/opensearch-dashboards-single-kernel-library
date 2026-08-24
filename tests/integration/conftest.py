@@ -34,6 +34,21 @@ def substrate() -> Literal["k8s", "vm"]:
 
 
 @pytest.fixture
+def charm_base():
+    """Returns the base in the modern format, e.g., 'ubuntu@24.04'."""
+    base_version = os.environ.get("CHARM_UBUNTU_BASE", "24.04")
+    return f"ubuntu@{base_version}"
+
+
+@pytest.fixture
+def charm(charm_base, substrate):
+    """Path to the vm charm file to use for testing."""
+    if substrate == "k8s":
+        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
+    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
+
+
+@pytest.fixture
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
     return "./tests/integration/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
@@ -65,7 +80,6 @@ class Flags:
         self.test_tls = os.environ.get("TEST_TLS", "false").lower() == "true"
         self.traefik = os.environ.get("TEST_TRAEFIK", "false").lower() == "true"
         self.transfer_traefik_ca = os.environ.get("TRANSFER_TRAEFIK_CA", "false").lower() == "true"
-        self.charm_base = f"ubuntu@{os.environ.get('CHARM_UBUNTU_BASE', '24.04')}"
         if self.transfer_traefik_ca and not self.traefik:
             raise ValueError("TRANSFER_TRAEFIK_CA=true requires TEST_TRAEFIK=true.")
 

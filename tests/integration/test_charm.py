@@ -9,7 +9,6 @@ import time
 
 import pytest
 import yaml
-from .helpers import OPENSEARCH_CHANNEL
 from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
@@ -23,6 +22,7 @@ from .helpers import (
     NUM_UNITS_APP,
     NUM_UNITS_DB,
     OPENSEARCH_APP_NAME,
+    OPENSEARCH_CHANNEL,
     OPENSEARCH_RELATION_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -33,7 +33,7 @@ from .helpers import (
     client_run_all_dashboards_request,
     client_run_db_request,
     count_lines_with,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     destroy_cluster,
     get_address,
     get_file_contents,
@@ -60,14 +60,16 @@ async def test_build_and_deploy(
     application_charm: str,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
-    charm_base = test_flags.charm_base
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         num_units_app=NUM_UNITS_APP,

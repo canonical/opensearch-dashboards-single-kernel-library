@@ -150,13 +150,6 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
         await wait_for_ingress_blocked(ops_test, idle_period=idle_period)
 
 
-def local_dashboards_charm(charm_base: str) -> str:
-    """Path to the locally built dashboards charm for the given substrate."""
-    if SUBSTRATE == "k8s":
-        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
-    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
-
-
 def opensearch_deploy_args(on_k8s: bool) -> tuple[str, bool]:
     """Return (charm, trust) for deploying OpenSearch on the given substrate."""
     if on_k8s:
@@ -164,8 +157,9 @@ def opensearch_deploy_args(on_k8s: bool) -> tuple[str, bool]:
     return OPENSEARCH_APP_NAME, False
 
 
-async def deploy_base(
+async def deploy_opensearch_and_dashboards(
     ops_test: OpsTest,
+    charm: str,
     charm_base: str,
     substrate: str,
     num_units_app: int = 1,
@@ -212,7 +206,6 @@ async def deploy_base(
         deploy_kwargs["channel"] = charm_channel
         deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
     else:
-        charm = local_dashboards_charm(charm_base)
         deploy_kwargs["base"] = charm_base
 
     if on_k8s:
