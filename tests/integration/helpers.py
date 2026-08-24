@@ -32,14 +32,12 @@ from tenacity import (
     wait_fixed,
 )
 
-from .conftest import SUBSTRATE, Flags
+from .conftest import OPENSEARCH_APP_NAME, SUBSTRATE, Flags
 
 METADATA_K8s = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
 APP_NAME = METADATA_VM["name"] if SUBSTRATE == "vm" else METADATA_K8s["name"]
 
-OPENSEARCH_APP_NAME = "opensearch"
-OPENSEARCH_K8S_CHARM = "opensearch-k8s"
 OPENSEARCH_CHANNEL = "2/edge"
 CONFIG_OPTS = {"profile": "testing"}
 
@@ -150,18 +148,12 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
         await wait_for_ingress_blocked(ops_test, idle_period=idle_period)
 
 
-def opensearch_deploy_args(on_k8s: bool) -> tuple[str, bool]:
-    """Return (charm, trust) for deploying OpenSearch on the given substrate."""
-    if on_k8s:
-        return OPENSEARCH_K8S_CHARM, True
-    return OPENSEARCH_APP_NAME, False
-
-
 async def deploy_opensearch_and_dashboards(
     ops_test: OpsTest,
     charm: str,
     charm_base: str,
     substrate: str,
+    opensearch_deploy_args: tuple[str, bool],
     num_units_app: int = 1,
     num_units_db: int = 2,
     trust_charm: bool = True,
@@ -173,7 +165,7 @@ async def deploy_opensearch_and_dashboards(
     if resource is None:
         resource = RESOURCE
     on_k8s = substrate == "k8s"
-    os_charm, os_trust = opensearch_deploy_args(on_k8s)
+    os_charm, os_trust = opensearch_deploy_args
 
     # The cloudinit-userdata sysctl tuning only applies to machine models.
     if not on_k8s:

@@ -15,14 +15,13 @@ from oauth_tools import (
 from playwright.async_api._generated import Page
 from pytest_operator.plugin import OpsTest
 
-from .conftest import Flags
+from .conftest import OPENSEARCH_K8S_CHARM, Flags
 from .helpers import (
     APP_NAME,
     CONFIG_OPTS,
     OPENSEARCH_APP_NAME,
     OPENSEARCH_CHANNEL,
     OPENSEARCH_CONFIG,
-    OPENSEARCH_K8S_CHARM,
     RESOURCE,
     TRAEFIK_APP_NAME,
     get_dashboard_routing,

@@ -74,6 +74,7 @@ async def test_build_and_deploy(
     test_flags: Flags,
     charm: str,
     charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
@@ -82,6 +83,7 @@ async def test_build_and_deploy(
         charm,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
     )

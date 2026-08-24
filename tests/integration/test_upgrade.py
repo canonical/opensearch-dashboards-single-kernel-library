@@ -40,6 +40,7 @@ async def _run_upgrade_scenario(
     test_flags: Flags,
     charm_base: str,
     charm: str,
+    opensearch_deploy_args: tuple[str, bool],
     old_charm_channel: str | None = None,
 ) -> None:
     """Deploy an old dashboards release, upgrade it to the local charm, and check the workload version changed."""
@@ -50,6 +51,7 @@ async def _run_upgrade_scenario(
         charm=charm,
         charm_base=charm_base,
         substrate=substrate,
+        opensearch_deploy_args=opensearch_deploy_args,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
         trust_charm=True,
@@ -157,6 +159,7 @@ async def test_vm_upgrade_from_stable(
     test_flags: Flags,
     charm_base: str,
     charm: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """VM: upgrade from the 2/stable Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -166,6 +169,7 @@ async def test_vm_upgrade_from_stable(
         test_flags,
         charm_base,
         charm,
+        opensearch_deploy_args,
         old_charm_channel=CHANNEL_STABLE,
     )
 
@@ -179,6 +183,7 @@ async def test_vm_upgrade_from_edge(
     test_flags: Flags,
     charm_base: str,
     charm: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """VM: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -188,6 +193,7 @@ async def test_vm_upgrade_from_edge(
         test_flags,
         charm_base,
         charm,
+        opensearch_deploy_args,
         old_charm_channel=CHANNEL_EDGE,
     )
 
@@ -201,6 +207,7 @@ async def test_k8s_upgrade_from_edge(
     test_flags: Flags,
     charm_base: str,
     charm: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """K8s: upgrade from the 2/edge Charmhub release to the locally built charm."""
     await _run_upgrade_scenario(
@@ -210,5 +217,6 @@ async def test_k8s_upgrade_from_edge(
         test_flags,
         charm_base,
         charm,
+        opensearch_deploy_args,
         old_charm_channel=CHANNEL_EDGE,
     )

@@ -98,7 +98,7 @@ jobs:
     strategy:
       matrix:
         path:
-          - tests/integration/dashboards_application_charm
+          - tests/charms/dashboards_application_charm
           - tests/charms/dashboards_vm_charm
           - tests/charms/dashboards_k8s_charm
     steps:

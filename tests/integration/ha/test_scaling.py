@@ -34,6 +34,7 @@ async def test_build_and_deploy(
     test_flags: Flags,
     charm: str,
     charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
@@ -43,6 +44,7 @@ async def test_build_and_deploy(
         charm,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=1,
         num_units_db=2,
     )
