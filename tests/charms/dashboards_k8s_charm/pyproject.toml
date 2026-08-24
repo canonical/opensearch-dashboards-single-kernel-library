@@ -43,11 +43,11 @@ ops = "^3.8.0"
 [tool.poetry.group.charm-libs.dependencies]
 ops = "^3.8.0"  # data_platform_libs/v0/data_interfaces.py, data_platform_libs/v1/upgrade.py
 pydantic = "^2.13.4"  # data_platform_libs/v1/upgrade.py
-lightkube = "^0.22.0"  # data_platform_libs/v1/upgrade.py
+lightkube = "^1.0.1"  # data_platform_libs/v1/upgrade.py
 poetry-core = "^2.4.1"  # data_platform_libs/v1/upgrade.py
-cryptography = "^49.0.0"  # tls_certificates_interface/v3/tls_certificates.py
+cryptography = "^50.0.0"  # tls_certificates_interface/v3/tls_certificates.py
 jsonschema = "^4.26.0"  # tls_certificates_interface/v3/tls_certificates.py
-cosl = "^1.10.1"  # grafana_agent/v0/cos_agent.py, grafana_k8s/v0/grafana_dashboard.py, loki_k8s/v1/loki_push_api.py
+cosl = "^1.10.3"  # grafana_agent/v0/cos_agent.py, grafana_k8s/v0/grafana_dashboard.py, loki_k8s/v1/loki_push_api.py
 
 [tool.pyright]
 include = ["src"]
