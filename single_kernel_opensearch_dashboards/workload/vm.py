@@ -83,7 +83,7 @@ class VMPaths(Paths):
 class VMWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
 
-    SNAP_NAME = "opensearch-dashboards"
+    SNAP_NAME = "opensearch-dashboards-charmed"
     SNAP_APP_SERVICE = "opensearch-dashboards-daemon"
     SNAP_EXPORTER_SERVICE = "exporter-daemon"
 
