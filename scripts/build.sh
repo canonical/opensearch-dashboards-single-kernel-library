@@ -3,7 +3,7 @@
 set -e
 
 # Charms for integration tests
-TEST_CHARMS=("tests/integration/dashboards_application_charm" "tests/integration/dashboards_tester_charm")
+TEST_CHARMS=("tests/charms/dashboards_application_charm")
 LIB_PATH="./single_kernel_opensearch_dashboards"
 CHARMS_PATH="./tests/charms"
 

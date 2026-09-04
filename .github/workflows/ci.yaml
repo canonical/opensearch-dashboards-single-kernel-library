@@ -26,7 +26,7 @@ permissions:
 jobs:
   lint:
     name: Lint
-    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v50.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/lint_workflows.yaml@v52.0.0
 
   lib-check:
     name: Check libraries
@@ -98,14 +98,12 @@ jobs:
     strategy:
       matrix:
         path:
-          - tests/integration/dashboards_application_charm
-          - tests/integration/dashboards_tester_charm
-          - tests/integration/dashboards_k8s_upgrade_test_charm
+          - tests/charms/dashboards_application_charm
           - tests/charms/dashboards_vm_charm
           - tests/charms/dashboards_k8s_charm
     steps:
       - name: Install CLI
-        run: pipx install git+https://github.com/canonical/data-platform-workflows@v50.0.0#subdirectory=_cli
+        run: pipx install git+https://github.com/canonical/data-platform-workflows@v52.0.0#subdirectory=_cli
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -160,8 +158,9 @@ jobs:
       - lint
       - unit-test
       - build
-    uses: ./.github/workflows/integration_test.yaml
+    uses: $/.github/workflows/integration_test.yaml
     with:
       artifact-prefix: packed-charm
+      run-on-all-bases: ${{ github.event_name == 'schedule' }}
     permissions:
       contents: write # Needed for Allure Report

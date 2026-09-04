@@ -8,9 +8,11 @@ import logging
 
 from lightkube import ApiError, Client
 from lightkube.resources.apps_v1 import StatefulSet
+from ops import SecretNotFoundError
 from typing_extensions import override
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
+    OSDFileOperationError,
     OSDInstallError,
     OSDNotTrusted,
 )
@@ -31,7 +33,9 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
     UpgradeGrantedEvent,
     UpgradeState,
 )
+from single_kernel_opensearch_dashboards.managers.config import ConfigManager
 from single_kernel_opensearch_dashboards.managers.health import HealthManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
@@ -51,6 +55,8 @@ class UpgradeEvents(DataUpgrade):
         workload: WorkloadBase,
         upgrade_manager: UpgradeManager,
         health_manager: HealthManager,
+        tls_manager: TLSManager,
+        config_manager: ConfigManager,
     ) -> None:
         if osd_state.substrate == Substrates.K8S and not upgrade_manager.is_charm_trusted(
             charm.model.name
@@ -68,6 +74,8 @@ class UpgradeEvents(DataUpgrade):
         self.workload = workload
         self.upgrade_manager = upgrade_manager
         self.health_manager = health_manager
+        self.tls_manager = tls_manager
+        self.config_manager = config_manager
 
     @override
     def _on_upgrade_charm(self, event) -> None:
@@ -160,6 +168,17 @@ class UpgradeEvents(DataUpgrade):
             logger.error("Unable to install OpensearchDashboards...")
             self.set_unit_failed(cause="Workload install failed")
             return
+
+        try:
+            self.tls_manager.write_tls_files()
+            self.config_manager.set_dashboard_properties()
+        except (OSDFileOperationError, SecretNotFoundError) as e:
+            logger.error("Unable to restore config/TLS after upgrade: %s", e)
+            self.set_unit_failed(cause="Post-install config restore failed")
+            return
+
+        logger.info(f"{self.osd_state.unit.name} restarting upgraded workload...")
+        self.workload.restart()
 
         try:
             logger.debug("Running post-upgrade check...")

@@ -83,9 +83,10 @@ class VMPaths(Paths):
 class VMWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
 
-    SNAP_NAME = "opensearch-dashboards"
+    SNAP_NAME = "opensearch-dashboards-charmed"
     SNAP_APP_SERVICE = "opensearch-dashboards-daemon"
     SNAP_EXPORTER_SERVICE = "exporter-daemon"
+    LEGACY_SNAP_NAME = "opensearch-dashboards"
 
     @cached_property
     def dashboards(self) -> snap.Snap:
@@ -111,6 +112,18 @@ class VMWorkload(WorkloadBase):
     @override
     def stop(self) -> None:
         """Stops the OpenSearch Dashboards and exporter daemon services."""
+        try:
+            cache = snap.SnapCache()
+            legacy_dashboards = cache[self.LEGACY_SNAP_NAME]
+            legacy_dashboards.stop(
+                services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE], disable=True
+            )
+        except (snap.SnapError, KeyError):
+            pass
+
+        if not self.dashboards.present:
+            return
+
         try:
             self.dashboards.stop(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
         except snap.SnapError as e:
@@ -232,4 +245,4 @@ class VMWorkload(WorkloadBase):
     @override
     def ready(self) -> bool:
         """Checks if workload is ready."""
-        return True
+        return self.paths.config_dir.exists()

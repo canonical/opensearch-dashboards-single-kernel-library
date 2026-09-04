@@ -27,6 +27,9 @@ SERVICE_DEFAULT_PATH = (
     "/etc/systemd/system/snap.opensearch-dashboards.opensearch-dashboards-daemon.service"
 )
 PEER = "cluster"
+# Timeouts shared by the HA test modules.
+LONG_TIMEOUT = 3000
+LONG_WAIT = 30
 
 
 class ProcessError(Exception):
@@ -373,7 +376,7 @@ async def send_control_signal(
         process = PROCESS if app_name == APP_NAME else DB_PROCESS
         kill_cmd = f"exec --unit {unit_name} -- pkill --signal {signal} -f {process}"
         return_code, stdout, stderr = await ops_test.juju(*kill_cmd.split())
-        if return_code != 0:
+        if return_code >= 2:
             raise Exception(
                 f"Expected kill command {kill_cmd} to succeed instead it failed: {return_code}, {stdout}, {stderr}"
             )

@@ -100,6 +100,9 @@ class TLSManager(BaseManager):
 
     def remove_cert_files(self) -> None:
         """Removes all certs, keys, stores from the unit."""
+        if not self.workload.exists(self.workload.paths.config_dir):
+            logger.debug("Config dir missing, skipping cert file removal.")
+            return
         try:
             self.workload.exec(
                 command=[
