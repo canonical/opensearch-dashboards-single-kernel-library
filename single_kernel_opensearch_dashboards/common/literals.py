@@ -24,7 +24,7 @@ class OpenSearchDashboardsPaths:
 
 
 # Snap
-OPENSEARCH_DASHBOARDS_SNAP_REVISION = "61"
+OPENSEARCH_DASHBOARDS_SNAP_REVISION = "46"
 CHARM_KEY = "opensearch-dashboards"
 
 # K8s
@@ -78,10 +78,10 @@ DEPENDENCIES = {
 }
 
 # Paths
-BASE_SNAP_DIR = "/var/snap/opensearch-dashboards"
+BASE_SNAP_DIR = "/var/snap/opensearch-dashboards-charmed"
 SNAP_DATA = "current"
 SNAP_COMMON = "common"
-SNAP = "/snap/opensearch-dashboards/current"
+SNAP = "/snap/opensearch-dashboards-charmed/current"
 
 # Secrets
 PEER_APP_SECRETS = ["monitor-username", "monitor-password", "oauth-client-secret"]

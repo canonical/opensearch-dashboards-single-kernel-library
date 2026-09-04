@@ -13,12 +13,14 @@ from .helpers import (
     DB_CLIENT_APP_NAME,
     NUM_UNITS_APP,
     NUM_UNITS_DB,
+    OLD_K8S_RESOURCE,
     OPENSEARCH_APP_NAME,
     RESOURCE,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
     assert_no_downgrade,
+    assert_upgraded,
     deploy_opensearch_and_dashboards,
     get_app_relation_data,
     get_charm_workload_version,
@@ -42,6 +44,9 @@ async def _run_upgrade_scenario(
     charm: str,
     opensearch_deploy_args: tuple[str, bool],
     old_charm_channel: str | None = None,
+    old_resource: dict | None = None,
+    expect_dashboards_upgrade: bool = False,
+    expect_workload_upgrade: bool = False,
 ) -> None:
     """Deploy an old dashboards release, upgrade it to the local charm, and check the workload version changed."""
     tls = test_flags.test_tls
@@ -56,6 +61,7 @@ async def _run_upgrade_scenario(
         num_units_db=NUM_UNITS_DB,
         trust_charm=True,
         charm_channel=old_charm_channel,
+        resource=old_resource,
     )
 
     if substrate == "k8s":
@@ -146,8 +152,17 @@ async def _run_upgrade_scenario(
     logger.info(f"New Charm URL: {new_charm_url}")
 
     assert new_charm_url != old_charm_url
-    assert_no_downgrade(old_workload_version, new_workload_version)
-    assert_no_downgrade(old_dashboards_version, new_dashboards_version)
+    if all(old_workload_version.values()):
+        if expect_workload_upgrade:
+            assert_upgraded(old_workload_version, new_workload_version)
+        else:
+            assert_no_downgrade(old_workload_version, new_workload_version)
+    else:
+        logger.info("Old release has no workload_version file; skipping workload comparison")
+    if expect_dashboards_upgrade:
+        assert_upgraded(old_dashboards_version, new_dashboards_version)
+    else:
+        assert_no_downgrade(old_dashboards_version, new_dashboards_version)
 
 
 @pytest.mark.vm_only
@@ -171,6 +186,8 @@ async def test_vm_upgrade_from_stable(
         charm,
         opensearch_deploy_args,
         old_charm_channel=CHANNEL_STABLE,
+        expect_dashboards_upgrade=True,
+        expect_workload_upgrade=True,
     )
 
 
@@ -219,4 +236,6 @@ async def test_k8s_upgrade_from_edge(
         charm,
         opensearch_deploy_args,
         old_charm_channel=CHANNEL_EDGE,
+        old_resource=OLD_K8S_RESOURCE,
+        expect_dashboards_upgrade=True,
     )

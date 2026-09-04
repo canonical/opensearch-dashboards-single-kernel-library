@@ -67,6 +67,12 @@ RESOURCE = {
         "upstream-source"
     ]
 }
+OLD_K8S_RESOURCE = {
+    "opensearch-dashboards-image": (
+        "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.5-24.04_edge@sha256:"
+        "57cd5a8e03bc80704bf64843f4d4309744ac6a4c92469169bbf4a4a1f7e81046"
+    )
+}
 
 
 logger = logging.getLogger(__name__)
@@ -162,8 +168,6 @@ async def deploy_opensearch_and_dashboards(
     charm_channel: str | None = None,
 ) -> str:
     """Deploy OpenSearch+TLS and dashboards on the same model, wired together."""
-    if resource is None:
-        resource = RESOURCE
     on_k8s = substrate == "k8s"
     os_charm, os_trust = opensearch_deploy_args
 
@@ -188,25 +192,45 @@ async def deploy_opensearch_and_dashboards(
     )
     await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
-    deploy_kwargs: dict = {
-        "application_name": APP_NAME,
-        "num_units": num_units_app,
-    }
-    # for upgrades test we need to pull dashboards from 2/stable and 2/edge, not local one
-    if charm_channel:
-        charm = APP_NAME
-        deploy_kwargs["channel"] = charm_channel
-        deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
-    else:
-        deploy_kwargs["base"] = charm_base
-
-    if on_k8s:
+    if on_k8s and charm_channel and resource is not None:
+        # libjuju cannot attach a custom OCI image to a charmhub charm, so we shell out to the juju CLI
+        cli_args = [
+            "deploy",
+            APP_NAME,  # charm name
+            APP_NAME,  # application name
+            "--channel",
+            charm_channel,
+            "--base",
+            charm_base,
+            "--num-units",
+            str(num_units_app),
+        ]
         if trust_charm:
-            deploy_kwargs["trust"] = True
-        if not charm_channel:
-            deploy_kwargs["resources"] = resource
-    await ops_test.model.deploy(charm, **deploy_kwargs)
+            cli_args.append("--trust")
+        for res_name, res_value in resource.items():
+            cli_args += ["--resource", f"{res_name}={res_value}"]
+        await ops_test.juju(*cli_args, check=True)
+    else:
+        deploy_kwargs: dict = {
+            "application_name": APP_NAME,
+            "num_units": num_units_app,
+        }
+        if charm_channel:
+            charm = APP_NAME
+            deploy_kwargs["channel"] = charm_channel
+            deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
+        else:
+            deploy_kwargs["base"] = charm_base
 
+        if on_k8s:
+            if trust_charm:
+                deploy_kwargs["trust"] = True
+            if not charm_channel:
+                deploy_kwargs["resources"] = resource if resource is not None else RESOURCE
+        await ops_test.model.deploy(charm, **deploy_kwargs)
+
+    # A CLI deploy may not be reflected in libjuju's model cache yet; wait for the app.
+    await ops_test.model.block_until(lambda: APP_NAME in ops_test.model.applications, timeout=300)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
@@ -482,6 +506,31 @@ async def access_all_dashboards(
     return result
 
 
+async def wait_until_dashboards_accessible(
+    ops_test: OpsTest,
+    https: bool = False,
+    verify: bool = True,
+    skip: list[str] = None,
+    timeout: int = 1200,
+    wait: int = 20,
+) -> bool:
+    """Poll every dashboard unit until they all serve their re-rendered config after an upgrade.
+
+    During a K8s rolling upgrade a unit can report ``active/idle`` while its freshly imaged pod is
+    still waiting for the rolling-restart lock — serving the pre-render config (404) — or is mid
+    restart (503). ``wait_for_idle`` is therefore not sufficient on its own; poll the actual
+    endpoints until the whole rollout has drained.
+    """
+    deadline = asyncio.get_event_loop().time() + timeout
+    while True:
+        if await access_all_dashboards(ops_test, https=https, verify=verify, skip=skip):
+            return True
+        if asyncio.get_event_loop().time() >= deadline:
+            logger.error("Dashboards were not all accessible within %s seconds", timeout)
+            return False
+        await asyncio.sleep(wait)
+
+
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(15),
@@ -582,8 +631,6 @@ def get_charm_workload_version(model_name: str, unit_name: str, substrate: str =
         except subprocess.CalledProcessError as err:
             output = err.output.strip() if err.output else ""
             logger.error(f"Failed to read workload_version: {output or err}")
-            if "No such file or directory" in output:
-                return "2.19.2"
             return ""
     elif substrate == "k8s":
         app, unit_index = unit_name.split("/")
@@ -599,24 +646,29 @@ def get_charm_workload_version(model_name: str, unit_name: str, substrate: str =
 
 
 def get_dashboards_snap_version_vm(model_name: str, unit_name: str) -> str:
-    """Return the installed opensearch-dashboards snap version from a VM unit.
-
-    Returns "2.19.2" if the snap is not yet installed (pre-workload_version charmhub releases).
-    """
-    cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo snap list opensearch-dashboards --unicode=never"
-    try:
-        output = subprocess.check_output(["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT)
+    """Return the installed opensearch-dashboards snap version from a VM unit."""
+    # New charmed snap first, then the legacy snap; the first one installed wins.
+    for snap_name in ("opensearch-dashboards-charmed", "opensearch-dashboards"):
+        cmd = (
+            f"JUJU_MODEL={model_name} juju ssh {unit_name} "
+            f"sudo snap list {snap_name} --unicode=never"
+        )
+        try:
+            output = subprocess.check_output(
+                ["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT
+            )
+        except subprocess.CalledProcessError as err:
+            output = err.output.strip() if err.output else ""
+            if "no matching snaps" in output or "snap not installed" in output.lower():
+                continue
+            logger.error(f"Failed to get snap version for {snap_name}: {output or err}")
+            return ""
         for line in output.splitlines():
-            if line.startswith("opensearch-dashboards"):
+            if line.split()[:1] == [snap_name]:
                 return line.split()[1]
-        logger.error(f"opensearch-dashboards snap not found in snap list output: {output!r}")
-        return ""
-    except subprocess.CalledProcessError as err:
-        output = err.output.strip() if err.output else ""
-        if "no matching snaps" in output or "snap not installed" in output.lower():
-            return "2.19.2"
-        logger.error(f"Failed to get snap version: {output or err}")
-        return ""
+        logger.error(f"{snap_name} snap not found in snap list output: {output!r}")
+
+    return "2.19.2"
 
 
 def get_dashboards_version(model_name: str, unit_name: str, substrate: str) -> str:
@@ -666,6 +718,15 @@ def assert_no_downgrade(old: dict[str, str], new: dict[str, str]) -> None:
         new_version = new[unit_name]
         assert version_key(new_version) >= version_key(old_version), (
             f"{unit_name} downgraded: {old_version!r} -> {new_version!r}"
+        )
+
+
+def assert_upgraded(old: dict[str, str], new: dict[str, str]) -> None:
+    """Assert each unit's version strictly increased across an upgrade."""
+    for unit_name, old_version in old.items():
+        new_version = new[unit_name]
+        assert version_key(new_version) > version_key(old_version), (
+            f"{unit_name} was not upgraded: {old_version!r} -> {new_version!r}"
         )
 
 
