@@ -81,12 +81,7 @@ def test_k8s_upgrade_charm_without_stack_skips_generic_upgrade_handler(mocker, c
 
 
 def test_k8s_upgrade_charm_with_stack_runs_k8s_upgrade_flow(mocker):
-    """A prepared k8s upgrade must enter the k8s upgrade path and mark the unit completed.
-
-    On K8s the freshly imaged pod re-renders its config and restarts through the normal
-    RollingOps restart flow (driven by start/config-changed), not from the upgrade handler, so
-    this only asserts the upgrade-completion bookkeeping.
-    """
+    """A prepared k8s upgrade must still enter the base k8s upgrade path."""
     post_upgrade_check = mocker.patch.object(UpgradeEvents, "post_upgrade_check")
     set_unit_completed = mocker.patch.object(UpgradeEvents, "set_unit_completed")
     harness = _begin_k8s_harness(mocker)

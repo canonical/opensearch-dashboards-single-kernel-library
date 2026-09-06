@@ -506,31 +506,6 @@ async def access_all_dashboards(
     return result
 
 
-async def wait_until_dashboards_accessible(
-    ops_test: OpsTest,
-    https: bool = False,
-    verify: bool = True,
-    skip: list[str] = None,
-    timeout: int = 1200,
-    wait: int = 20,
-) -> bool:
-    """Poll every dashboard unit until they all serve their re-rendered config after an upgrade.
-
-    During a K8s rolling upgrade a unit can report ``active/idle`` while its freshly imaged pod is
-    still waiting for the rolling-restart lock — serving the pre-render config (404) — or is mid
-    restart (503). ``wait_for_idle`` is therefore not sufficient on its own; poll the actual
-    endpoints until the whole rollout has drained.
-    """
-    deadline = asyncio.get_event_loop().time() + timeout
-    while True:
-        if await access_all_dashboards(ops_test, https=https, verify=verify, skip=skip):
-            return True
-        if asyncio.get_event_loop().time() >= deadline:
-            logger.error("Dashboards were not all accessible within %s seconds", timeout)
-            return False
-        await asyncio.sleep(wait)
-
-
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_fixed(15),
@@ -582,7 +557,7 @@ def get_dashboard_ca_cert(model_full_name: str, unit: str) -> bool:
     else:
         cmd = (
             f"JUJU_MODEL={model_full_name} juju scp "
-            f"ubuntu@{unit}:/var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/ca.pem ./"
+            f"ubuntu@{unit}:/var/snap/opensearch-dashboards-charmed/current/etc/opensearch-dashboards/certificates/ca.pem ./"
         )
 
     try:
