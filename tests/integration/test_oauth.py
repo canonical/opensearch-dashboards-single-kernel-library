@@ -129,7 +129,10 @@ async def test_setup_relations(
 
         await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "hydra:oauth")
         await ops_test.model.integrate(f"{APP_NAME}:oauth", "hydra:oauth")
-        await ops_test.model.wait_for_idle()
+        if traefik:
+            await ops_test.model.wait_for_idle(status="active", timeout=1000)
+        else:
+            await ops_test.model.wait_for_idle(timeout=1000)
         return
 
     await ops_test_k8s.model.create_offer(
@@ -171,6 +174,15 @@ async def test_oauth(
 ):
     """Ensure that SSO works for OpenSearch Dashboards login."""
     traefik = test_flags.traefik
+
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    if traefik:
+        await ops_test.model.wait_for_idle(
+            apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
+        )
+    else:
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], timeout=1000)
+
     unit = ops_test.model.applications[APP_NAME].units[0]
     host, port, path, _ = await get_dashboard_routing(
         ops_test,
