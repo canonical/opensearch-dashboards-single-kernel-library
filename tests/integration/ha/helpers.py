@@ -21,12 +21,10 @@ from tests.integration.helpers import APP_NAME, k8s_exec
 
 logger = logging.getLogger(__name__)
 
-PROCESS = (
-    "/snap/opensearch-dashboards-charmed/current/usr/share/opensearch-dashboards/node/bin/node"
-)
+PROCESS = "/snap/opensearch-dashboards/current/usr/share/opensearch-dashboards/node/bin/node"
 DB_PROCESS = "org.opensearch.bootstrap.OpenSearch"
 SERVICE_DEFAULT_PATH = (
-    "/etc/systemd/system/snap.opensearch-dashboards-charmed.opensearch-dashboards-daemon.service"
+    "/etc/systemd/system/snap.opensearch-dashboards.opensearch-dashboards-daemon.service"
 )
 PEER = "cluster"
 # Timeouts shared by the HA test modules.

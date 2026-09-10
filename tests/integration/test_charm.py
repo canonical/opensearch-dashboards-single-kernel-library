@@ -153,7 +153,7 @@ async def test_dashboard_tls_lifecycle(
     server_cert = (
         "/etc/opensearch-dashboards/certificates/server.pem"
         if substrate == "k8s"
-        else "/var/snap/opensearch-dashboards-charmed/current/etc/opensearch-dashboards/certificates/server.pem"
+        else "/var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/server.pem"
     )
 
     unit = ops_test.model.applications[APP_NAME].units[0]
@@ -345,7 +345,7 @@ async def test_log_level_change(
     substrate: str,
     test_flags: Flags,
 ):
-    log_path = "/var/snap/opensearch-dashboards-charmed/common/var/log/opensearch-dashboards/opensearch_dashboards.log"
+    log_path = "/var/snap/opensearch-dashboards/common/var/log/opensearch-dashboards/opensearch_dashboards.log"
     container = ""
     traefik = test_flags.traefik
 

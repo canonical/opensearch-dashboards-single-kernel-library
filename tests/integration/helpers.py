@@ -557,7 +557,7 @@ def get_dashboard_ca_cert(model_full_name: str, unit: str) -> bool:
     else:
         cmd = (
             f"JUJU_MODEL={model_full_name} juju scp "
-            f"ubuntu@{unit}:/var/snap/opensearch-dashboards-charmed/current/etc/opensearch-dashboards/certificates/ca.pem ./"
+            f"ubuntu@{unit}:/var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/ca.pem ./"
         )
 
     try:
@@ -621,29 +621,24 @@ def get_charm_workload_version(model_name: str, unit_name: str, substrate: str =
 
 
 def get_dashboards_snap_version_vm(model_name: str, unit_name: str) -> str:
-    """Return the installed opensearch-dashboards snap version from a VM unit."""
-    # New charmed snap first, then the legacy snap; the first one installed wins.
-    for snap_name in ("opensearch-dashboards-charmed", "opensearch-dashboards"):
-        cmd = (
-            f"JUJU_MODEL={model_name} juju ssh {unit_name} "
-            f"sudo snap list {snap_name} --unicode=never"
-        )
-        try:
-            output = subprocess.check_output(
-                ["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT
-            )
-        except subprocess.CalledProcessError as err:
-            output = err.output.strip() if err.output else ""
-            if "no matching snaps" in output or "snap not installed" in output.lower():
-                continue
-            logger.error(f"Failed to get snap version for {snap_name}: {output or err}")
-            return ""
-        for line in output.splitlines():
-            if line.split()[:1] == [snap_name]:
-                return line.split()[1]
-        logger.error(f"{snap_name} snap not found in snap list output: {output!r}")
+    """Return the installed opensearch-dashboards snap version from a VM unit.
 
-    return "2.19.2"
+    Returns "2.19.2" if the snap is not yet installed (pre-workload_version charmhub releases).
+    """
+    cmd = f"JUJU_MODEL={model_name} juju ssh {unit_name} sudo snap list opensearch-dashboards --unicode=never"
+    try:
+        output = subprocess.check_output(["bash", "-c", cmd], text=True, stderr=subprocess.STDOUT)
+        for line in output.splitlines():
+            if line.startswith("opensearch-dashboards"):
+                return line.split()[1]
+        logger.error(f"opensearch-dashboards snap not found in snap list output: {output!r}")
+        return ""
+    except subprocess.CalledProcessError as err:
+        output = err.output.strip() if err.output else ""
+        if "no matching snaps" in output or "snap not installed" in output.lower():
+            return "2.19.2"
+        logger.error(f"Failed to get snap version: {output or err}")
+        return ""
 
 
 def get_dashboards_version(model_name: str, unit_name: str, substrate: str) -> str:

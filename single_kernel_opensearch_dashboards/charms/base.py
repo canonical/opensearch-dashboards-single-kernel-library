@@ -117,8 +117,6 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
                 self.workload,
                 self.upgrade_manager,
                 self.health_manager,
-                self.tls_manager,
-                self.config_manager,
             )
         except OSDNotTrusted as e:
             logger.error(

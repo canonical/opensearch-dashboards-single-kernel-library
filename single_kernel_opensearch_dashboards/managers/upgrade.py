@@ -94,12 +94,17 @@ class UpgradeManager(BaseManager):
         return upgrade_stack
 
     def upgrade_osd(self) -> None:
-        """Stop the running workload and install the upgraded snap."""
+        """Execute the upgrade process for the OpenSearch Dashboards.
+
+        This method stops the current workload, installs the upgraded version
+        of the software, and restarts the service.
+        """
         self.workload.stop()
 
         self.workload.install()
 
         logger.info(f"{self.state.unit.name} upgrading workload...")
+        self.workload.restart()
 
     def is_charm_trusted(self, namespace: str) -> bool:
         """Checks if the charm has RBAC permissions to patch StatefulSets."""
