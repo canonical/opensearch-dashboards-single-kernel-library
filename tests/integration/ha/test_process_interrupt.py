@@ -85,6 +85,7 @@ async def test_build_and_deploy(
 
     app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         opensearch_deploy_args,
@@ -149,11 +150,6 @@ async def _recover_from_signal(
     verify: bool = False,
 ):
     is_dashboards = app_name == APP_NAME
-<<<<<<< HEAD
-    # dashboards and opensearch share the same model
-    app_ops_test = ops_test
-=======
->>>>>>> 2/edge
     container = ""
     if is_dashboards and substrate == "k8s":
         container = "opensearch-dashboards"
@@ -199,11 +195,7 @@ async def _recover_from_signal(
         await asyncio.gather(
             *[
                 send_control_signal(
-<<<<<<< HEAD
-                    app_ops_test, unit, "SIGCONT", app_name, True if container else False
-=======
                     ops_test, unit, "SIGCONT", app_name, True if container else False
->>>>>>> 2/edge
                 )
                 for unit in units
             ]

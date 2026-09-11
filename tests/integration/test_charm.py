@@ -9,7 +9,6 @@ import time
 
 import pytest
 import yaml
-from .helpers import OPENSEARCH_CHANNEL
 from pytest_operator.plugin import OpsTest
 
 from .conftest import Flags
@@ -41,7 +40,6 @@ from .helpers import (
     get_relations,
     get_unit_relation_data,
     is_https_enabled,
-    opensearch_deploy_args,
     wait_for_dashboard_idle,
     wait_for_ingress_blocked,
 )
@@ -71,6 +69,7 @@ async def test_build_and_deploy(
     transfer_traefik_ca = test_flags.transfer_traefik_ca
     app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         opensearch_deploy_args,

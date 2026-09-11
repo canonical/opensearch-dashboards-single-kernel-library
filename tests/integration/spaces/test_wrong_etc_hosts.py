@@ -8,7 +8,6 @@ import subprocess
 import pytest
 from pytest_operator.plugin import OpsTest
 
-from ..conftest import Flags
 from ..helpers import (
     APP_NAME,
     CONFIG_OPTS,
@@ -18,7 +17,6 @@ from ..helpers import (
     access_all_dashboards,
     access_all_prometheus_exporters,
     for_machines,
-    local_dashboards_charm,
 )
 
 logger = logging.getLogger(__name__)

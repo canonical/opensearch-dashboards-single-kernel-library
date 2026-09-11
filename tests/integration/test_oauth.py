@@ -25,7 +25,6 @@ from .helpers import (
     RESOURCE,
     TRAEFIK_APP_NAME,
     get_dashboard_routing,
-    local_dashboards_charm,
 )
 
 pytest_plugins = ["oauth_tools.fixtures"]
@@ -51,8 +50,6 @@ async def test_deploy(
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
     traefik = test_flags.traefik
-    charm_base = test_flags.charm_base
-    charm = local_dashboards_charm(charm_base)
 
     if substrate == "k8s":
         await ops_test.model.deploy(

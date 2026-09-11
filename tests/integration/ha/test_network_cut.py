@@ -80,6 +80,7 @@ async def test_build_and_deploy(
     tls = test_flags.test_tls
     app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         opensearch_deploy_args,

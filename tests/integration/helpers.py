@@ -156,6 +156,7 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
 
 async def deploy_opensearch_and_dashboards(
     ops_test: OpsTest,
+    charm: str,
     charm_base: str,
     substrate: str,
     opensearch_deploy_args: tuple[str, bool],

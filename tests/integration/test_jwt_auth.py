@@ -42,11 +42,11 @@ async def test_build_and_deploy(
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-    charm_base = test_flags.charm_base
 
     await ops_test.model.deploy(JWT_APP_NAME, channel="1/edge")
     app_name = await deploy_opensearch_and_dashboards(
         ops_test,
+        charm,
         charm_base,
         substrate,
         opensearch_deploy_args,

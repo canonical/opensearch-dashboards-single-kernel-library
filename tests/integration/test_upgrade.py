@@ -26,7 +26,6 @@ from .helpers import (
     get_charm_workload_version,
     get_dashboards_version,
     is_https_enabled,
-    local_dashboards_charm,
     wait_for_dashboard_idle,
 )
 
