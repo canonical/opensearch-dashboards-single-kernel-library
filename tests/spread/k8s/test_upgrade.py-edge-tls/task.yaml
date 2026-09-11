@@ -1,7 +1,7 @@
-summary: test_upgrade.py::test_k8s_upgrade_from_local_2_19_4_charm
+summary: test_upgrade.py::test_k8s_upgrade_from_edge
 environment:
   TEST_MODULE: test_upgrade.py
-  TEST_NAME: test_k8s_upgrade_from_local_2_19_4_charm
+  TEST_NAME: test_k8s_upgrade_from_edge
   TEST_TLS: true
   SUBSTRATE: "k8s"
 

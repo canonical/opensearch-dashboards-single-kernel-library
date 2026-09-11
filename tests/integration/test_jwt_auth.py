@@ -16,7 +16,7 @@ from .helpers import (
     OPENSEARCH_APP_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     get_dashboard_routing,
     is_https_enabled,
     wait_for_dashboard_idle,
@@ -28,56 +28,40 @@ logger = logging.getLogger(__name__)
 
 JWT_APP_NAME = "jwt-integrator"
 JWT_REL_NAME = "jwt-configuration"
-OPENSEARCH_RELATION_NAME = "opensearch-client"
 
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
-    charm_base: str,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
 
-    # Deploy JWT on the VM model alongside OpenSearch before wiring everything
-    await ops_test_vm.model.deploy(JWT_APP_NAME, channel="1/edge")
-    charm = charmvm if substrate == "vm" else charmk8s
-    app_name = await deploy_base(
-        ops_test_vm,
+    await ops_test.model.deploy(JWT_APP_NAME, channel="1/edge")
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
         charm,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_db=3,
     )
-
-    if substrate == "k8s":
-        await ops_test_vm.model.create_offer(JWT_REL_NAME, JWT_APP_NAME, "jwt-integrator")
-        await ops_test.model.consume(f"admin/{ops_test_vm.model.name}.{JWT_APP_NAME}")
-        if tls:
-            await ops_test_vm.model.create_offer(
-                endpoint=f"{TLS_CERTIFICATES_APP_NAME}:certificates,send-ca-cert",
-                offer_name="self-signed-certificates",
-            )
-            await ops_test.model.consume(
-                f"admin/{ops_test_vm.model.name}.{TLS_CERTIFICATES_APP_NAME}"
-            )
 
     logger.info("Create JWT configuration")
     global generated_jwt
     generated_jwt = generate_json_web_token()
 
     secret_name = "jwt-signing-key"
-    secret_id = await ops_test_vm.model.add_secret(
+    secret_id = await ops_test.model.add_secret(
         name=secret_name, data_args=[f"signing-key={generated_jwt['signing-key']}"]
     )
-    await ops_test_vm.model.grant_secret(secret_name=secret_name, application=JWT_APP_NAME)
+    await ops_test.model.grant_secret(secret_name=secret_name, application=JWT_APP_NAME)
 
     jwt_config = {
         "signing-key": secret_id,
@@ -85,13 +69,11 @@ async def test_build_and_deploy(
         "subject-key": "user",
         "jwt-url-parameter": "jwt",
     }
-    await ops_test_vm.model.applications[JWT_APP_NAME].set_config(jwt_config)
+    await ops_test.model.applications[JWT_APP_NAME].set_config(jwt_config)
 
     logger.info(f"Integrating {OPENSEARCH_APP_NAME} with {JWT_APP_NAME}")
-    await ops_test_vm.model.integrate(JWT_APP_NAME, OPENSEARCH_APP_NAME)
-    await ops_test_vm.model.wait_for_idle(
-        apps=[OPENSEARCH_APP_NAME, JWT_APP_NAME], status="active"
-    )
+    await ops_test.model.integrate(JWT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME, JWT_APP_NAME], status="active")
 
     logger.info(f"Integrating {app_name} with {JWT_APP_NAME}")
     await ops_test.model.integrate(JWT_APP_NAME, app_name)
@@ -114,12 +96,11 @@ async def test_build_and_deploy(
             )
 
     await wait_for_dashboard_idle(ops_test, traefik)
-    await ops_test_vm.model.wait_for_idle(apps=[JWT_APP_NAME], status="active")
+    await ops_test.model.wait_for_idle(apps=[JWT_APP_NAME], status="active")
 
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_access(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
@@ -147,7 +128,7 @@ async def test_dashboard_access(
     await ops_test.juju("remove-relation", JWT_APP_NAME, APP_NAME)
 
     logger.info(f"Remove relation of {JWT_APP_NAME} with {OPENSEARCH_APP_NAME}")
-    await ops_test_vm.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
+    await ops_test.juju("remove-relation", JWT_APP_NAME, OPENSEARCH_APP_NAME)
 
     await wait_for_dashboard_idle(ops_test, traefik, 60)
     logger.info("Test access with JWT after disabling")

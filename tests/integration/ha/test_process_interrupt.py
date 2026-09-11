@@ -17,11 +17,12 @@ from ..helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     get_leader_name,
     wait_for_ingress_blocked,
 )
 from .helpers import (
+    LONG_TIMEOUT,
     get_service_pid,
     is_down,
     patch_restart_delay,
@@ -31,7 +32,6 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-CLIENT_TIMEOUT = 10
 RESTART_DELAY = 60
 UPDATE_STATUS_INTERVAL = 60
 HANGING_TIMEOUT = 90
@@ -52,19 +52,12 @@ K8s_CONFIG = {
     "update-status-hook-interval": f"{UPDATE_STATUS_INTERVAL}s",
 }
 
-OPENSEARCH_RELATION_NAME = "opensearch-client"
-PEER = "dashboard_peers"
-SERVER_PORT = 5601
-
 NUM_UNITS_APP = 2
 NUM_UNITS_DB = 3
 
-LONG_TIMEOUT = 3000
-LONG_WAIT = 30
-
 
 @pytest.fixture()
-async def restart_delay(ops_test_vm: OpsTest, ops_test: OpsTest, substrate: str):
+async def restart_delay(ops_test: OpsTest, substrate: str):
     if substrate == "k8s":
         yield
         return
@@ -78,26 +71,24 @@ async def restart_delay(ops_test_vm: OpsTest, ops_test: OpsTest, substrate: str)
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
-    charmvm: str,
-    charmk8s: str,
-    charm_base: str,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-    charm = charmvm if substrate == "vm" else charmk8s
     if substrate == "k8s":
         await ops_test.model.set_config(K8s_CONFIG)
 
-    app_name = await deploy_base(
-        ops_test_vm,
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
         charm,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
         opensearch_config=OPENSEARCH_CONFIG,
@@ -119,26 +110,20 @@ async def test_build_and_deploy(
     else:
         assert ops_test.model.applications[app_name].status == "active"
     await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
 
     if tls:
         logger.info("Initializing TLS Charm connections")
         if substrate == "k8s":
-            await ops_test_vm.model.create_offer(
-                "certificates", TLS_CERTIFICATES_APP_NAME, "self-signed-certificates"
-            )
-            await ops_test.model.consume(
-                f"admin/{ops_test_vm.model_name}.{TLS_CERTIFICATES_APP_NAME}"
-            )
             await ops_test.model.integrate(
                 f"{TLS_CERTIFICATES_APP_NAME}:certificates", TRAEFIK_APP_NAME
             )
 
         await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
 
-        await ops_test_vm.model.wait_for_idle(
+        await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT
         )
         await ops_test.model.wait_for_idle(
@@ -146,7 +131,7 @@ async def test_build_and_deploy(
         )
 
         logger.info("Checking Dashboard access after TLS is configured")
-        assert await access_all_dashboards(ops_test_vm, ops_test, https=True, verify=True)
+        assert await access_all_dashboards(ops_test, https=True, verify=True)
 
 
 ##############################################################################
@@ -155,7 +140,6 @@ async def test_build_and_deploy(
 
 
 async def _recover_from_signal(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     signal: str,
     units: list[str],
@@ -166,8 +150,6 @@ async def _recover_from_signal(
     verify: bool = False,
 ):
     is_dashboards = app_name == APP_NAME
-    # dashboards always deploys to ops_test model; opensearch always to ops_test_vm
-    app_ops_test = ops_test if is_dashboards else ops_test_vm
     container = ""
     if is_dashboards and substrate == "k8s":
         container = "opensearch-dashboards"
@@ -184,7 +166,7 @@ async def _recover_from_signal(
             await asyncio.gather(
                 *[
                     send_control_signal(
-                        app_ops_test, unit, signal, app_name, True if container else False
+                        ops_test, unit, signal, app_name, True if container else False
                     )
                     for unit in units
                 ]
@@ -199,23 +181,38 @@ async def _recover_from_signal(
                 # Check that process is down
                 logger.info(f"Waiting for {app_name}:{units} to be down...")
                 assert all(
-                    await asyncio.gather(
-                        *[is_down(app_ops_test, unit, app_name) for unit in units]
-                    )
+                    await asyncio.gather(*[is_down(ops_test, unit, app_name) for unit in units])
                 )
+
+    # Opensearch does not restart a SIGSTOP-frozen process,
+    # so it never recovers on its own.
+    # un-freeze it and let the system recover, so we can verify
+    # the dashboards reconnect once the node is responsive again.
+    if signal == "SIGSTOP" and not is_dashboards:
+        logger.info(f"Holding {app_name}:{units} frozen so the outage is registered...")
+        await asyncio.sleep(UPDATE_STATUS_INTERVAL + 2)
+        logger.info(f"Sending SIGCONT to un-freeze {app_name}:{units}...")
+        await asyncio.gather(
+            *[
+                send_control_signal(
+                    ops_test, unit, "SIGCONT", app_name, True if container else False
+                )
+                for unit in units
+            ]
+        )
 
     logger.info("Waiting a bit, so the process could safely restart...")
     await asyncio.sleep(UPDATE_STATUS_INTERVAL + 2)
     if signal == "SIGSTOP":
         await asyncio.sleep(HANGING_TIMEOUT + 2)
-    await ops_test_vm.model.wait_for_idle(
+    await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME], wait_for_active=True, timeout=1000
     )
     # Always wait for dashboards to reconnect, not just when we were testing dashboards directly.
     await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=1000)
 
     logger.info("Checking OSD access...")
-    assert await access_all_dashboards(ops_test_vm, ops_test, https, verify=verify)
+    assert await access_all_dashboards(ops_test, https, verify=verify)
 
 
 ##############################################################################
@@ -226,16 +223,14 @@ async def _recover_from_signal(
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
 async def test_signal_opensearch_process_leader_https(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     signal,
     substrate: str,
     test_flags: Flags,
 ):
     """Signals OSD leader process and checks recovery + re-election."""
-    db_leader_name = await get_leader_name(ops_test_vm, app_name=OPENSEARCH_APP_NAME)
+    db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=[db_leader_name],
@@ -247,17 +242,14 @@ async def test_signal_opensearch_process_leader_https(
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 async def test_sigstop_opensearch_process_leader(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
-    """Signals Opensearch leader process and checks recovery + re-election."""
-    db_leader_name = await get_leader_name(ops_test_vm, app_name=OPENSEARCH_APP_NAME)
+    """Freezes the Opensearch leader with SIGSTOP, un-freezes it, and checks recovery."""
+    db_leader_name = await get_leader_name(ops_test, app_name=OPENSEARCH_APP_NAME)
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal="SIGSTOP",
         units=[db_leader_name],
@@ -271,7 +263,6 @@ async def test_sigstop_opensearch_process_leader(
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
 async def test_signal_dashboard_process_leader(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     signal,
     substrate: str,
@@ -281,7 +272,6 @@ async def test_signal_dashboard_process_leader(
     """Signals OSD leader process and checks recovery + re-election."""
     leader_name = await get_leader_name(ops_test, APP_NAME)
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=[leader_name],
@@ -295,16 +285,14 @@ async def test_signal_dashboard_process_leader(
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM"])
 async def test_signal_opensearch_process_cluster(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     signal,
     substrate: str,
     test_flags: Flags,
 ):
     """Signals Opensearch leader process and checks recovery + re-election."""
-    db_units = [unit.name for unit in ops_test_vm.model.applications[OPENSEARCH_APP_NAME].units]
+    db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=db_units,
@@ -316,17 +304,14 @@ async def test_signal_opensearch_process_cluster(
 
 
 @pytest.mark.abort_on_fail
-@pytest.mark.skip(reason="Opensearch is not possible to contact after recovery")
 async def test_sigstop_opensearch_process_cluster(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
 ):
-    """Signals Opensearch leader process and checks recovery + re-election."""
-    db_units = [unit.name for unit in ops_test_vm.model.applications[OPENSEARCH_APP_NAME].units]
+    """Freezes the whole Opensearch cluster with SIGSTOP, un-freezes it, and checks recovery."""
+    db_units = [unit.name for unit in ops_test.model.applications[OPENSEARCH_APP_NAME].units]
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal="SIGSTOP",
         units=db_units,
@@ -340,7 +325,6 @@ async def test_sigstop_opensearch_process_cluster(
 @pytest.mark.abort_on_fail
 @pytest.mark.parametrize("signal", ["SIGKILL", "SIGTERM", "SIGSTOP"])
 async def test_signal_dashboard_process_cluster(
-    ops_test_vm: OpsTest,
     ops_test: OpsTest,
     signal,
     substrate: str,
@@ -350,7 +334,6 @@ async def test_signal_dashboard_process_cluster(
     """Signals OSD leader process and checks recovery + re-election."""
     units = [unit.name for unit in ops_test.model.applications[APP_NAME].units]
     await _recover_from_signal(
-        ops_test_vm=ops_test_vm,
         ops_test=ops_test,
         signal=signal,
         units=units,
