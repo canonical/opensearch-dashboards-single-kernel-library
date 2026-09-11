@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   ci:
-    uses: ./.github/workflows/ci.yaml
+    uses: $/.github/workflows/ci.yaml
     secrets:
       CHARMHUB_TOKEN: ${{ secrets.CHARMHUB_TOKEN }}
     permissions:
@@ -29,7 +29,7 @@ jobs:
     needs:
       - ci
     name: Release to PyPI (part 1)
-    uses: canonical/data-platform-workflows/.github/workflows/release_python_package_part1.yaml@v50.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_python_package_part1.yaml@v52.0.0
     permissions:
       contents: write # Needed to create git tag
 
@@ -58,7 +58,7 @@ jobs:
     needs:
       - release-part1
       - release-trusted-publishing
-    uses: canonical/data-platform-workflows/.github/workflows/release_python_package_part2.yaml@v50.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_python_package_part2.yaml@v52.0.0
     with:
       git-tag: ${{ needs.release-part1.outputs.git-tag }}
     permissions:
@@ -101,7 +101,7 @@ jobs:
       - release-part1
       - release-part2
       - wait-for-pypi-available
-    uses: ./.github/workflows/bump_dependent_charms.yaml
+    uses: $/.github/workflows/bump_dependent_charms.yaml
     with:
       version: ${{ needs.release-part1.outputs.git-tag }}
       base_branch: ${{ github.ref_name }}

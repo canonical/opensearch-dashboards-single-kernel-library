@@ -29,6 +29,8 @@ from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v1.upgrad
     DependencyModel,
     UpgradeState,
 )
+from single_kernel_opensearch_dashboards.managers.config import ConfigManager
+from single_kernel_opensearch_dashboards.managers.tls import TLSManager
 from single_kernel_opensearch_dashboards.managers.upgrade import (
     OpensearchDashboardsDependencyModel,
     UpgradeManager,
@@ -300,6 +302,8 @@ def test_upgrade_granted_sets_failed_if_failed_upgrade_check(harness, mocker):
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")
     mocker.patch.object(VMWorkload, "install", return_value=True)
+    mocker.patch.object(TLSManager, "write_tls_files")
+    mocker.patch.object(ConfigManager, "set_dashboard_properties")
     mocker.patch.object(UpgradeEvents, "set_unit_completed")
     mocker.patch.object(UpgradeEvents, "set_unit_failed")
 
@@ -335,6 +339,8 @@ def test_upgrade_granted_succeeds(harness, mocker):
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")
     mocker.patch.object(VMWorkload, "install")
+    mocker.patch.object(TLSManager, "write_tls_files")
+    mocker.patch.object(ConfigManager, "set_dashboard_properties")
     mocker.patch.object(UpgradeEvents, "pre_upgrade_check")
     mocker.patch.object(UpgradeEvents, "set_unit_completed")
     mocker.patch.object(UpgradeEvents, "set_unit_failed")
@@ -372,6 +378,8 @@ def test_upgrade_granted_recurses_upgrade_changed_on_leader(harness, mocker):
     mocker.patch.object(VMWorkload, "stop")
     mocker.patch.object(VMWorkload, "restart")
     mocker.patch.object(VMWorkload, "install")
+    mocker.patch.object(TLSManager, "write_tls_files")
+    mocker.patch.object(ConfigManager, "set_dashboard_properties")
     mocker.patch.object(UpgradeEvents, "pre_upgrade_check")
     mocker.patch.object(UpgradeEvents, "on_upgrade_changed")
 

@@ -62,6 +62,15 @@ def patched_healthy(mocker):
 
 
 @pytest.fixture(autouse=True)
+def patched_ready(mocker):
+    """`ready()` checks the on-disk config dir, which does not exist under the harness."""
+    mocker.patch(
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.ready",
+        return_value=True,
+    )
+
+
+@pytest.fixture(autouse=True)
 def patched_workload_version(mocker):
     """The charm reads the workload_version file from its own directory at runtime;
     unit tests run from the repo root where that file does not exist."""

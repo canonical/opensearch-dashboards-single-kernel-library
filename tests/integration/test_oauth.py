@@ -15,14 +15,13 @@ from oauth_tools import (
 from playwright.async_api._generated import Page
 from pytest_operator.plugin import OpsTest
 
-from .conftest import Flags
+from .conftest import OPENSEARCH_K8S_CHARM, Flags
 from .helpers import (
     APP_NAME,
     CONFIG_OPTS,
     OPENSEARCH_APP_NAME,
     OPENSEARCH_CHANNEL,
     OPENSEARCH_CONFIG,
-    OPENSEARCH_K8S_CHARM,
     RESOURCE,
     TRAEFIK_APP_NAME,
     get_dashboard_routing,
@@ -47,6 +46,8 @@ async def test_deploy(
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
+    charm_base: str,
+    charm: str,
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
     traefik = test_flags.traefik
@@ -71,7 +72,7 @@ async def test_deploy(
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
         await ops_test.model.deploy(
             OPENSEARCH_APP_NAME,
-            channel="2/edge",
+            channel=OPENSEARCH_CHANNEL,
             num_units=2,
             config=CONFIG_OPTS,
         )
@@ -131,7 +132,10 @@ async def test_setup_relations(
 
         await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:oauth", "hydra:oauth")
         await ops_test.model.integrate(f"{APP_NAME}:oauth", "hydra:oauth")
-        await ops_test.model.wait_for_idle()
+        if traefik:
+            await ops_test.model.wait_for_idle(status="active", timeout=1000)
+        else:
+            await ops_test.model.wait_for_idle(timeout=1000)
         return
 
     await ops_test_k8s.model.create_offer(
@@ -173,6 +177,15 @@ async def test_oauth(
 ):
     """Ensure that SSO works for OpenSearch Dashboards login."""
     traefik = test_flags.traefik
+
+    await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)
+    if traefik:
+        await ops_test.model.wait_for_idle(
+            apps=[APP_NAME, TRAEFIK_APP_NAME], status="active", timeout=1000
+        )
+    else:
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], timeout=1000)
+
     unit = ops_test.model.applications[APP_NAME].units[0]
     host, port, path, _ = await get_dashboard_routing(
         ops_test,

@@ -32,14 +32,12 @@ from tenacity import (
     wait_fixed,
 )
 
-from .conftest import SUBSTRATE, Flags
+from .conftest import OPENSEARCH_APP_NAME, SUBSTRATE, Flags
 
 METADATA_K8s = yaml.safe_load(Path("tests/charms/dashboards_k8s_charm/metadata.yaml").read_text())
 METADATA_VM = yaml.safe_load(Path("tests/charms/dashboards_vm_charm/metadata.yaml").read_text())
 APP_NAME = METADATA_VM["name"] if SUBSTRATE == "vm" else METADATA_K8s["name"]
 
-OPENSEARCH_APP_NAME = "opensearch"
-OPENSEARCH_K8S_CHARM = "opensearch-k8s"
 OPENSEARCH_CHANNEL = "2/edge"
 CONFIG_OPTS = {"profile": "testing"}
 
@@ -68,6 +66,12 @@ RESOURCE = {
     "opensearch-dashboards-image": METADATA_K8s["resources"]["opensearch-dashboards-image"][
         "upstream-source"
     ]
+}
+OLD_K8S_RESOURCE = {
+    "opensearch-dashboards-image": (
+        "ghcr.io/canonical/charmed-opensearch-dashboards:2.19.5-24.04_edge@sha256:"
+        "57cd5a8e03bc80704bf64843f4d4309744ac6a4c92469169bbf4a4a1f7e81046"
+    )
 }
 
 
@@ -150,24 +154,11 @@ async def wait_for_dashboard_idle(ops_test: OpsTest, traefik: bool, idle_period:
         await wait_for_ingress_blocked(ops_test, idle_period=idle_period)
 
 
-def local_dashboards_charm(charm_base: str) -> str:
-    """Path to the locally built dashboards charm for the given substrate."""
-    if SUBSTRATE == "k8s":
-        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
-    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
-
-
-def opensearch_deploy_args(on_k8s: bool) -> tuple[str, bool]:
-    """Return (charm, trust) for deploying OpenSearch on the given substrate."""
-    if on_k8s:
-        return OPENSEARCH_K8S_CHARM, True
-    return OPENSEARCH_APP_NAME, False
-
-
-async def deploy_base(
+async def deploy_opensearch_and_dashboards(
     ops_test: OpsTest,
     charm_base: str,
     substrate: str,
+    opensearch_deploy_args: tuple[str, bool],
     num_units_app: int = 1,
     num_units_db: int = 2,
     trust_charm: bool = True,
@@ -176,10 +167,8 @@ async def deploy_base(
     charm_channel: str | None = None,
 ) -> str:
     """Deploy OpenSearch+TLS and dashboards on the same model, wired together."""
-    if resource is None:
-        resource = RESOURCE
     on_k8s = substrate == "k8s"
-    os_charm, os_trust = opensearch_deploy_args(on_k8s)
+    os_charm, os_trust = opensearch_deploy_args
 
     # The cloudinit-userdata sysctl tuning only applies to machine models.
     if not on_k8s:
@@ -202,26 +191,45 @@ async def deploy_base(
     )
     await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
 
-    deploy_kwargs: dict = {
-        "application_name": APP_NAME,
-        "num_units": num_units_app,
-    }
-    # for upgrades test we need to pull dashboards from 2/stable and 2/edge, not local one
-    if charm_channel:
-        charm = APP_NAME
-        deploy_kwargs["channel"] = charm_channel
-        deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
-    else:
-        charm = local_dashboards_charm(charm_base)
-        deploy_kwargs["base"] = charm_base
-
-    if on_k8s:
+    if on_k8s and charm_channel and resource is not None:
+        # libjuju cannot attach a custom OCI image to a charmhub charm, so we shell out to the juju CLI
+        cli_args = [
+            "deploy",
+            APP_NAME,  # charm name
+            APP_NAME,  # application name
+            "--channel",
+            charm_channel,
+            "--base",
+            charm_base,
+            "--num-units",
+            str(num_units_app),
+        ]
         if trust_charm:
-            deploy_kwargs["trust"] = True
-        if not charm_channel:
-            deploy_kwargs["resources"] = resource
-    await ops_test.model.deploy(charm, **deploy_kwargs)
+            cli_args.append("--trust")
+        for res_name, res_value in resource.items():
+            cli_args += ["--resource", f"{res_name}={res_value}"]
+        await ops_test.juju(*cli_args, check=True)
+    else:
+        deploy_kwargs: dict = {
+            "application_name": APP_NAME,
+            "num_units": num_units_app,
+        }
+        if charm_channel:
+            charm = APP_NAME
+            deploy_kwargs["channel"] = charm_channel
+            deploy_kwargs["series"] = "jammy" if charm_base == "ubuntu@22.04" else "noble"
+        else:
+            deploy_kwargs["base"] = charm_base
 
+        if on_k8s:
+            if trust_charm:
+                deploy_kwargs["trust"] = True
+            if not charm_channel:
+                deploy_kwargs["resources"] = resource if resource is not None else RESOURCE
+        await ops_test.model.deploy(charm, **deploy_kwargs)
+
+    # A CLI deploy may not be reflected in libjuju's model cache yet; wait for the app.
+    await ops_test.model.block_until(lambda: APP_NAME in ops_test.model.applications, timeout=300)
     await ops_test.model.wait_for_idle(
         apps=[OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000
     )
@@ -597,8 +605,6 @@ def get_charm_workload_version(model_name: str, unit_name: str, substrate: str =
         except subprocess.CalledProcessError as err:
             output = err.output.strip() if err.output else ""
             logger.error(f"Failed to read workload_version: {output or err}")
-            if "No such file or directory" in output:
-                return "2.19.2"
             return ""
     elif substrate == "k8s":
         app, unit_index = unit_name.split("/")
@@ -681,6 +687,15 @@ def assert_no_downgrade(old: dict[str, str], new: dict[str, str]) -> None:
         new_version = new[unit_name]
         assert version_key(new_version) >= version_key(old_version), (
             f"{unit_name} downgraded: {old_version!r} -> {new_version!r}"
+        )
+
+
+def assert_upgraded(old: dict[str, str], new: dict[str, str]) -> None:
+    """Assert each unit's version strictly increased across an upgrade."""
+    for unit_name, old_version in old.items():
+        new_version = new[unit_name]
+        assert version_key(new_version) > version_key(old_version), (
+            f"{unit_name} was not upgraded: {old_version!r} -> {new_version!r}"
         )
 
 

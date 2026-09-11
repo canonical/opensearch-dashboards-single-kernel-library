@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 K8S_CLOUD_NAME = "uk8s"
 SUBSTRATE = os.environ.get("SUBSTRATE", "vm").lower()
 
+OPENSEARCH_APP_NAME = "opensearch"
+OPENSEARCH_K8S_CHARM = "opensearch-k8s"
+
 
 @pytest.fixture(autouse=True, scope="module")
 def opensearch_sysctl_settings():
@@ -34,9 +37,32 @@ def substrate() -> Literal["k8s", "vm"]:
 
 
 @pytest.fixture
+def charm_base():
+    """Returns the base in the modern format, e.g., 'ubuntu@24.04'."""
+    base_version = os.environ.get("CHARM_UBUNTU_BASE", "24.04")
+    return f"ubuntu@{base_version}"
+
+
+@pytest.fixture
+def charm(charm_base, substrate):
+    """Path to the vm charm file to use for testing."""
+    if substrate == "k8s":
+        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
+    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
+
+
+@pytest.fixture
+def opensearch_deploy_args(substrate) -> tuple[str, bool]:
+    """Returns (charm, trust) for deploying OpenSearch on the current substrate."""
+    if substrate == "k8s":
+        return OPENSEARCH_K8S_CHARM, True
+    return OPENSEARCH_APP_NAME, False
+
+
+@pytest.fixture
 def application_charm() -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/integration/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
+    return "./tests/charms/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
 
 
 def pytest_collection_modifyitems(config, items):

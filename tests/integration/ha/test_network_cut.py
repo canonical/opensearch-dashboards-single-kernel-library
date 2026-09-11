@@ -21,7 +21,7 @@ from tests.integration.helpers import (
     TRAEFIK_APP_NAME,
     access_all_dashboards,
     all_dashboards_unavailable,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     get_address,
     get_leader_name,
     wait_for_ingress_blocked,
@@ -72,14 +72,17 @@ async def test_build_and_deploy(
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Tests that the charm deploys safely"""
     tls = test_flags.test_tls
-    charm_base = test_flags.charm_base
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
     )

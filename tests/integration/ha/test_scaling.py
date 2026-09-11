@@ -17,7 +17,7 @@ from ..helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     access_all_dashboards,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     is_https_enabled,
     wait_for_ingress_blocked,
 )
@@ -32,15 +32,18 @@ async def test_build_and_deploy(
     application_charm: str,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
-    charm_base = test_flags.charm_base
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=1,
         num_units_db=2,
     )

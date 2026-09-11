@@ -23,6 +23,7 @@ from .helpers import (
     NUM_UNITS_APP,
     NUM_UNITS_DB,
     OPENSEARCH_APP_NAME,
+    OPENSEARCH_CHANNEL,
     OPENSEARCH_RELATION_NAME,
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
@@ -33,7 +34,7 @@ from .helpers import (
     client_run_all_dashboards_request,
     client_run_db_request,
     count_lines_with,
-    deploy_base,
+    deploy_opensearch_and_dashboards,
     destroy_cluster,
     get_address,
     get_file_contents,
@@ -60,16 +61,19 @@ async def test_build_and_deploy(
     application_charm: str,
     substrate: str,
     test_flags: Flags,
+    charm: str,
+    charm_base: str,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
     traefik = test_flags.traefik
     transfer_traefik_ca = test_flags.transfer_traefik_ca
-    charm_base = test_flags.charm_base
-    app_name = await deploy_base(
+    app_name = await deploy_opensearch_and_dashboards(
         ops_test,
         charm_base,
         substrate,
+        opensearch_deploy_args,
         num_units_app=NUM_UNITS_APP,
         num_units_db=NUM_UNITS_DB,
     )
@@ -477,6 +481,7 @@ async def test_restore_opensearch_restores_osd(
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
+    opensearch_deploy_args: tuple[str, bool],
 ):
     """This test shouldn't be separate but a native continuation of the previous one."""
     tls = test_flags.test_tls
@@ -484,7 +489,7 @@ async def test_restore_opensearch_restores_osd(
     logger.info("Destroying and restoring the Opensearch cluster")
     await destroy_cluster(ops_test, app=OPENSEARCH_APP_NAME)
 
-    os_charm, os_trust = opensearch_deploy_args(substrate == "k8s")
+    os_charm, os_trust = opensearch_deploy_args
     os_deploy_kwargs: dict = {
         "application_name": OPENSEARCH_APP_NAME,
         "channel": OPENSEARCH_CHANNEL,
