@@ -7,6 +7,7 @@
 import logging
 import subprocess
 from functools import cached_property
+from platform import machine
 
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
@@ -15,7 +16,6 @@ from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 from typing_extensions import override
-from platform import machine
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (

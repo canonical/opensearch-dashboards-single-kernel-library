@@ -53,9 +53,9 @@ async def test_deploy(
     if architecture == "arm64":
         pytest.skip(
             "Skipping test on arm64 architecture since kratos-external-idp-integrator is not available for arm64"
-        )    
+        )
     traefik = test_flags.traefik
-    
+
     if substrate == "k8s":
         await ops_test.model.deploy(
             OPENSEARCH_K8S_CHARM,

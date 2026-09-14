@@ -87,9 +87,11 @@ async def test_build_and_deploy(
         await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
     else:
         # Prometheus k8s and grafana k8s are not available for arm64
-        if architecture == "amd64": 
+        if architecture == "amd64":
             for app in [PROMETHEUS_APP, LOKI_APP, GRAFANA_APP]:
-                await ops_test.model.deploy(app, application_name=app, channel="2/stable", trust=True)
+                await ops_test.model.deploy(
+                    app, application_name=app, channel="2/stable", trust=True
+                )
 
     if substrate == "k8s":
         await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)

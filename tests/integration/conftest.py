@@ -58,6 +58,7 @@ def opensearch_deploy_args(substrate) -> tuple[str, bool]:
         return OPENSEARCH_K8S_CHARM, True
     return OPENSEARCH_APP_NAME, False
 
+
 @pytest.fixture(scope="session")
 def machine_platform() -> str:
     """Get the machine platform running the tests."""
@@ -75,7 +76,6 @@ def architecture(machine_platform) -> str:
         return "arm64"
     else:
         raise ValueError(f"Unsupported machine platform: {machine_platform}")
-
 
 
 @pytest.fixture

@@ -106,17 +106,14 @@ async def test_build_and_deploy(
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_access(
-    ops_test: OpsTest,
-    substrate: str,
-    test_flags: Flags,
-    architecture: str
+    ops_test: OpsTest, substrate: str, test_flags: Flags, architecture: str
 ):
     """Test access to dashboard unit with JWT and basic auth."""
     if architecture == "arm64":
         pytest.skip(
             "Skipping test on arm64 architecture since jwt-integrator is not available for arm64"
         )
-     
+
     traefik = test_flags.traefik
 
     # Calculate protocol depending on tls/traefik state
