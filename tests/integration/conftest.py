@@ -44,11 +44,11 @@ def charm_base():
 
 
 @pytest.fixture
-def charm(charm_base, substrate):
+def charm(charm_base, substrate, architecture) -> str:
     """Path to the vm charm file to use for testing."""
     if substrate == "k8s":
-        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-amd64.charm"
-    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-amd64.charm"
+        return f"./tests/charms/dashboards_k8s_charm/opensearch-dashboards-k8s_{charm_base}-{architecture}.charm"
+    return f"./tests/charms/dashboards_vm_charm/opensearch-dashboards_{charm_base}-{architecture}.charm"
 
 
 @pytest.fixture
@@ -58,11 +58,30 @@ def opensearch_deploy_args(substrate) -> tuple[str, bool]:
         return OPENSEARCH_K8S_CHARM, True
     return OPENSEARCH_APP_NAME, False
 
+@pytest.fixture(scope="session")
+def machine_platform() -> str:
+    """Get the machine platform running the tests."""
+    import platform
+
+    return platform.machine()
+
+
+@pytest.fixture(scope="session")
+def architecture(machine_platform) -> str:
+    """Get the architecture of the machine running the tests."""
+    if machine_platform == "x86_64":
+        return "amd64"
+    elif machine_platform == "aarch64":
+        return "arm64"
+    else:
+        raise ValueError(f"Unsupported machine platform: {machine_platform}")
+
+
 
 @pytest.fixture
-def application_charm() -> str:
+def application_charm(architecture) -> str:
     """Path to the application charm to use for testing."""
-    return "./tests/charms/dashboards_application_charm/application_ubuntu@24.04-amd64.charm"
+    return f"./tests/charms/dashboards_application_charm/application_ubuntu@24.04-{architecture}.charm"
 
 
 def pytest_collection_modifyitems(config, items):
