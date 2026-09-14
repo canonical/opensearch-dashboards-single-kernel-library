@@ -46,7 +46,7 @@ def test_tls_enabled(harness):
     ):
         harness.charm.unit.add_secret(
             {"private-key": "key", "certificate": "cert", "ca-cert": "exists"},
-            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
+            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit.tls",
         )
 
     assert harness.charm.config_manager.dashboard_properties().get("server.ssl.enabled") is True

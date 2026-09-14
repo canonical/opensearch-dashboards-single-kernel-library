@@ -257,19 +257,6 @@ def get_relations(ops_test: OpsTest, name: str, app_name: str = "remote-") -> li
     return results
 
 
-async def get_secret_by_label(ops_test, label: str) -> Dict[str, str]:
-    secrets_meta_raw = await ops_test.juju("list-secrets", "--format", "json")
-    secrets_meta = json.loads(secrets_meta_raw[1])
-
-    for secret_id in secrets_meta:
-        if secrets_meta[secret_id]["label"] == label:
-            break
-
-    secret_data_raw = await ops_test.juju("show-secret", "--format", "json", "--reveal", secret_id)
-    secret_data = json.loads(secret_data_raw[1])
-    return secret_data[secret_id]["content"]["Data"]
-
-
 def access_prometheus_exporter(host: str) -> bool:
     """Check if a given unit has 'dashboard-exporter' service available and publishing."""
     try:
@@ -458,15 +445,11 @@ async def access_all_dashboards(
     skip: list[str] = None,
 ):
     skip = skip or []
-    relation_id = get_relations(ops_test, "opensearch-client", APP_NAME)[0].id
-
     if not ops_test.model.applications[APP_NAME].units:
         logger.error(f"No units for application {APP_NAME}")
         return False
 
-    dashboard_credentials = await get_secret_by_label(
-        ops_test, f"opensearch-client.{relation_id}.user.secret"
-    )
+    dashboard_credentials = await get_opensearch_client_credentials(ops_test)
     dashboard_password = dashboard_credentials["password"]
     result = True
     # Copying the Dashboard's CA cert locally to use it for SSL verification
@@ -814,6 +797,47 @@ def get_unit_relation_data(model_full_name: str, unit: str, endpoint: str):
     raise Exception("No relation found!")
 
 
+async def get_secret_data_by_uri(ops_test: OpsTest, secret_uri: str) -> Dict[str, str]:
+    """Retrieve a secret's content by its URI."""
+    secret_id = secret_uri.rsplit("/", 1)[-1]
+    _, stdout, _ = await ops_test.juju("show-secret", "--format", "json", "--reveal", secret_uri)
+    return json.loads(stdout)[secret_id]["content"]["Data"]
+
+
+def _extract_user_secret_uri(app_data: Dict[str, str]) -> str | None:
+    """Pull the user-credentials secret URI out of an opensearch-client provider databag."""
+    requests_raw = app_data.get("requests")
+    if requests_raw:
+        try:
+            entries = json.loads(requests_raw)
+        except (json.JSONDecodeError, TypeError):
+            entries = []
+        for entry in entries:
+            if isinstance(entry, dict) and entry.get("secret-user"):
+                return entry["secret-user"]
+    return app_data.get("secret-user")
+
+
+async def get_opensearch_client_credentials(
+    ops_test: OpsTest,
+    relation_name: str = OPENSEARCH_RELATION_NAME,
+    unit_name: str | None = None,
+) -> Dict[str, str]:
+    """Return the opensearch-client credentials the OpenSearch provider published."""
+    if unit_name is None:
+        unit_name = ops_test.model.applications[APP_NAME].units[0].name
+    app_data = get_app_relation_data(ops_test.model.name, unit_name, relation_name)
+
+    secret_uri = _extract_user_secret_uri(app_data)
+    if secret_uri:
+        return await get_secret_data_by_uri(ops_test, secret_uri)
+
+    raise KeyError(
+        "No opensearch-client credentials found: the provider databag has no "
+        f"'secret-user' URI. Available keys: {sorted(app_data)}"
+    )
+
+
 async def check_full_status(
     ops_test: OpsTest,
     app_name: str = APP_NAME,
@@ -1005,9 +1029,7 @@ async def client_run_all_dashboards_request(
         logger.debug(f"No units for application {APP_NAME}")
         return False
 
-    dashboard_credentials = await get_secret_by_label(
-        ops_test, f"opensearch-client.{relation.id}.user.secret"
-    )
+    dashboard_credentials = await get_opensearch_client_credentials(ops_test, unit_name=unit_name)
     username = dashboard_credentials.get("username")
     password = dashboard_credentials.get("password")
 

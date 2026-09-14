@@ -10,7 +10,7 @@ import responses
 from requests import ReadTimeout
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses, HealthStatuses
+from single_kernel_opensearch_dashboards.common.statuses import CharmStatuses, HealthStatuses
 
 logger = logging.getLogger(__name__)
 
@@ -411,8 +411,6 @@ def test_api_request(harness):
             ],
         },
     }
-    harness.charm.state.unit_server.relation = MagicMock(name="test")
-
     responses.add(
         method="GET",
         url=f"{harness.charm.state.url}/api/status",

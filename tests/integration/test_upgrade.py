@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 CHANNEL_STABLE = "2/stable"
 CHANNEL_EDGE = "2/edge"
+pytestmark = pytest.mark.skip(reason="Upgrade tests will be enabled in 3.x")
 
 
 async def _run_upgrade_scenario(

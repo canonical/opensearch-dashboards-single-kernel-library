@@ -216,7 +216,7 @@ async def test_dashboard_client_data_access(
     payload = "\n".join([json.dumps(d) for d in dicts]) + "\n"
 
     unit_name = ops_test.model.applications[DB_CLIENT_APP_NAME].units[0].name
-    await client_run_db_request(
+    bulk_data = await client_run_db_request(
         ops_test,
         unit_name,
         client_relation,
@@ -224,11 +224,15 @@ async def test_dashboard_client_data_access(
         "/_bulk?refresh=true",
         re.escape(payload),
     )
+    logging.info(f"Bulk load response: {bulk_data}")
+    bulk_results = json.loads(bulk_data["results"])
+    assert not bulk_results.get("errors", True), f"Bulk load reported errors: {bulk_results}"
 
     # Checking if data got to the DB indeed
     read_db_data = await client_run_db_request(
         ops_test, unit_name, client_relation, "GET", "/albums/_search"
     )
+    logging.info(f"Raw search response: {read_db_data}")
     results = json.loads(read_db_data["results"])
     logging.info(f"Loaded into the database: {results}")
 

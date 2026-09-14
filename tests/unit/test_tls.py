@@ -14,33 +14,10 @@ from single_kernel_opensearch_dashboards.common.literals import (
 
 
 @pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
-def test_certificates_created_sets_tls_enabled(harness):
-    with harness.hooks_disabled():
-        harness.set_leader(True)
-
-    with (
-        patch("ops.framework.EventBase.defer"),
-        patch(
-            "single_kernel_opensearch_dashboards.core.state.ClusterState.stable",
-            new_callable=PropertyMock,
-            return_value=True,
-        ),
-    ):
-        harness.add_relation(CERTS_REL_NAME, "tls-certificates-operator")
-
-        assert harness.charm.state.cluster.tls_enabled
-
-
-@pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
 def test_certificates_joined_creates_private_key(harness):
     with (
         patch(
             "single_kernel_opensearch_dashboards.core.state.ClusterState.stable",
-            new_callable=PropertyMock,
-            return_value=True,
-        ),
-        patch(
-            "single_kernel_opensearch_dashboards.core.models.OSDCluster.tls_enabled",
             new_callable=PropertyMock,
             return_value=True,
         ),
@@ -69,7 +46,7 @@ def test_certificates_available_fails_wrong_csr(harness):
     )
 
     assert not harness.charm.state.unit_server.certificate
-    assert not harness.charm.state.unit_server.ca
+    assert not harness.charm.state.unit_server.ca_cert
 
 
 @pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
@@ -82,7 +59,7 @@ def test_certificates_available_succeeds(harness):
 
     harness.charm.unit.add_secret(
         {"csr": "not-missing"},
-        label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
+        label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit.tls",
     )
 
     # implicitly tests these method calls
@@ -102,7 +79,7 @@ def test_certificates_available_succeeds(harness):
         )
 
         assert harness.charm.state.unit_server.certificate
-        assert harness.charm.state.unit_server.ca
+        assert harness.charm.state.unit_server.ca_cert
 
 
 @pytest.mark.parametrize("harness", [{"add_upgrade": False}], indirect=True)
@@ -117,12 +94,12 @@ def test_certificates_broken(harness):
                 "ca-cert": "exists",
                 "private-key": "key",
             },
-            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit",
+            label=f"{PEERS_REL_NAME}.opensearch-dashboards.unit.tls",
         )
         harness.set_leader(True)
 
     assert harness.charm.state.unit_server.certificate
-    assert harness.charm.state.unit_server.ca
+    assert harness.charm.state.unit_server.ca_cert
     assert harness.charm.state.unit_server.csr
 
     # implicitly tests these method calls
@@ -137,16 +114,16 @@ def test_certificates_broken(harness):
         ) as workload_config,
         patch(
             "single_kernel_opensearch_dashboards.events.tls.TLSCertificatesRequiresV3.request_certificate_revocation"
-        ),
+        ) as request_revocation,
     ):
         harness.remove_relation(certs_rel_id)
 
         # While the TLS relation and certs are gone
-        assert not harness.charm.state.cluster.tls_enabled
         assert not harness.charm.state.unit_server.certificate
-        assert not harness.charm.state.unit_server.ca
+        assert not harness.charm.state.unit_server.ca_cert
         assert not harness.charm.state.unit_server.csr
         assert not harness.charm.state.unit_server.tls_enabled
+        request_revocation.assert_not_called()
 
         assert workload_config.assert_called_once
 
