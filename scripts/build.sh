@@ -4,9 +4,9 @@ set -e
 
 PLATFORM=""
 # Charms for integration tests
-TEST_CHARMS=("tests/charms/dashboards_application_charm")
 LIB_PATH="./single_kernel_opensearch_dashboards"
 CHARMS_PATH="./tests/charms"
+THIRD_PARTY_CHARMS=("./tests/charms/dashboards_application_charm")
 
 
 # --- Argument Parsing ---
@@ -60,7 +60,7 @@ if [ ${#TEST_CHARMS[@]} -eq 0 ]; then
 fi
 
 for directory in "${TEST_CHARMS[@]}"; do
-    if [[ " ${TEST_CHARMS[*]} " =~ ${directory} ]]; then
+    if [[ " ${THIRD_PARTY_CHARMS[*]} " =~ ${directory} ]]; then
       printf 'Building charm %s \n' "$directory"
       pushd "$directory"
       pack_charm
