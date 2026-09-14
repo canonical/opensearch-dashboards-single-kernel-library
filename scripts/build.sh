@@ -2,32 +2,65 @@
 
 set -e
 
+PLATFORM=""
 # Charms for integration tests
-TEST_CHARMS=("tests/charms/dashboards_application_charm")
 LIB_PATH="./single_kernel_opensearch_dashboards"
 CHARMS_PATH="./tests/charms"
+THIRD_PARTY_CHARMS=("./tests/charms/dashboards_application_charm")
+
+
+# --- Argument Parsing ---
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -p|--platform)
+            PLATFORM="$2"
+            shift 2
+            ;;
+        -c|--charm)
+            TEST_CHARMS+=("$2")
+            shift 2
+            ;;
+        *)
+            # Maintain backward compatibility for an unnamed first parameter as the charm
+            if [[ "$1" != -* ]] && [ ${#TEST_CHARMS[@]} -eq 0 ]; then
+                TEST_CHARMS+=("$1")
+                shift
+            else
+                echo "Unknown parameter passed: $1"
+                echo "Usage: $0 [-p|--platform <platform>] [-c|--charm <charm_path>] [charm_path]"
+                exit 1
+            fi
+            ;;
+    esac
+done
 
 # Helper function to avoid code duplication
 pack_charm() {
+    # Store arguments in an array to safely handle spaces or empty strings
+    local pack_args=("-v")
+
+    # Inject platform argument if one was provided
+    if [ -n "$PLATFORM" ]; then
+        pack_args+=("--platform" "$PLATFORM")
+    fi
+
     if ${CI_CACHE:-false}; then
         if ! command -v ccc >/dev/null 2>&1; then
               echo "Error: CI_CACHE is enabled but 'ccc' is not installed." >&2
               return 1
         fi
-        ccc pack -v
+        ccc pack "${pack_args[@]}"
     else
-        charmcraft pack -v
+        charmcraft pack "${pack_args[@]}"
     fi
 }
 
-if [ $# -ge 1 ]; then
-    declare -a CHARMS=("$1")
-else
-    declare -a CHARMS=("${CHARMS_PATH}/vm" )
+if [ ${#TEST_CHARMS[@]} -eq 0 ]; then
+    TEST_CHARMS=("${CHARMS_PATH}/dashboards_vm_charm")
 fi
 
-for directory in "${CHARMS[@]}"; do
-    if [[ " ${TEST_CHARMS[*]} " =~ ${directory} ]]; then
+for directory in "${TEST_CHARMS[@]}"; do
+    if [[ " ${THIRD_PARTY_CHARMS[*]} " =~ ${directory} ]]; then
       printf 'Building charm %s \n' "$directory"
       pushd "$directory"
       pack_charm

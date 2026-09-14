@@ -24,7 +24,10 @@ class OpenSearchDashboardsPaths:
 
 
 # Snap
-OPENSEARCH_DASHBOARDS_SNAP_REVISION = "155"
+OPENSEARCH_DASHBOARDS_SNAP_REVISIONS = {
+    "x86_64": "155",
+    "aarch64": "156",
+}
 CHARM_KEY = "opensearch-dashboards"
 
 # K8s
