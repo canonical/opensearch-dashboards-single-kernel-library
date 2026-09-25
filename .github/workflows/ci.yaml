@@ -93,7 +93,7 @@ jobs:
 
   build:
     name: Build Test charm | ${{ matrix.path }}
-    uses: ./.github/workflows/build_test_charms.yaml
+    uses: $/.github/workflows/build_test_charms.yaml
     with:
       path-to-charm-directory: ${{ matrix.path }}
       artifact-prefix: packed-charm
