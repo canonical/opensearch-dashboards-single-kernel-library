@@ -83,10 +83,6 @@ SNAP_DATA = "current"
 SNAP_COMMON = "common"
 SNAP = "/snap/opensearch-dashboards/current"
 
-# Secrets
-PEER_APP_SECRETS = ["monitor-username", "monitor-password", "oauth-client-secret"]
-PEER_UNIT_SECRETS = ["ca-cert", "csr", "certificate", "private-key"]
-
 # Timeouts
 RESTART_TIMEOUT = 30
 SERVICE_AVAILABLE_TIMEOUT = 90

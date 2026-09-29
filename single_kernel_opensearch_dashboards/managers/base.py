@@ -16,7 +16,6 @@ from tenacity import Retrying, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import (
     OSDAPIError,
-    OSDFileOperationError,
 )
 from single_kernel_opensearch_dashboards.common.literals import (
     DASHBOARD_USER,
@@ -173,7 +172,7 @@ class BaseManager(ManagerStatusProtocol):
         if self.state.substrate == Substrates.K8S:
             workload = cast(K8sWorkload, self.workload)
             cert = (
-                self.state.unit_server.ca
+                self.state.unit_server.ca_cert
                 if cert_path == self.workload.paths.ca
                 else self.state.opensearch_server.tls_ca
             )

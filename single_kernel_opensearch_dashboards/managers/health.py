@@ -21,11 +21,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     HEALTH_MANAGER_NAME,
     SERVICE_AVAILABLE_TIMEOUT,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     CharmStatuses,
     HealthStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.managers.base import BaseManager
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 

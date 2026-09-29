@@ -14,11 +14,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     OAUTH_REL_NAME,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     ConfigStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 
 logger = logging.getLogger(__name__)
 
@@ -65,15 +65,12 @@ class OAuthEvents(Object):
             event.defer()
             return
 
-        self.state.cluster.update(
-            {
-                "oauth-client-secret": (
-                    provider_info.client_secret
-                    if provider_info and provider_info.client_secret
-                    else ""
-                ),
-            }
-        )
+        if self.charm.unit.is_leader():
+            self.state.cluster.oauth_client_secret = (
+                provider_info.client_secret
+                if provider_info and provider_info.client_secret
+                else ""
+            )
 
         self.charm.emit_restart(event)
 
@@ -82,5 +79,6 @@ class OAuthEvents(Object):
         if self.charm.is_app_removal(event):
             return
 
-        self.state.cluster.update({"oauth-client-secret": ""})
+        if self.charm.unit.is_leader():
+            self.state.cluster.oauth_client_secret = ""
         self.charm.emit_restart(event)

@@ -4,7 +4,7 @@
 
 import json
 
-from single_kernel_opensearch_dashboards.core.statuses import CharmStatuses
+from single_kernel_opensearch_dashboards.common.statuses import CharmStatuses
 from single_kernel_opensearch_dashboards.managers.cos import COSManager
 
 
