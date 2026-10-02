@@ -17,6 +17,7 @@ from .helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     get_dashboard_routing,
     is_https_enabled,
     wait_for_dashboard_idle,
@@ -38,8 +39,13 @@ async def test_build_and_deploy(
     charm: str,
     charm_base: str,
     opensearch_deploy_args: tuple[str, bool],
+    architecture: str,
 ):
     """Deploying all charms required for the tests, and wait for their complete setup to be done."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since jwt-integrator is not available for arm64"
+        )
     tls = test_flags.test_tls
     traefik = test_flags.traefik
 
@@ -84,8 +90,7 @@ async def test_build_and_deploy(
         await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     if traefik:
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
-        await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+        await deploy_traefik(ops_test)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
 
     if tls:
@@ -101,11 +106,14 @@ async def test_build_and_deploy(
 
 @pytest.mark.abort_on_fail
 async def test_dashboard_access(
-    ops_test: OpsTest,
-    substrate: str,
-    test_flags: Flags,
+    ops_test: OpsTest, substrate: str, test_flags: Flags, architecture: str
 ):
     """Test access to dashboard unit with JWT and basic auth."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since jwt-integrator is not available for arm64"
+        )
+
     traefik = test_flags.traefik
 
     # Calculate protocol depending on tls/traefik state

@@ -6,6 +6,9 @@ environment:
   TEST_TRAEFIK: true
   SUBSTRATE: "k8s"
 
+systems:
+  - ubuntu-24.04
+  - ubuntu-24.04-arm
 execute: |
   tox run -e integration -- "tests/integration/${TEST_MODULE}::${TEST_NAME}" --model testing --alluredir="$SPREAD_TASK/allure-results"
 artifacts:

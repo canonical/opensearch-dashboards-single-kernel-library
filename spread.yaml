@@ -41,7 +41,7 @@ backends:
       lxc delete --force "${VM_NAME}"
     environment:
       CONCIERGE_EXTRA_SNAPS: charmcraft
-      CONCIERGE_EXTRA_DEBS: pipx
+      CONCIERGE_EXTRA_DEBS: pipx,build-essential,python3-dev,libldap-dev,libsasl2-dev
     systems:
       - ubuntu-24.04:
           username: runner
@@ -82,8 +82,15 @@ backends:
       sudo systemctl daemon-reload
       sudo systemctl start ssh
 
-      # Needed for IS-hosted runners
-      sudo passwd --delete ubuntu
+      if [[ $SPREAD_SYSTEM == "self-hosted"* ]]
+      then
+        # Needed for IS-hosted runners
+        sudo passwd --delete ubuntu
+      else
+        sudo passwd --delete runner
+      fi
+
+      sudo systemctl reload ssh || sudo systemctl restart ssh
 
       ADDRESS localhost
     # HACK: spread does not pass environment variables set on runner
@@ -93,10 +100,12 @@ backends:
       CHARM_UBUNTU_BASE: '$(HOST: echo $CHARM_UBUNTU_BASE)'
       DOCKERHUB_MIRROR: '$(HOST: echo $DOCKERHUB_MIRROR)'
       # To install pipx on self-hosted runners
-      CONCIERGE_EXTRA_DEBS: pipx
+      CONCIERGE_EXTRA_DEBS: pipx,build-essential,python3-dev,libldap-dev,libsasl2-dev
     systems:
-      - self-hosted-linux-amd64-noble-large:
-          username: ubuntu
+      - ubuntu-24.04:
+          username: runner
+      - ubuntu-24.04-arm:
+          username: runner
 
 suites:
   tests/spread/vm/:
@@ -108,7 +117,7 @@ path: /root/spread_project
 
 kill-timeout: 3h
 environment:
-  PATH: $PATH:/root/.local/bin
+  PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL: 3.6/stable
   CHARM_UBUNTU_BASE/ubuntu24: 24.04
   CHARM_UBUNTU_BASE/ubuntu22: 22.04

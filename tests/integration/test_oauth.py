@@ -24,6 +24,7 @@ from .helpers import (
     OPENSEARCH_CONFIG,
     RESOURCE,
     TRAEFIK_APP_NAME,
+    deploy_traefik,
     get_dashboard_routing,
 )
 
@@ -47,8 +48,13 @@ async def test_deploy(
     test_flags: Flags,
     charm_base: str,
     charm: str,
+    architecture: str,
 ):
     """Deploy OpenSearch and OpenSearch Dashboards but don't wait for completion."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since kratos-external-idp-integrator is not available for arm64"
+        )
     traefik = test_flags.traefik
 
     if substrate == "k8s":
@@ -64,7 +70,7 @@ async def test_deploy(
             charm, application_name=APP_NAME, base=charm_base, resources=RESOURCE
         )
         if traefik:
-            await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+            await deploy_traefik(ops_test)
     else:
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
         await ops_test.model.deploy(
@@ -82,8 +88,13 @@ async def test_deploy_identity_bundle(
     ops_test_k8s: OpsTest,
     ops_test: OpsTest,
     ext_idp_service: ExternalIdpService,
+    architecture: str,
 ):
     """Deploy identity platform and wait for all models to complete deployments."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since kratos-external-idp-integrator is not available for arm64"
+        )
     await deploy_identity_bundle(
         ops_test=ops_test_k8s,
         bundle_url="./tests/integration/bundle-iam.yaml",
@@ -102,8 +113,13 @@ async def test_setup_relations(
     ops_test: OpsTest,
     substrate: str,
     test_flags: Flags,
+    architecture: str,
 ):
     """Establish all the required relations."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since kratos-external-idp-integrator is not available for arm64"
+        )
     traefik = test_flags.traefik
 
     if substrate == "k8s":
@@ -171,8 +187,13 @@ async def test_oauth(
     page: Page,
     ext_idp_service: ExternalIdpService,
     test_flags: Flags,
+    architecture: str,
 ):
     """Ensure that SSO works for OpenSearch Dashboards login."""
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 architecture since kratos-external-idp-integrator is not available for arm64"
+        )
     traefik = test_flags.traefik
 
     await ops_test.model.wait_for_idle(apps=[OPENSEARCH_APP_NAME], status="active", timeout=1000)

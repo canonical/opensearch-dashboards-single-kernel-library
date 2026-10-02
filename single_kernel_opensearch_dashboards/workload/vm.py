@@ -7,6 +7,7 @@
 import logging
 import subprocess
 from functools import cached_property
+from platform import machine
 
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
@@ -19,7 +20,7 @@ from typing_extensions import override
 from single_kernel_opensearch_dashboards.common.exceptions import OSDInstallError
 from single_kernel_opensearch_dashboards.common.literals import (
     BASE_SNAP_DIR,
-    OPENSEARCH_DASHBOARDS_SNAP_REVISION,
+    OPENSEARCH_DASHBOARDS_SNAP_REVISIONS,
     SNAP,
     SNAP_COMMON,
     SNAP_DATA,
@@ -217,8 +218,8 @@ class VMWorkload(WorkloadBase):
         try:
             cache = snap.SnapCache()
             dashboards = cache[self.SNAP_NAME]
-
-            dashboards.ensure(snap.SnapState.Present, revision=OPENSEARCH_DASHBOARDS_SNAP_REVISION)
+            revision = OPENSEARCH_DASHBOARDS_SNAP_REVISIONS[machine()]
+            dashboards.ensure(snap.SnapState.Present, revision=revision)
 
             self.dashboards = dashboards
             self.paths.certificate_dir.mkdir(exist_ok=True)
