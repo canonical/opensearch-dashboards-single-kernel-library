@@ -175,8 +175,14 @@ async def test_vm_upgrade_from_stable(
     charm_base: str,
     charm: str,
     opensearch_deploy_args: tuple[str, bool],
+    architecture: str,
 ):
     """VM: upgrade from the 2/stable Charmhub release to the locally built charm."""
+    # TODO: Remove once opensearch-dashboards is published on arm64
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 since opensearch-dashboards is not published for arm64 on Charmhub"
+        )
     await _run_upgrade_scenario(
         ops_test,
         substrate,
@@ -201,8 +207,14 @@ async def test_vm_upgrade_from_edge(
     charm_base: str,
     charm: str,
     opensearch_deploy_args: tuple[str, bool],
+    architecture: str,
 ):
     """VM: upgrade from the 2/edge Charmhub release to the locally built charm."""
+    # TODO: Remove once opensearch-dashboards is published on arm64
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 since opensearch-dashboards is not published for arm64 on Charmhub"
+        )
     await _run_upgrade_scenario(
         ops_test,
         substrate,
@@ -225,8 +237,14 @@ async def test_k8s_upgrade_from_edge(
     charm_base: str,
     charm: str,
     opensearch_deploy_args: tuple[str, bool],
+    architecture: str,
 ):
     """K8s: upgrade from the 2/edge Charmhub release to the locally built charm."""
+    # TODO: Remove once opensearch-dashboards is published on arm64
+    if architecture == "arm64":
+        pytest.skip(
+            "Skipping test on arm64 since opensearch-dashboards is not published for arm64 on Charmhub"
+        )
     await _run_upgrade_scenario(
         ops_test,
         substrate,
