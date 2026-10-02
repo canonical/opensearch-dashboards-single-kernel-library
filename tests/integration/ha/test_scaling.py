@@ -18,6 +18,7 @@ from ..helpers import (
     TRAEFIK_APP_NAME,
     access_all_dashboards,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     is_https_enabled,
     wait_for_ingress_blocked,
 )
@@ -50,7 +51,7 @@ async def test_build_and_deploy(
     )
 
     if traefik:
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await deploy_traefik(ops_test)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
         await ops_test.model.wait_for_idle(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000

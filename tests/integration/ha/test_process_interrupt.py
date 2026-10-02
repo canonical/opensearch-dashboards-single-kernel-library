@@ -18,6 +18,7 @@ from ..helpers import (
     TRAEFIK_APP_NAME,
     access_all_dashboards,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     get_leader_name,
     wait_for_ingress_blocked,
 )
@@ -104,7 +105,7 @@ async def test_build_and_deploy(
 
     if substrate == "k8s":
         assert ops_test.model.applications[app_name].status == "blocked"
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+        await deploy_traefik(ops_test)
         await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
     else:

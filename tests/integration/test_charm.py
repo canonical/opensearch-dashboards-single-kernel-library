@@ -34,6 +34,7 @@ from .helpers import (
     client_run_db_request,
     count_lines_with,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     destroy_cluster,
     get_address,
     get_file_contents,
@@ -101,8 +102,7 @@ async def test_build_and_deploy(
     await ops_test.model.wait_for_idle(apps=[DB_CLIENT_APP_NAME], status="active", timeout=1000)
 
     if traefik:
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
-        await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+        await deploy_traefik(ops_test)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
         await ops_test.model.wait_for_idle(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000

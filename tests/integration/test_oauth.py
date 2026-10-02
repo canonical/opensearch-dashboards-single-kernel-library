@@ -24,6 +24,7 @@ from .helpers import (
     OPENSEARCH_CONFIG,
     RESOURCE,
     TRAEFIK_APP_NAME,
+    deploy_traefik,
     get_dashboard_routing,
 )
 
@@ -69,7 +70,7 @@ async def test_deploy(
             charm, application_name=APP_NAME, base=charm_base, resources=RESOURCE
         )
         if traefik:
-            await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
+            await deploy_traefik(ops_test)
     else:
         await ops_test.model.set_config(OPENSEARCH_CONFIG)
         await ops_test.model.deploy(
