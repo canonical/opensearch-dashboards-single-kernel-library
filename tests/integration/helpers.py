@@ -168,6 +168,8 @@ async def deploy_traefik(ops_test: OpsTest) -> None:
         lambda: TRAEFIK_APP_NAME in ops_test.model.applications, timeout=1000
     )
 
+    await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+
 
 async def deploy_opensearch_and_dashboards(
     ops_test: OpsTest,
