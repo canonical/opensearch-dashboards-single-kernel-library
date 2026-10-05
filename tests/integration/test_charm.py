@@ -34,6 +34,7 @@ from .helpers import (
     client_run_db_request,
     count_lines_with,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     destroy_cluster,
     get_address,
     get_file_contents,
@@ -62,6 +63,7 @@ async def test_build_and_deploy(
     charm: str,
     charm_base: str,
     opensearch_deploy_args: tuple[str, bool],
+    architecture: str,
 ):
     """Deploying all charms required for the tests, and wait for complete setup."""
     tls = test_flags.test_tls
@@ -85,8 +87,12 @@ async def test_build_and_deploy(
         series = "jammy" if charm_base == "ubuntu@22.04" else "noble"
         await ops_test.model.deploy(COS_AGENT_APP_NAME, channel=COS_CHANNEL, series=series)
     else:
-        for app in [PROMETHEUS_APP, LOKI_APP, GRAFANA_APP]:
-            await ops_test.model.deploy(app, application_name=app, channel="2/stable", trust=True)
+        # Prometheus k8s and grafana k8s are not available for arm64
+        if architecture == "amd64":
+            for app in [PROMETHEUS_APP, LOKI_APP, GRAFANA_APP]:
+                await ops_test.model.deploy(
+                    app, application_name=app, channel="2/stable", trust=True
+                )
 
     if substrate == "k8s":
         await wait_for_ingress_blocked(ops_test, app_name, timeout=1000)
@@ -96,8 +102,7 @@ async def test_build_and_deploy(
     await ops_test.model.wait_for_idle(apps=[DB_CLIENT_APP_NAME], status="active", timeout=1000)
 
     if traefik:
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
-        await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+        await deploy_traefik(ops_test)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
         await ops_test.model.wait_for_idle(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
@@ -255,10 +260,13 @@ async def test_dashboard_client_data_access(
 async def test_cos_relations(
     ops_test: OpsTest,
     substrate: str,
+    architecture: str,
     test_flags: Flags,
 ):
     traefik = test_flags.traefik
-    if substrate == "k8s":
+    if substrate == "k8s" and architecture == "arm64":
+        pytest.skip("Prometheus, Loki and Grafana are not available for arm64")
+    if substrate == "k8s" and architecture == "amd64":
         await ops_test.model.integrate(f"{APP_NAME}:metrics-endpoint", PROMETHEUS_APP)
         await ops_test.model.integrate(f"{APP_NAME}:logging", LOKI_APP)
         await ops_test.model.integrate(f"{APP_NAME}:grafana-dashboard", GRAFANA_APP)

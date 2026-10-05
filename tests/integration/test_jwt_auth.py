@@ -17,6 +17,7 @@ from .helpers import (
     TLS_CERTIFICATES_APP_NAME,
     TRAEFIK_APP_NAME,
     deploy_opensearch_and_dashboards,
+    deploy_traefik,
     get_dashboard_routing,
     is_https_enabled,
     wait_for_dashboard_idle,
@@ -84,8 +85,7 @@ async def test_build_and_deploy(
         await ops_test.model.wait_for_idle(apps=[app_name], status="active", timeout=1000)
 
     if traefik:
-        await ops_test.model.deploy(TRAEFIK_APP_NAME, channel="latest/stable", trust=True)
-        await ops_test.model.wait_for_idle(apps=[TRAEFIK_APP_NAME], status="active", timeout=1000)
+        await deploy_traefik(ops_test)
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
 
     if tls:
@@ -100,11 +100,7 @@ async def test_build_and_deploy(
 
 
 @pytest.mark.abort_on_fail
-async def test_dashboard_access(
-    ops_test: OpsTest,
-    substrate: str,
-    test_flags: Flags,
-):
+async def test_dashboard_access(ops_test: OpsTest, substrate: str, test_flags: Flags):
     """Test access to dashboard unit with JWT and basic auth."""
     traefik = test_flags.traefik
 
