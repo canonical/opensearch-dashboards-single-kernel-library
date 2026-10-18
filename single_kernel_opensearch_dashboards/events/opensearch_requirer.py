@@ -4,26 +4,108 @@
 
 """Event handler for related applications on the `opensearch-client` relation interface."""
 
+import json
 import logging
 from typing import cast
 
+from dpcharmlibs.interfaces import (
+    OpsRelationRepository,
+    RequirerCommonModel,
+    ResourceProviderModel,
+    ResourceRequirerEventHandler,
+)
 from ops import CharmBase, Object
-from ops.charm import RelationBrokenEvent, RelationEvent
+from ops.charm import (
+    RelationBrokenEvent,
+    RelationChangedEvent,
+    RelationCreatedEvent,
+    RelationEvent,
+    SecretChangedEvent,
+)
+from ops.model import Application, Relation
 from typing_extensions import Any
 
 from single_kernel_opensearch_dashboards.charms.charm_status import StatusHandlingCharm
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 from single_kernel_opensearch_dashboards.common.literals import (
     CLUSTER_MANAGER_NAME,
+    DASHBOARD_INDEX,
+    DASHBOARD_ROLE,
     OPENSEARCH_REL_NAME,
 )
+from single_kernel_opensearch_dashboards.common.statuses import ServerStatuses
 from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import ServerStatuses
-from single_kernel_opensearch_dashboards.lib.charms.data_platform_libs.v0.data_interfaces import (
-    OpenSearchRequiresEventHandlers,
-)
 
 logger = logging.getLogger(__name__)
+
+
+# TODO: drop in favour of ResourceRequirerEventHandler when opensearch updates to di v1
+class V0CompatibleResourceRequirer(ResourceRequirerEventHandler):
+    """Requirer handler that also speaks to a legacy data-interfaces v0 OpenSearch provider.
+
+    Support is bidirectional:
+
+    - Request: the parent only advertises the v1 ``requests`` envelope, which a v0 provider
+      can't parse, so it would never create the index/user. The request is mirrored in the
+      flat v0 shape (``index``/``extra-user-roles``/``extra-group-roles``, plus
+      ``requested-secrets`` so credentials come through Juju secrets); a v1 provider
+      ignores those keys.
+    - Response: the v1 relation-changed / secret-changed handlers build a ``DataContractV1``
+      from the provider databag and raise ``ValidationError`` on a flat v0 one (its
+      ``version`` is the OpenSearch *workload* version, not ``"v1"``), faulting the hook.
+      They are skipped for a v0 provider; its response is read through ``OpensearchServer``
+      in ``RequirerEvents._on_client_relation_changed``.
+    """
+
+    # Fields a v0 requirer asks to receive through Juju secrets (v0 ``RequirerData``'s
+    # ``SECRET_FIELDS``); without ``requested-secrets`` a v0 provider publishes them in plaintext.
+    V0_REQUESTED_SECRETS = [
+        "username",
+        "password",
+        "tls",
+        "tls-ca",
+        "uris",
+        "read-only-uris",
+        "entity-name",
+        "entity-password",
+    ]
+
+    def _on_relation_created_event(self, event: RelationCreatedEvent) -> None:
+        super()._on_relation_created_event(event)
+
+        if not self.charm.unit.is_leader():
+            return
+
+        repository = OpsRelationRepository(self.model, event.relation, self.charm.app)
+        repository.write_field("requested-secrets", json.dumps(self.V0_REQUESTED_SECRETS))
+        for request in self._requests:
+            if request.resource:
+                repository.write_field("index", request.resource)
+            if request.extra_user_roles:
+                repository.write_field("extra-user-roles", request.extra_user_roles)
+            if request.extra_group_roles:
+                repository.write_field("extra-group-roles", request.extra_group_roles)
+
+    def _provider_speaks_v0(self, relation: Relation, app: Application | None) -> bool:
+        """True when the provider's databag is a flat, pre-v1 payload with data present."""
+        if app is None:
+            return False
+        version = OpsRelationRepository(self.model, relation, component=app).get_field("version")
+        return version is not None and version != "v1"
+
+    def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
+        if self._provider_speaks_v0(event.relation, event.app):
+            logger.debug("v0 opensearch provider detected; skipping v1 requirer processing.")
+            return
+        super()._on_relation_changed_event(event)
+
+    def _on_secret_changed_event(self, event: SecretChangedEvent) -> None:
+        if event.secret.label:
+            relation = self._relation_from_secret_label(event.secret.label)
+            if relation and self._provider_speaks_v0(relation, relation.app):
+                logger.debug("v0 opensearch provider detected; skipping v1 secret processing.")
+                return
+        super()._on_secret_changed_event(event)
 
 
 class RequirerEvents(Object):
@@ -38,8 +120,13 @@ class RequirerEvents(Object):
         self.charm = charm
         self.state = state
         self.tls_manager = self.charm.tls_manager
-        self.requirer_events = OpenSearchRequiresEventHandlers(
-            cast(CharmBase, cast(Any, charm)), self.state.client_requires_data
+        self.requirer_events = V0CompatibleResourceRequirer(
+            cast(CharmBase, cast(Any, charm)),
+            relation_name=OPENSEARCH_REL_NAME,
+            requests=[
+                RequirerCommonModel(resource=DASHBOARD_INDEX, extra_user_roles=DASHBOARD_ROLE),
+            ],
+            response_model=ResourceProviderModel,
         )
         self.framework.observe(
             self.charm.on[OPENSEARCH_REL_NAME].relation_changed, self._on_client_relation_changed

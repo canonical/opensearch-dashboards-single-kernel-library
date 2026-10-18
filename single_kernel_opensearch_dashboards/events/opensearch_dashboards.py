@@ -15,11 +15,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     CONFIG_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     ConfigStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.workload.base import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     SecretNotFoundError,
+    SecretRemoveEvent,
 )
 
 from single_kernel_opensearch_dashboards.common.literals import (
@@ -61,6 +62,9 @@ class OpenSearchDashboardsEvents(Object):
         self.framework.observe(self.charm.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(
+            self.charm.on[PEERS_REL_NAME].relation_created, self._on_relation_created
+        )
+        self.framework.observe(
             self.charm.on[PEERS_REL_NAME].relation_changed, self._on_relation_changed
         )
         self.framework.observe(
@@ -71,6 +75,7 @@ class OpenSearchDashboardsEvents(Object):
         )
 
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        self.framework.observe(self.charm.on.secret_remove, self._on_secret_remove)
         self.framework.observe(self.charm.on.stop, self._on_stop)
         if self.state.substrate == Substrates.K8S:
             self.framework.observe(
@@ -125,6 +130,12 @@ class OpenSearchDashboardsEvents(Object):
             return
 
         self.charm.emit_restart(event)
+
+    def _on_relation_created(self, event: EventBase) -> None:
+        """Handle the peer `relation-created` event."""
+        if not self.state.unit_server.csr:
+            # just to init tls secret group, so it exists even when TLS is never related
+            self.state.unit_server.csr = " "
 
     def _on_relation_departed(self, event: RelationDepartedEvent) -> None:
         """Handle the peer `relation-departed` event."""
@@ -183,11 +194,25 @@ class OpenSearchDashboardsEvents(Object):
         if not event.secret.label:
             return
 
-        if self.state.cluster.data_interface.secrets.get(
-            event.secret.label
-        ) or self.state.unit_server.data_interface.secrets.get(event.secret.label):
+        if event.secret.label.startswith(f"{PEERS_REL_NAME}."):
             logger.info(f"Secret {event.secret.label} changed.")
             self.charm.emit_restart(event)
+
+    def _on_secret_remove(self, event: SecretRemoveEvent) -> None:
+        """Prune obsolete revisions of the charm's own peer secrets."""
+        if not event.secret.label:
+            return
+
+        if not event.secret.label.startswith(f"{PEERS_REL_NAME}.{self.charm.app.name}."):
+            return
+
+        try:
+            event.secret.get_info()
+        except SecretNotFoundError:
+            return
+
+        logger.debug("Removing obsolete revision of secret %s.", event.secret.label)
+        event.remove_revision()
 
     def _on_stop(self, event: EventBase) -> None:
         """Handle the `stop` event."""

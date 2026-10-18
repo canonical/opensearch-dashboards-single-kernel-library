@@ -11,11 +11,11 @@ from single_kernel_opensearch_dashboards.common.literals import (
     INGRESS_MANAGER_NAME,
     Substrates,
 )
-from single_kernel_opensearch_dashboards.core.state import ClusterState
-from single_kernel_opensearch_dashboards.core.statuses import (
+from single_kernel_opensearch_dashboards.common.statuses import (
     CharmStatuses,
     ServerStatuses,
 )
+from single_kernel_opensearch_dashboards.core.state import ClusterState
 from single_kernel_opensearch_dashboards.lib.charms.traefik_k8s.v2.ingress import (
     IngressPerAppRequirer,
 )
