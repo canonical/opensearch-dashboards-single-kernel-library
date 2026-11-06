@@ -130,8 +130,10 @@ jobs:
 
       - name: Poetry update
         run: |
+          # Make a full poetry update to ensure all dependencies are 
+          # resolved correctly after bumping the dependent charm library.
           for dir in . kubernetes machine; do
-            (cd "${dir}" && poetry update "${DEP_NAME}")
+            (cd "${dir}" && poetry update)
           done
 
       - name: Configure git signing
