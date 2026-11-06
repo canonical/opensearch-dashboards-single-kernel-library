@@ -93,7 +93,7 @@ async def test_build_and_deploy(
         num_units=3,
         config=CONFIG_OPTS,
     )
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.integrate(OPENSEARCH_APP_NAME, APP_NAME)
 
     await ops_test.model.wait_for_idle(
@@ -118,7 +118,7 @@ async def test_dashboard_access_http(ops_test: OpsTest):
 async def test_tls_on(ops_test: OpsTest) -> None:
     """Not a real test, but only switching on TLS"""
     # Relate Dashboards to OpenSearch to set up TLS.
-    await ops_test.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.integrate(f"{APP_NAME}:certificates", TLS_CERTIFICATES_APP_NAME)
 
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME, TLS_CERTIFICATES_APP_NAME], status="active", timeout=3000, idle_period=30

@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
+    versioning-strategy: "increase"
     commit-message:
       # Required by create-semantic-version-tag; must be breaking/compatible/patch
       prefix: "patch"
