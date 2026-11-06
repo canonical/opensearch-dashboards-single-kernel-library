@@ -207,7 +207,7 @@ async def deploy_opensearch_and_dashboards(
         channel=TLS_STABLE_CHANNEL,
         config={"ca-common-name": "CN_CA"},
     )
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", TLS_CERTIFICATES_APP_NAME)
 
     if on_k8s and charm_channel and resource is not None:
         # libjuju cannot attach a custom OCI image to a charmhub charm, so we shell out to the juju CLI

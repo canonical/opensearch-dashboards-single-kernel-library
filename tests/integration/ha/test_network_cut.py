@@ -108,7 +108,7 @@ async def test_build_and_deploy(
 
     if tls:
         logger.info("Initializing TLS Charm connections")
-        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
 
         if substrate == "k8s":
             await ops_test.model.integrate(

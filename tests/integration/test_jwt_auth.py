@@ -89,7 +89,7 @@ async def test_build_and_deploy(
         await ops_test.model.integrate(app_name, TRAEFIK_APP_NAME)
 
     if tls:
-        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
         if traefik:
             await ops_test.model.integrate(
                 TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
