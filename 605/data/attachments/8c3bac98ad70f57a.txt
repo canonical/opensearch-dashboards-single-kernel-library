@@ -1,0 +1,76 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:181 Choose external provider
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:186 Completing the login flow on the external provider
+[32mINFO    [0m oauth_tools.external_idp:external_idp.py:214 Signing in to dex
+[32mINFO    [0m httpx2:_client.py:1085 HTTP Request: GET https://127.0.0.1:6443/api/v1/namespaces/dex/services/dex "HTTP/1.1 200 OK"
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model        Controller     Cloud/Region  Version  SLA          Timestamp
+testing-k8s  concierge-lxd  uk8s/default  3.6.29   unsupported  02:16:38Z
+
+App                                  Version  Status  Scale  Charm                                Channel        Rev  Address         Exposed  Message
+hydra                                v2.3.0   active      1  hydra                                latest/edge    339  10.152.183.96   no       
+identity-platform-login-ui-operator  0.21.2   active      1  identity-platform-login-ui-operator  latest/edge    146  10.152.183.238  no       
+kratos                               v1.3.1   active      1  kratos                               latest/edge    500  10.152.183.32   no       
+kratos-external-idp-integrator                active      1  kratos-external-idp-integrator       latest/edge    245  10.152.183.102  no       Provider is ready
+postgresql-k8s                       14.19    active      1  postgresql-k8s                       14/stable      960  10.152.183.125  no       
+self-signed-certificates                      active      1  self-signed-certificates             1/stable       588  10.152.183.133  no       
+traefik-admin                        v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.1      no       
+traefik-public                       v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.2      no       
+
+Unit                                    Workload  Agent  Address     Ports  Message
+hydra/0*                                active    idle   10.1.0.243         
+identity-platform-login-ui-operator/0*  active    idle   10.1.0.19          
+kratos-external-idp-integrator/0*       active    idle   10.1.0.181         Provider is ready
+kratos/0*                               active    idle   10.1.0.244         
+postgresql-k8s/0*                       active    idle   10.1.0.127         Primary
+self-signed-certificates/0*             active    idle   10.1.0.188         
+traefik-admin/0*                        active    idle   10.1.0.60          
+traefik-public/0*                       active    idle   10.1.0.211         
+
+Offer         Application               Charm                     Rev  Connected  Endpoint      Interface         Role
+certificates  self-signed-certificates  self-signed-certificates  588  2/2        certificates  tls-certificates  provider
+oauth         hydra                     hydra                     339  2/2        oauth         oauth             provider
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-kratos-0: 02:09:05 ERROR juju.worker.uniter pebble poll failed for container "kratos": failed to send pebble-ready event: terminated
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model testing-k8s...
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:16:38Z
+
+SAAS          Status  Store  URL
+certificates  active  local  admin/testing-k8s.certificates
+oauth         active  local  admin/testing-k8s.oauth
+
+App                    Version  Status  Scale  Charm                  Channel  Rev  Exposed  Message
+opensearch                      active      2  opensearch             2/edge   401  no       
+opensearch-dashboards  2.19.6   active      1  opensearch-dashboards             0  no       
+
+Unit                      Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*  active    idle   2        10.20.237.253   5601/tcp  
+opensearch/0*             active    idle   0        10.20.237.42    9200/tcp  
+opensearch/1              active    idle   1        10.20.237.224   9200/tcp  
+
+Machine  State    Address        Inst id        Base          AZ                              Message
+0        started  10.20.237.42   juju-e214b1-0  ubuntu@24.04  amd64-noble-large-ibyio0kzb4id  Running
+1        started  10.20.237.224  juju-e214b1-1  ubuntu@24.04  amd64-noble-large-ibyio0kzb4id  Running
+2        started  10.20.237.253  juju-e214b1-2  ubuntu@24.04  amd64-noble-large-ibyio0kzb4id  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:08:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:08:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:08:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:08:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:08:34 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:08:34 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,20 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  02:40:25Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Address         Exposed  Message
+opensearch                         waiting    0/2  opensearch-k8s            2/edge     47  10.152.183.159  no       agent initialising
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  10.152.183.83   no       
+
+Unit                         Workload  Agent       Address     Ports  Message
+opensearch/0*                waiting   allocating  10.1.0.165         agent initialising
+opensearch/1                 waiting   allocating  10.1.0.207         agent initialising
+self-signed-certificates/0*  active    idle        10.1.0.209         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-0: 02:39:34 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:39:34 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
