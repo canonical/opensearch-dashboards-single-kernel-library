@@ -1,0 +1,33 @@
+Destroying chaos mesh in testing
+deleting api-resources
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+deleting chaos-mesh-validation-auth
+validatingwebhookconfiguration.admissionregistration.k8s.io "chaos-mesh-validation-auth" deleted
+deleting chaos-mesh-validation
+validatingwebhookconfiguration.admissionregistration.k8s.io "chaos-mesh-validation" deleted
+deleting clusterrolebindings
+deleting clusterroles
+deleting crds
+uninstalling chaos-mesh k8s helm repo
+release "chaos-mesh" uninstalled

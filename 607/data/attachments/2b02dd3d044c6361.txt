@@ -1,0 +1,65 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model        Controller     Cloud/Region  Version  SLA          Timestamp
+testing-k8s  concierge-lxd  uk8s/default  3.6.29   unsupported  01:50:31Z
+
+App                                  Version  Status  Scale  Charm                                Channel        Rev  Address         Exposed  Message
+hydra                                v2.3.0   active      1  hydra                                latest/edge    339  10.152.183.226  no       
+identity-platform-login-ui-operator  0.21.2   active      1  identity-platform-login-ui-operator  latest/edge    146  10.152.183.238  no       
+kratos                               v1.3.1   active      1  kratos                               latest/edge    500  10.152.183.103  no       
+kratos-external-idp-integrator                active      1  kratos-external-idp-integrator       latest/edge    245  10.152.183.65   no       Provider is ready
+postgresql-k8s                       14.19    active      1  postgresql-k8s                       14/stable      960  10.152.183.98   no       
+self-signed-certificates                      active      1  self-signed-certificates             1/stable       588  10.152.183.141  no       
+traefik-admin                        v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.2      no       
+traefik-public                       v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.1      no       
+
+Unit                                    Workload  Agent  Address     Ports  Message
+hydra/0*                                active    idle   10.1.0.251         
+identity-platform-login-ui-operator/0*  active    idle   10.1.0.254         
+kratos-external-idp-integrator/0*       active    idle   10.1.0.52          Provider is ready
+kratos/0*                               active    idle   10.1.0.12          
+postgresql-k8s/0*                       active    idle   10.1.0.96          Primary
+self-signed-certificates/0*             active    idle   10.1.0.146         
+traefik-admin/0*                        active    idle   10.1.0.59          
+traefik-public/0*                       active    idle   10.1.0.34          
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-traefik-public-0: 01:37:40 ERROR unit.traefik-public/0.juju-log ingress:16: failed processing the ingress relation <ops.model.Relation ingress:15>: 'provider is not ready: ingress for <ops.model.Relation ingress:15> wiped.'
+unit-traefik-public-0: 01:37:40 ERROR unit.traefik-public/0.juju-log ingress:16: failed processing the ingress relation <ops.model.Relation ingress:15>: 'provider is not ready: ingress for <ops.model.Relation ingress:15> wiped.'
+unit-traefik-public-0: 01:37:41 ERROR unit.traefik-public/0.juju-log ingress:16: The setup of some ingress relation failed, see previous logs
+unit-traefik-public-0: 01:37:45 ERROR unit.traefik-public/0.juju-log ingress:13: failed processing the ingress relation <ops.model.Relation ingress:15>: 'provider is not ready: ingress for <ops.model.Relation ingress:15> wiped.'
+unit-traefik-public-0: 01:37:46 ERROR unit.traefik-public/0.juju-log ingress:13: failed processing the ingress relation <ops.model.Relation ingress:15>: 'provider is not ready: ingress for <ops.model.Relation ingress:15> wiped.'
+unit-traefik-public-0: 01:37:46 ERROR unit.traefik-public/0.juju-log ingress:13: The setup of some ingress relation failed, see previous logs
+unit-kratos-0: 01:37:58 ERROR juju.worker.uniter pebble poll failed for container "kratos": failed to send pebble-ready event: terminated
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model testing-k8s...
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  01:50:31Z
+
+App                    Version  Status   Scale  Charm                  Channel  Rev  Exposed  Message
+opensearch                      blocked      2  opensearch             2/edge   401  no       Missing TLS relation with this cluster.
+opensearch-dashboards  2.19.6   blocked      1  opensearch-dashboards             0  no       OpenSearch connection is missing
+
+Unit                      Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*  blocked   idle   2        10.186.252.180  5601/tcp  OpenSearch connection is missing
+opensearch/0*             blocked   idle   0        10.186.252.217            Missing TLS relation with this cluster.
+opensearch/1              blocked   idle   1        10.186.252.21             Missing TLS relation with this cluster.
+
+Machine  State    Address         Inst id        Base          AZ                              Message
+0        started  10.186.252.217  juju-3cd70d-0  ubuntu@24.04  amd64-noble-large-b10c7d87v9ji  Running
+1        started  10.186.252.21   juju-3cd70d-1  ubuntu@24.04  amd64-noble-large-b10c7d87v9ji  Running
+2        started  10.186.252.180  juju-3cd70d-2  ubuntu@24.04  amd64-noble-large-b10c7d87v9ji  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:36:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:36:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:37:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:37:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:37:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:37:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,16 @@
+vm.swappiness = 0
+vm.max_map_count = 262144
+net.ipv4.tcp_retries2 = 5
+namespace=testing
+adding chaos-mesh k8s helm repo
+"chaos-mesh" has been added to your repositories
+installing chaos-mesh
+NAME: chaos-mesh
+LAST DEPLOYED: Mon Nov  9 08:30:46 2026
+NAMESPACE: testing
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+1. Make sure chaos-mesh components are running
+   kubectl get pods --namespace testing -l app.kubernetes.io/instance=chaos-mesh
