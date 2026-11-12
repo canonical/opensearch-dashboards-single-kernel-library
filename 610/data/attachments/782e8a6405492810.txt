@@ -1,0 +1,37 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  05:42:24Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         waiting    0/3  opensearch                2/edge    398  no       waiting for machine
+opensearch-dashboards              waiting    0/3  opensearch-dashboards                 0  no       agent initialising
+self-signed-certificates           waiting    0/1  self-signed-certificates  1/stable  585  no       waiting for machine
+
+Unit                        Workload  Agent       Machine  Public address  Ports  Message
+opensearch-dashboards/0*    waiting   allocating  0        10.0.0.197             agent initialising
+opensearch-dashboards/1     waiting   allocating  1        10.0.0.39              agent initialising
+opensearch-dashboards/2     waiting   allocating  2        10.0.0.225             agent initialising
+opensearch/0                waiting   allocating  4                               waiting for machine
+opensearch/1                waiting   allocating  5                               waiting for machine
+opensearch/2                waiting   allocating                                  waiting for machine
+self-signed-certificates/0  waiting   allocating  3                               waiting for machine
+
+Machine  State    Address     Inst id        Base          AZ                                  Message
+0        started  10.0.0.197  juju-91a8b0-0  ubuntu@24.04  arm64-noble-large-ps6-aeevkght8stj  Running
+1        started  10.0.0.39   juju-91a8b0-1  ubuntu@24.04  arm64-noble-large-ps6-aeevkght8stj  Running
+2        started  10.0.0.225  juju-91a8b0-2  ubuntu@24.04  arm64-noble-large-ps6-aeevkght8stj  Running
+3        pending              pending        ubuntu@24.04                                      Creating container
+4        pending              pending        ubuntu@24.04                                      acquiring LXD image
+5        pending              pending        ubuntu@24.04                                      
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 05:41:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 05:41:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 05:41:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 05:41:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 05:41:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 05:41:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
