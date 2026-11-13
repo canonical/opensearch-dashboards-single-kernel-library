@@ -175,19 +175,8 @@ class K8sWorkload(WorkloadBase):
         return stdout
 
     @override
-    @retry(
-        wait=wait_fixed(1),
-        stop=stop_after_attempt(5),
-        retry_error_callback=lambda state: state.outcome.result(),
-        # type: ignore
-        retry=retry_if_not_result(lambda result: True if result else False),
-    )
-    def healthy(self) -> bool:
-        """Checks if the workload is healthy.
-
-        Returns:
-            bool: True if the workload is alive and functioning as expected.
-        """
+    def running(self) -> bool:
+        """Checks if the OpenSearch Dashboards Pebble service is running."""
         if not self.container.can_connect():
             logger.debug("can't connect to container")
             return False

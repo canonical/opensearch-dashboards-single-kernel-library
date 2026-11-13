@@ -180,20 +180,8 @@ class VMWorkload(WorkloadBase):
         )
 
     @override
-    @retry(
-        wait=wait_fixed(1),
-        stop=stop_after_attempt(5),
-        retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
-        retry=retry_if_not_result(lambda result: True if result else False),
-    )
-    def healthy(self) -> bool:
-        """Checks if the workload is healthy.
-
-        This method retries up to 5 times to confirm the service is running.
-
-        Returns:
-            bool: True if the workload is alive and functioning as expected, False otherwise.
-        """
+    def running(self) -> bool:
+        """Checks if the OpenSearch Dashboards snap service is active."""
         try:
             return bool(self.dashboards.services[self.SNAP_APP_SERVICE]["active"])
         except KeyError:
