@@ -210,7 +210,7 @@ class OpenSearchDashboardsBaseCharm(TypedCharmBase[CharmConfig], ABC):
             component=self.cluster_manager.name,
         )
 
-        if self.workload.healthy():
+        if self.workload.running():
             self.status_handler.set_running_status(
                 status=ServerStatuses.RESTARTING_SERVER.value,
                 component_name=self.cluster_manager.name,

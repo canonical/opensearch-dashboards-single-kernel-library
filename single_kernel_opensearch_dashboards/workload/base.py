@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 from charmlibs import pathops
 from charmlibs.pathops import PathProtocol
+from tenacity import retry, retry_if_not_result, stop_after_attempt, wait_fixed
 
 from single_kernel_opensearch_dashboards.common.exceptions import OSDFileOperationError
 
@@ -110,9 +111,19 @@ class WorkloadBase(ABC):
         ...
 
     @abstractmethod
-    def healthy(self) -> bool:
-        """Checks that the workload is healthy."""
+    def running(self) -> bool:
+        """Checks once, without retrying, if the workload service is running."""
         ...
+
+    @retry(
+        wait=wait_fixed(1),
+        stop=stop_after_attempt(5),
+        retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
+        retry=retry_if_not_result(bool),
+    )
+    def healthy(self) -> bool:
+        """Checks that the workload is healthy, retrying up to 5 times for the service to come up."""
+        return self.running()
 
     @abstractmethod
     def install(self) -> None:
