@@ -1,0 +1,38 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  11:21:57Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Address        Exposed  Message
+opensearch                         blocked      2  opensearch-k8s            2/edge     47  10.152.183.95  no       Missing TLS relation with this cluster.
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  10.152.183.66  no       
+
+Unit                         Workload  Agent      Address     Ports  Message
+opensearch/0                 blocked   executing  10.1.0.184         Missing TLS relation with this cluster.
+opensearch/1*                blocked   executing  10.1.0.249         Missing TLS relation with this cluster.
+self-signed-certificates/0*  active    idle       10.1.0.245         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-1: 11:21:22 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 11:21:22 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 11:21:51 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 11:21:52 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 11:21:52 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 11:21:54 ERROR unit.opensearch/0.juju-log upgrade-version-a:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 11:21:54 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 11:21:56 ERROR unit.opensearch/0.juju-log upgrade-version-a:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
