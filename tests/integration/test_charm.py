@@ -115,7 +115,7 @@ async def test_build_and_deploy(
             apps=[app_name, TRAEFIK_APP_NAME], status="active", timeout=1000
         )
     if tls:
-        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
         if not transfer_traefik_ca and traefik:
             await ops_test.model.integrate(
                 TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
@@ -178,7 +178,7 @@ async def test_dashboard_tls_lifecycle(
     assert await access_all_dashboards(ops_test, https=https, verify=tls)
 
     # Restore relation for further tests
-    await ops_test.model.integrate(APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.integrate(f"{APP_NAME}:certificates", TLS_CERTIFICATES_APP_NAME)
     await ops_test.model.wait_for_idle(
         apps=[TLS_CERTIFICATES_APP_NAME], status="active", timeout=1000, idle_period=20
     )
@@ -507,7 +507,7 @@ async def test_restore_opensearch_restores_osd(
         os_deploy_kwargs["trust"] = True
     await ops_test.model.deploy(os_charm, **os_deploy_kwargs)
 
-    await ops_test.model.integrate(OPENSEARCH_APP_NAME, TLS_CERTIFICATES_APP_NAME)
+    await ops_test.model.integrate(f"{OPENSEARCH_APP_NAME}:certificates", TLS_CERTIFICATES_APP_NAME)
 
     async with ops_test.fast_forward("30s"):
         await ops_test.model.wait_for_idle(
