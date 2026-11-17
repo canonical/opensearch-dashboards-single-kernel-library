@@ -122,7 +122,7 @@ async def test_build_and_deploy(
                 f"{TLS_CERTIFICATES_APP_NAME}:certificates", TRAEFIK_APP_NAME
             )
 
-        await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+        await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
 
         await ops_test.model.wait_for_idle(
             apps=[TLS_CERTIFICATES_APP_NAME], wait_for_active=True, timeout=LONG_TIMEOUT

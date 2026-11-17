@@ -80,7 +80,7 @@ async def _run_upgrade_scenario(
             await ops_test.model.deploy(application_charm, application_name=DB_CLIENT_APP_NAME)
 
         if tls:
-            await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+            await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
             if traefik:
                 await ops_test.model.integrate(
                     TRAEFIK_APP_NAME, f"{TLS_CERTIFICATES_APP_NAME}:certificates"
@@ -92,7 +92,7 @@ async def _run_upgrade_scenario(
         )
     else:
         if tls:
-            await ops_test.model.integrate(app_name, TLS_CERTIFICATES_APP_NAME)
+            await ops_test.model.integrate(f"{app_name}:certificates", TLS_CERTIFICATES_APP_NAME)
         await wait_for_dashboard_idle(ops_test, traefik)
 
     leader_unit = None
