@@ -1,0 +1,97 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGSTOP opensearch-dashboards-k8s:['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch-dashboards-k8s:['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password 2D994ASFZSxvLWRtvC9pvQDY1bhoMnZu and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password 2D994ASFZSxvLWRtvC9pvQDY1bhoMnZu and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  02:24:06Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Address         Exposed  Message
+opensearch                          active      3  opensearch-k8s             2/edge          49  10.152.183.80   no       
+opensearch-dashboards-k8s  2.19.6   active      2  opensearch-dashboards-k8s                   0  10.152.183.217  no       
+self-signed-certificates            active      1  self-signed-certificates   1/stable       585  10.152.183.84   no       
+traefik-k8s                2.11.57  active      1  traefik-k8s                latest/stable  508  10.152.183.245  no       Serving at http://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+opensearch-dashboards-k8s/0*  active    idle   10.1.0.212         
+opensearch-dashboards-k8s/1   active    idle   10.1.0.60          
+opensearch/0                  active    idle   10.1.0.49          
+opensearch/1                  active    idle   10.1.0.63          
+opensearch/2*                 active    idle   10.1.0.208         
+self-signed-certificates/0*   active    idle   10.1.0.93          
+traefik-k8s/0*                active    idle   10.1.0.229         Serving at http://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-2: 01:40:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 01:40:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 01:40:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 01:40:44 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 01:40:44 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 01:42:52 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 01:42:53 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:42:56 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 01:42:57 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:42:59 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 01:43:01 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:43:03 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:45:02 ERROR unit.opensearch/1.juju-log status-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:03 ERROR unit.opensearch/0.juju-log status-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 01:45:07 ERROR unit.opensearch/1.juju-log status-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:09 ERROR unit.opensearch/0.juju-log opensearch-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 01:45:12 ERROR unit.opensearch/1.juju-log opensearch-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:14 ERROR unit.opensearch/0.juju-log node-lock-fallback:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 01:45:17 ERROR unit.opensearch/1.juju-log upgrade-version-a:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:19 ERROR unit.opensearch/0.juju-log node-lock-fallback:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 01:45:23 ERROR unit.opensearch/1.juju-log opensearch-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:24 ERROR unit.opensearch/0.juju-log node-lock-fallback:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 01:45:29 ERROR unit.opensearch/0.juju-log opensearch-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:35 ERROR unit.opensearch/0.juju-log upgrade-version-a:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:40 ERROR unit.opensearch/0.juju-log upgrade-version-a:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:47 ERROR unit.opensearch/0.juju-log upgrade-version-a:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 01:45:52 ERROR unit.opensearch/0.juju-log opensearch-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-traefik-k8s-0: 01:51:26 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:26 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:28 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:28 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:31 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:31 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:33 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:51:33 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:06:45 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-0: 02:07:03 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-0: 02:07:43 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-1: 02:21:24 ERROR unit.opensearch-dashboards-k8s/1.juju-log Hanging, no response from http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-0: 02:21:24 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-1: 02:21:42 ERROR unit.opensearch-dashboards-k8s/1.juju-log Hanging, no response from http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

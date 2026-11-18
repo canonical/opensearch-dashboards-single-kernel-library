@@ -1,0 +1,101 @@
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:116 Test access with JWT to http://10.28.89.110:5601/api/status
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:121 Access with JWT successful
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:123 Remove relation of jwt-integrator with opensearch-dashboards
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:126 Remove relation of jwt-integrator with opensearch
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:130 Test access with JWT after disabling
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:135 Access with JWT failed as expected
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:15:33Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+jwt-integrator                     blocked      1  jwt-integrator            1/edge     20  no       no relation for jwt interface
+opensearch                         active       3  opensearch                2/edge    402  no       
+opensearch-dashboards     2.19.6   active       1  opensearch-dashboards                 0  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+jwt-integrator/0*            blocked   idle   0        10.28.89.156              no relation for jwt interface
+opensearch-dashboards/0*     active    idle   5        10.28.89.110    5601/tcp  
+opensearch/0                 active    idle   1        10.28.89.104    9200/tcp  
+opensearch/1                 active    idle   2        10.28.89.253    9200/tcp  
+opensearch/2*                active    idle   3        10.28.89.190    9200/tcp  
+self-signed-certificates/0*  active    idle   4        10.28.89.106              
+
+Machine  State    Address       Inst id        Base          AZ                                  Message
+0        started  10.28.89.156  juju-89ba16-0  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+1        started  10.28.89.104  juju-89ba16-1  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+2        started  10.28.89.253  juju-89ba16-2  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+3        started  10.28.89.190  juju-89ba16-3  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+4        started  10.28.89.106  juju-89ba16-4  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+5        started  10.28.89.110  juju-89ba16-5  ubuntu@24.04  arm64-noble-large-ps7-c1lsg71retvl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:00:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:00:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:00:26 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:00:26 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:00:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:00:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:00:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:00:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:00:39 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:39 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:41 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:41 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:42 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:42 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-4: 02:00:43 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:00:43 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:00:43 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:43 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:44 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:00:44 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-5: 02:01:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:01:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:04:36 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:04:39 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:04:43 ERROR unit.opensearch/0.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:04:46 ERROR unit.opensearch/0.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:10 ERROR unit.opensearch/0.juju-log opensearch-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:14 ERROR unit.opensearch/0.juju-log status-peers:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:18 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:23 ERROR unit.opensearch/0.juju-log upgrade-version-a:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:26 ERROR unit.opensearch/0.juju-log status-peers:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:30 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:31 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:33 ERROR unit.opensearch/0.juju-log upgrade-version-a:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:34 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:36 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:37 ERROR unit.opensearch/1.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:05:40 ERROR unit.opensearch/0.juju-log upgrade-version-a:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-jwt-integrator-0: 02:06:35 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:06:35 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:06:35 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:06:35 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:06:37 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:06:37 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-opensearch-1: 02:07:40 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:07:45 ERROR unit.opensearch/1.juju-log upgrade-version-a:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:07:49 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:07:55 ERROR unit.opensearch/1.juju-log upgrade-version-a:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:08:00 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:08:03 ERROR unit.opensearch/1.juju-log status-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+unit-opensearch-1: 02:08:09 ERROR unit.opensearch/1.juju-log opensearch-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.28.89.253:9200 and alternative_hosts: ['10.28.89.104'] not reachable."
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

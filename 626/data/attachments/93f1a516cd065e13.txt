@@ -1,0 +1,26 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:153 Network throttle on opensearch-dashboards-k8s/1 (Pod: opensearch-dashboards-k8s-1)...
+[32mINFO    [0m tests.integration.ha.helpers:helpers.py:327 Force deleting pod opensearch-dashboards-k8s-1 to simulate network cut...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:157 Waiting 10s for Juju to know pod has expired...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:160 Waiting for stabilize
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] maintenance: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:208 Waiting for Juju to detect new IP...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:217 Old IP 10.1.0.1 has changed to 10.1.0.247...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:226 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password MqNvICyn8lPFIE4GKqSx23GQJcf7NPND and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password MqNvICyn8lPFIE4GKqSx23GQJcf7NPND and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login

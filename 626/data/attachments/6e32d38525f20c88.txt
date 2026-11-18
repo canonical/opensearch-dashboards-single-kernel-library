@@ -1,0 +1,142 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:181 Choose external provider
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:186 Completing the login flow on the external provider
+[32mINFO    [0m oauth_tools.external_idp:external_idp.py:214 Signing in to dex
+[32mINFO    [0m httpx2:_client.py:1085 HTTP Request: GET https://127.0.0.1:6443/api/v1/namespaces/dex/services/dex "HTTP/1.1 200 OK"
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  01:54:42Z
+
+App                                  Version  Status  Scale  Charm                                Channel        Rev  Address         Exposed  Message
+hydra                                v2.3.0   active      1  hydra                                latest/edge    339  10.152.183.215  no       
+identity-platform-login-ui-operator  0.21.2   active      1  identity-platform-login-ui-operator  latest/edge    146  10.152.183.241  no       
+kratos                               v1.3.1   active      1  kratos                               latest/edge    500  10.152.183.230  no       
+kratos-external-idp-integrator                active      1  kratos-external-idp-integrator       latest/edge    245  10.152.183.67   no       Provider is ready
+opensearch                                    active      2  opensearch-k8s                       2/edge          52  10.152.183.73   no       
+opensearch-dashboards-k8s            2.19.6   active      1  opensearch-dashboards-k8s                             0  10.152.183.61   no       
+postgresql-k8s                       14.19    active      1  postgresql-k8s                       14/stable      960  10.152.183.37   no       
+self-signed-certificates                      active      1  self-signed-certificates             1/stable       588  10.152.183.183  no       
+traefik-admin                        v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.2      no       
+traefik-k8s                          2.11.57  active      1  traefik-k8s                          latest/stable  506  10.152.183.159  no       Serving at https://10.43.45.0
+traefik-public                       v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.3      no       
+
+Unit                                    Workload  Agent  Address     Ports  Message
+hydra/0*                                active    idle   10.1.0.147         
+identity-platform-login-ui-operator/0*  active    idle   10.1.0.45          
+kratos-external-idp-integrator/0*       active    idle   10.1.0.247         Provider is ready
+kratos/0*                               active    idle   10.1.0.9           
+opensearch-dashboards-k8s/0*            active    idle   10.1.0.93          
+opensearch/0                            active    idle   10.1.0.177         
+opensearch/1*                           active    idle   10.1.0.253         
+postgresql-k8s/0*                       active    idle   10.1.0.94          Primary
+self-signed-certificates/0*             active    idle   10.1.0.22          
+traefik-admin/0*                        active    idle   10.1.0.168         
+traefik-k8s/0*                          active    idle   10.1.0.155         Serving at https://10.43.45.0
+traefik-public/0*                       active    idle   10.1.0.139         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-1: 01:40:28 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 01:40:28 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 01:40:32 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 01:40:40 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:42 ERROR unit.opensearch-dashboards-k8s/0.juju-log status-peers:5: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:44 ERROR unit.opensearch-dashboards-k8s/0.juju-log dashboard_peers:6: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:46 ERROR unit.opensearch-dashboards-k8s/0.juju-log restart:7: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:48 ERROR unit.opensearch-dashboards-k8s/0.juju-log upgrade:4: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:50 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:52 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 01:40:54 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-traefik-k8s-0: 01:40:56 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:40:56 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:40:58 ERROR unit.traefik-k8s/0.juju-log peers:8: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:40:58 ERROR unit.traefik-k8s/0.juju-log peers:8: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:41:00 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:41:00 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-0: 01:41:00 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-traefik-k8s-0: 01:41:02 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 01:41:02 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-0: 01:41:02 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:03 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:04 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:05 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:06 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:08 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:08 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:10 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:10 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:12 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:13 ERROR unit.opensearch/1.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:15 ERROR unit.opensearch/0.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:16 ERROR unit.opensearch/1.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:17 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-dashboards-k8s-0: 01:41:18 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-1: 01:41:19 ERROR unit.opensearch/1.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:19 ERROR unit.opensearch/0.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:22 ERROR unit.opensearch/0.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:22 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 01:41:25 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:25 ERROR unit.opensearch/1.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-dashboards-k8s-0: 01:41:27 ERROR unit.opensearch-dashboards-k8s/0.juju-log restart:7: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-1: 01:41:28 ERROR unit.opensearch/1.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-dashboards-k8s-0: 01:41:29 ERROR unit.opensearch-dashboards-k8s/0.juju-log status-peers:5: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-1: 01:41:31 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 01:41:33 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-kratos-0: 01:43:03 ERROR juju.worker.uniter pebble poll failed for container "kratos": failed to send pebble-ready event: terminated
+unit-opensearch-dashboards-k8s-0: 01:49:23 ERROR unit.opensearch-dashboards-k8s/0.juju-log opensearch-client:36: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

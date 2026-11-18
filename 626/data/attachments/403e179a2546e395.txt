@@ -1,0 +1,348 @@
+[32mINFO    [0m integration.test_charm:test_charm.py:496 Destroying and restoring the Opensearch cluster
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-405
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] waiting: agent initialising
+  opensearch/4 [allocating] waiting: agent initialising
+  opensearch/5 [executing] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/4 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/5 [executing] maintenance: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Initializing the security index...
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [idle] active: 
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.test_charm:test_charm.py:528 Checking if Dashboards is available again
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.84.64.46:5601 with password KVcaa84atX2pF7wpOQ2rgcd6F1F9Eid1 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.84.64.46:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.84.64.46:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.84.64.169:5601 with password KVcaa84atX2pF7wpOQ2rgcd6F1F9Eid1 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.84.64.169:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.84.64.169:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.84.64.119:5601 with password KVcaa84atX2pF7wpOQ2rgcd6F1F9Eid1 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.84.64.119:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.84.64.119:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:06:41Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+application                        active       1  application                           0  no       
+grafana-agent                      blocked      3  grafana-agent             1/stable  605  no       Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch                         active       3  opensearch                2/edge    405  no       
+opensearch-dashboards     2.19.6   active       3  opensearch-dashboards                 0  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+application/0*               active    idle   7        10.84.64.155              
+opensearch-dashboards/0*     active    idle   4        10.84.64.46     5601/tcp  
+  grafana-agent/2            blocked   idle            10.84.64.46               Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch-dashboards/1      active    idle   5        10.84.64.169    5601/tcp  
+  grafana-agent/1*           blocked   idle            10.84.64.169              Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch-dashboards/2      active    idle   6        10.84.64.119    5601/tcp  
+  grafana-agent/3            blocked   idle            10.84.64.119              Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch/3*                active    idle   8        10.84.64.39     9200/tcp  
+opensearch/4                 active    idle   9        10.84.64.68     9200/tcp  
+opensearch/5                 active    idle   10       10.84.64.156    9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.84.64.47               
+
+Machine  State    Address       Inst id         Base          AZ                                  Message
+3        started  10.84.64.47   juju-8c96ab-3   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+4        started  10.84.64.46   juju-8c96ab-4   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+5        started  10.84.64.169  juju-8c96ab-5   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+6        started  10.84.64.119  juju-8c96ab-6   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+7        started  10.84.64.155  juju-8c96ab-7   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+8        started  10.84.64.39   juju-8c96ab-8   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+9        started  10.84.64.68   juju-8c96ab-9   ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+10       started  10.84.64.156  juju-8c96ab-10  ubuntu@24.04  amd64-noble-large-ps5-n9wdzfxaua9f  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:33:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:33:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:33:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:33:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:33:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:33:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:33:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:33:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:33:40 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:33:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:33:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:33:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:33:51 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:33:51 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 02:36:17 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+machine-7: 02:40:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:40:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 02:57:20 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:20 ERROR unit.opensearch/2.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:21 ERROR unit.opensearch/0.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:57:41 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:41 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:42 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:53 ERROR unit.opensearch/2.juju-log Failed to delete voting exclusions {'opensearch-2.c95'}: HTTP error self.response_code=None
+self.response_text='HTTPSConnectionPool(host=\'10.84.64.126\', port=9200): Max retries exceeded with url: /_cluster/voting_config_exclusions?node_names=opensearch-0.c95,opensearch-1.c95&timeout=1m (Caused by NewConnectionError("HTTPSConnection(host=\'10.84.64.126\', port=9200): Failed to establish a new connection: [Errno 111] Connection refused"))'
+unit-opensearch-2: 02:57:53 ERROR unit.opensearch/2.juju-log Failed to delete voting exclusion: opensearch-2.c95.
+unit-opensearch-2: 02:57:54 ERROR unit.opensearch/2.juju-log Failed to delete shard allocation exclusion: opensearch-2.c95.
+unit-opensearch-0: 02:57:54 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:57:54 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:54 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.126'] not reachable."
+unit-opensearch-0: 02:57:54 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:54 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:57:56 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:56 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.126'] not reachable."
+unit-opensearch-0: 02:57:56 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-0: 02:57:56 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:56 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-1: 02:57:57 ERROR unit.opensearch/1.juju-log Failed to delete voting exclusions {'opensearch-1.c95'}: HTTP error self.response_code=None
+self.response_text='HTTPSConnectionPool(host=\'10.84.64.126\', port=9200): Max retries exceeded with url: /_cluster/voting_config_exclusions?node_names=opensearch-0.c95&timeout=1m (Caused by NewConnectionError("HTTPSConnection(host=\'10.84.64.126\', port=9200): Failed to establish a new connection: [Errno 111] Connection refused"))'
+unit-opensearch-1: 02:57:57 ERROR unit.opensearch/1.juju-log Failed to delete voting exclusion: opensearch-1.c95.
+unit-opensearch-1: 02:57:57 ERROR unit.opensearch/1.juju-log Failed to delete shard allocation exclusion: opensearch-1.c95.
+unit-opensearch-2: 02:57:57 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:57:57 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:57:58 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.126', '10.84.64.63'] not reachable."
+unit-opensearch-1: 02:57:58 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.63:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.126'] not reachable."
+unit-opensearch-0: 02:57:58 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-0: 02:57:59 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:59 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:58:00 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:00 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:00 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.126'] not reachable."
+unit-opensearch-1: 02:58:00 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.63:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.126'] not reachable."
+unit-opensearch-0: 02:58:01 ERROR unit.opensearch/0.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-0: 02:58:01 ERROR unit.opensearch/0.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:01 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:02 ERROR unit.opensearch/0.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:58:02 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.126'] not reachable."
+unit-opensearch-1: 02:58:02 ERROR unit.opensearch/1.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:02 ERROR unit.opensearch/1.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.63:9200 and alternative_hosts: ['10.84.64.126', '10.84.64.185'] not reachable."
+unit-opensearch-2: 02:58:03 ERROR unit.opensearch/2.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:03 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:58:03 ERROR unit.opensearch/2.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63'] not reachable."
+unit-opensearch-1: 02:58:03 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:04 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:04 ERROR unit.opensearch/1.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.63:9200 and alternative_hosts: ['10.84.64.185'] not reachable."
+unit-opensearch-0: 02:58:04 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:58:05 ERROR unit.opensearch/2.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:05 ERROR unit.opensearch/2.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.185:9200 and alternative_hosts: ['10.84.64.63'] not reachable."
+unit-opensearch-1: 02:58:05 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:05 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.63:9200 and alternative_hosts: ['10.84.64.185'] not reachable."
+unit-opensearch-0: 02:58:05 ERROR unit.opensearch/0.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.185'] not reachable."
+unit-opensearch-0: 02:58:06 ERROR unit.opensearch/0.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:06 ERROR unit.opensearch/0.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.63', '10.84.64.185'] not reachable."
+unit-opensearch-2: 02:58:07 ERROR unit.opensearch/2.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:07 ERROR unit.opensearch/2.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.185:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:58:07 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:07 ERROR unit.opensearch/1.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.63:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:07 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-0: 02:58:08 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:08 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185', '10.84.64.63'] not reachable."
+unit-opensearch-2: 02:58:09 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:09 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.185:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:58:09 ERROR unit.opensearch/1.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:09 ERROR unit.opensearch/1.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.63:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:10 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185'] not reachable."
+unit-opensearch-0: 02:58:10 ERROR unit.opensearch/0.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:11 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.84.64.126:9200 and alternative_hosts: ['10.84.64.185'] not reachable."
+unit-opensearch-2: 02:58:11 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:58:11 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.185:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:58:11 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:11 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.63:9200 and alternative_hosts: [] not reachable.'
+machine-2: 02:58:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:58:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:58:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:58:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-2: 02:58:11 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+unit-opensearch-0: 02:58:12 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:13 ERROR unit.opensearch/0.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:13 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:58:13 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:13 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.63:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:15 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:58:15 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:15 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:58:15 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.63:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:15 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+machine-1: 02:58:15 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 02:58:15 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-1: 02:58:15 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+unit-opensearch-0: 02:58:17 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:58:17 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:17 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.84.64.126:9200 and alternative_hosts: [] not reachable.'
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-0: 02:58:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-8: 02:59:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-8: 02:59:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-10: 02:59:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-10: 02:59:38 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-9: 02:59:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-9: 02:59:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-4: 03:01:49 ERROR unit.opensearch/4.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:50 ERROR unit.opensearch/5.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:01:51 ERROR unit.opensearch/4.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:52 ERROR unit.opensearch/5.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:01:53 ERROR unit.opensearch/4.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:54 ERROR unit.opensearch/5.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:01:54 ERROR unit.opensearch/4.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:56 ERROR unit.opensearch/5.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:01:56 ERROR unit.opensearch/4.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:57 ERROR unit.opensearch/5.juju-log certificates:20: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:01:58 ERROR unit.opensearch/4.juju-log upgrade-version-a:19: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:01:59 ERROR unit.opensearch/5.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:00 ERROR unit.opensearch/4.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:01 ERROR unit.opensearch/5.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:02 ERROR unit.opensearch/4.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:04 ERROR unit.opensearch/5.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:04 ERROR unit.opensearch/4.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:05 ERROR unit.opensearch/5.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:06 ERROR unit.opensearch/4.juju-log upgrade-version-a:19: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:07 ERROR unit.opensearch/5.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:08 ERROR unit.opensearch/4.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:09 ERROR unit.opensearch/5.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:09 ERROR unit.opensearch/4.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:11 ERROR unit.opensearch/5.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:11 ERROR unit.opensearch/4.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:13 ERROR unit.opensearch/5.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:13 ERROR unit.opensearch/4.juju-log node-lock-fallback:16: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:14 ERROR unit.opensearch/5.juju-log upgrade-version-a:19: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:15 ERROR unit.opensearch/4.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:16 ERROR unit.opensearch/5.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:17 ERROR unit.opensearch/4.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:18 ERROR unit.opensearch/5.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:19 ERROR unit.opensearch/4.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:20 ERROR unit.opensearch/5.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:20 ERROR unit.opensearch/4.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-5: 03:02:22 ERROR unit.opensearch/5.juju-log opensearch-peers:17: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-4: 03:02:22 ERROR unit.opensearch/4.juju-log status-peers:18: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
