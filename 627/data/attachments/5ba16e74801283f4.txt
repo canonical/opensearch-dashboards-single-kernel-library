@@ -1,0 +1,128 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGSTOP opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.142.155.74:5601 with password nUabVZnSLOD8eOSxuhqmps2viqRvGxLZ and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.142.155.74:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.142.155.74:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.142.155.181:5601 with password nUabVZnSLOD8eOSxuhqmps2viqRvGxLZ and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.142.155.181:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.142.155.181:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:32:26Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      3  opensearch                2/edge    405  no       
+opensearch-dashboards     2.19.6   active      2  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*     active    idle   4        10.142.155.74   5601/tcp  
+opensearch-dashboards/1      active    idle   5        10.142.155.181  5601/tcp  
+opensearch/0*                active    idle   0        10.142.155.73   9200/tcp  
+opensearch/1                 active    idle   1        10.142.155.71   9200/tcp  
+opensearch/2                 active    idle   2        10.142.155.17   9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.142.155.21             
+
+Machine  State    Address         Inst id        Base          AZ                                  Message
+0        started  10.142.155.73   juju-09be31-0  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+1        started  10.142.155.71   juju-09be31-1  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+2        started  10.142.155.17   juju-09be31-2  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+3        started  10.142.155.21   juju-09be31-3  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+4        started  10.142.155.74   juju-09be31-4  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+5        started  10.142.155.181  juju-09be31-5  ubuntu@24.04  amd64-noble-large-ps5-isuu4ijfzgoa  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:49:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:49:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:49:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:49:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:49:30 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:49:30 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:49:41 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:49:41 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:50:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:50:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:50:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:50:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-2: 01:53:44 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:53:44 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 01:53:46 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:53:46 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-dashboards-0: 02:13:52 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from https://10.142.155.74:5601/api/status: HTTPSConnectionPool(host='10.142.155.74', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-2: 02:16:16 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.17:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.73'] not reachable."
+unit-opensearch-2: 02:16:17 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.17:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.73'] not reachable."
+unit-opensearch-1: 02:16:30 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.73'] not reachable."
+unit-opensearch-1: 02:16:31 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.73'] not reachable."
+unit-opensearch-0: 02:16:33 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.17'] not reachable."
+unit-opensearch-0: 02:16:34 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.17'] not reachable."
+unit-opensearch-0: 02:16:35 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.17'] not reachable."
+unit-opensearch-dashboards-1: 02:16:36 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.17:9200/_cluster/health
+unit-opensearch-0: 02:16:36 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.17'] not reachable."
+unit-opensearch-dashboards-1: 02:16:38 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.71:9200/_cluster/health
+unit-opensearch-dashboards-1: 02:16:40 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.73:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:16:58 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.17:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:17:00 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.71:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:17:02 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.73:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:17:07 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.17:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:17:09 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.71:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:17:11 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.142.155.73:9200/_cluster/health
+unit-opensearch-1: 02:18:27 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.73'] not reachable."
+unit-opensearch-1: 02:18:28 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.73'] not reachable."
+unit-opensearch-0: 02:18:35 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.71'] not reachable."
+unit-opensearch-0: 02:18:35 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.71'] not reachable."
+unit-opensearch-0: 02:18:36 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.71'] not reachable."
+unit-opensearch-0: 02:18:37 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.73:9200 and alternative_hosts: ['10.142.155.17', '10.142.155.71'] not reachable."
+unit-opensearch-1: 02:20:25 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.73', '10.142.155.17'] not reachable."
+unit-opensearch-2: 02:20:28 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.17:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.73'] not reachable."
+unit-opensearch-1: 02:20:28 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.71:9200 and alternative_hosts: ['10.142.155.73', '10.142.155.17'] not reachable."
+unit-opensearch-2: 02:20:32 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.142.155.17:9200 and alternative_hosts: ['10.142.155.71', '10.142.155.73'] not reachable."
+unit-opensearch-dashboards-1: 02:20:36 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.181:5601/api/status: HTTPSConnectionPool(host='10.142.155.181', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:20:53 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.17:9200/_cluster/health: HTTPSConnectionPool(host='10.142.155.17', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:20:53 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.17:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:21:03 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from https://10.142.155.74:5601/api/status: HTTPSConnectionPool(host='10.142.155.74', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:21:15 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.71:9200/_cluster/health: HTTPSConnectionPool(host='10.142.155.71', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:21:15 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.71:9200/_cluster/health
+unit-opensearch-0: 02:21:15 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="HTTPSConnectionPool(host='10.142.155.71', port=9200): Read timed out. (read timeout=5)"
+unit-opensearch-dashboards-1: 02:21:32 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.73:9200/_cluster/health: HTTPSConnectionPool(host='10.142.155.73', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:21:32 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.73:9200/_cluster/health
+unit-opensearch-1: 02:21:37 ERROR unit.opensearch/1.juju-log unable to get nodes
+unit-opensearch-2: 02:21:48 ERROR unit.opensearch/2.juju-log unable to get nodes
+unit-opensearch-1: 02:21:56 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="HTTPSConnectionPool(host='10.142.155.71', port=9200): Read timed out. (read timeout=5)"
+unit-opensearch-dashboards-1: 02:21:57 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.17:9200/_cluster/health: HTTPSConnectionPool(host='10.142.155.17', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:21:57 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.142.155.17:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:29:46 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from https://10.142.155.74:5601/api/status: HTTPSConnectionPool(host='10.142.155.74', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:30:04 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.181:5601/api/status: HTTPSConnectionPool(host='10.142.155.181', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:30:21 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.142.155.181:5601/api/status: HTTPSConnectionPool(host='10.142.155.181', port=5601): Read timed out. (read timeout=5).
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

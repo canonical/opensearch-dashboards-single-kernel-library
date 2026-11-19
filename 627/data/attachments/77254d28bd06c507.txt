@@ -1,0 +1,122 @@
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:102 Adding 3 units
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:105 Waiting for 3 units to be added and stable
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [allocating] waiting: waiting for machine
+  opensearch-dashboards/4 [allocating] waiting: waiting for machine
+  opensearch-dashboards/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [allocating] waiting: waiting for machine
+  opensearch-dashboards/4 [allocating] waiting: waiting for machine
+  opensearch-dashboards/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [allocating] waiting: waiting for machine
+  opensearch-dashboards/4 [allocating] waiting: waiting for machine
+  opensearch-dashboards/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [allocating] waiting: agent initialising
+  opensearch-dashboards/4 [allocating] waiting: waiting for machine
+  opensearch-dashboards/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] maintenance: Installing OpenSearch Dashboards
+  opensearch-dashboards/4 [executing] maintenance: Installing OpenSearch Dashboards
+  opensearch-dashboards/5 [executing] maintenance: Installing OpenSearch Dashboards
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] maintenance: Installing OpenSearch Dashboards
+  opensearch-dashboards/4 [executing] maintenance: Installing OpenSearch Dashboards
+  opensearch-dashboards/5 [executing] maintenance: Installing OpenSearch Dashboards
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/4 [executing] active: 
+  opensearch-dashboards/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards/4 [executing] active: 
+  opensearch-dashboards/5 [executing] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] active: 
+  opensearch-dashboards/4 [idle] active: 
+  opensearch-dashboards/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] active: 
+  opensearch-dashboards/4 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [executing] active: 
+  opensearch-dashboards/4 [executing] active: 
+  opensearch-dashboards/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/3 [idle] active: 
+  opensearch-dashboards/4 [idle] active: 
+  opensearch-dashboards/5 [idle] active: 
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:122 Checking the functionality of the new units
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.200.42.225:5601 with password IE4aEMhTvtmn2s05yJ0qddb66IQJX3AV and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.200.42.225:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.200.42.225:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.200.42.181:5601 with password IE4aEMhTvtmn2s05yJ0qddb66IQJX3AV and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.200.42.181:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.200.42.181:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.200.42.128:5601 with password IE4aEMhTvtmn2s05yJ0qddb66IQJX3AV and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.200.42.128:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.200.42.128:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:54:30Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      2  opensearch                2/edge    402  no       
+opensearch-dashboards     2.19.6   active      3  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/3*     active    idle   6        10.200.42.225   5601/tcp  
+opensearch-dashboards/4      active    idle   7        10.200.42.181   5601/tcp  
+opensearch-dashboards/5      active    idle   8        10.200.42.128   5601/tcp  
+opensearch/0*                active    idle   0        10.200.42.117   9200/tcp  
+opensearch/1                 active    idle   1        10.200.42.49    9200/tcp  
+self-signed-certificates/0*  active    idle   2        10.200.42.86              
+
+Machine  State    Address        Inst id        Base          AZ                                  Message
+0        started  10.200.42.117  juju-738cb3-0  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+1        started  10.200.42.49   juju-738cb3-1  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+2        started  10.200.42.86   juju-738cb3-2  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+6        started  10.200.42.225  juju-738cb3-6  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+7        started  10.200.42.181  juju-738cb3-7  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+8        started  10.200.42.128  juju-738cb3-8  ubuntu@24.04  arm64-noble-large-ps7-piflwe3z66zw  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 02:33:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:33:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:33:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:33:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:33:09 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:33:09 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:33:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:33:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 02:38:52 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:38:56 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:38:59 ERROR unit.opensearch/1.juju-log certificates:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:39:03 ERROR unit.opensearch/1.juju-log certificates:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:39:07 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:39:10 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:39:14 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.200.42.49:9200 and alternative_hosts: [] not reachable.'
+machine-5: 02:43:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:43:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:43:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:43:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:50:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:50:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:50:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:50:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-8: 02:50:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-8: 02:50:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

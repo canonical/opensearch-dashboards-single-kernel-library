@@ -1,0 +1,2 @@
+Device eth0 added to juju-53c781-4
+Device eth0 removed from juju-53c781-4

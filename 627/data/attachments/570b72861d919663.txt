@@ -1,0 +1,2 @@
+Device eth0 overridden for juju-53c781-3
+Device eth0 removed from juju-53c781-3

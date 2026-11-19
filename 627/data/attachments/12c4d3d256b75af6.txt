@@ -1,0 +1,50 @@
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:102 Adding 2 units
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:105 Waiting for 2 units to be added and stable
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [allocating] waiting: waiting for machine
+  opensearch-dashboards/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/1 [allocating] waiting: waiting for machine
+  opensearch-dashboards/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/1 [allocating] waiting: waiting for machine
+  opensearch-dashboards/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/1 [allocating] waiting: waiting for machine
+  opensearch-dashboards/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/1 [allocating] waiting: waiting for machine
+  opensearch-dashboards/2 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [executing] maintenance: Installing OpenSearch Dashboards
+  opensearch-dashboards/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+  opensearch-dashboards/1 [executing] active: 
+  opensearch-dashboards/2 [executing] maintenance: Installing OpenSearch Dashboards
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+  opensearch-dashboards/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [executing] active: 
+  opensearch-dashboards/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.ha.test_scaling:test_scaling.py:122 Checking the functionality of the new units
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.149.205.192:5601 with password 8yJTp8bhBk1QvtRdmZQmNIg4XQ2BX6OZ and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.149.205.192:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.149.205.192:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.149.205.199:5601 with password 8yJTp8bhBk1QvtRdmZQmNIg4XQ2BX6OZ and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.149.205.199:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.149.205.199:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.149.205.63:5601 with password 8yJTp8bhBk1QvtRdmZQmNIg4XQ2BX6OZ and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.149.205.63:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.149.205.63:5601/auth/login
