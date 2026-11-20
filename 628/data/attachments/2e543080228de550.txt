@@ -1,0 +1,15 @@
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.125:5601 with password 010fWVf7QJ6hk39YiwcuT91YEPl7YfB2 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.10.10.125:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.10.10.125:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.154:5601 with password 010fWVf7QJ6hk39YiwcuT91YEPl7YfB2 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.10.10.154:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.10.10.154:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.63:5601 with password 010fWVf7QJ6hk39YiwcuT91YEPl7YfB2 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.10.10.63:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.10.10.63:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.23 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.105 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.20 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>

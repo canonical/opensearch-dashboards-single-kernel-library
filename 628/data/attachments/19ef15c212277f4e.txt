@@ -1,0 +1,97 @@
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:116 Test access with JWT to https://10.225.139.233:5601/api/status
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:121 Access with JWT successful
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:123 Remove relation of jwt-integrator with opensearch-dashboards
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:126 Remove relation of jwt-integrator with opensearch
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:130 Test access with JWT after disabling
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:135 Access with JWT failed as expected
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:30:33Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+jwt-integrator                     blocked      1  jwt-integrator            1/edge     19  no       no relation for jwt interface
+opensearch                         active       3  opensearch                2/edge    409  no       
+opensearch-dashboards     2.19.6   active       1  opensearch-dashboards                 0  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+jwt-integrator/0*            blocked   idle   0        10.225.139.150            no relation for jwt interface
+opensearch-dashboards/0*     active    idle   5        10.225.139.233  5601/tcp  
+opensearch/0                 active    idle   1        10.225.139.50   9200/tcp  
+opensearch/1                 active    idle   2        10.225.139.186  9200/tcp  
+opensearch/2*                active    idle   3        10.225.139.135  9200/tcp  
+self-signed-certificates/0*  active    idle   4        10.225.139.57             
+
+Machine  State    Address         Inst id        Base          AZ                              Message
+0        started  10.225.139.150  juju-5908e1-0  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+1        started  10.225.139.50   juju-5908e1-1  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+2        started  10.225.139.186  juju-5908e1-2  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+3        started  10.225.139.135  juju-5908e1-3  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+4        started  10.225.139.57   juju-5908e1-4  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+5        started  10.225.139.233  juju-5908e1-5  ubuntu@24.04  amd64-noble-large-bgtaf5mfyen9  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:15:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:15:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:15:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:15:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:16:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:16:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:16:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:05 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:05 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+machine-4: 02:16:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:16:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:16:06 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:06 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:08 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:16:09 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-1: 02:16:17 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:16:17 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:16:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:16:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:21:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:21:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:21:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:21:07 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:21:08 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:21:09 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-opensearch-1: 02:21:36 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.186:9200 and alternative_hosts: ['10.225.139.50'] not reachable."
+unit-opensearch-0: 02:21:38 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.225.139.50:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:21:41 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.186:9200 and alternative_hosts: ['10.225.139.50'] not reachable."
+unit-opensearch-0: 02:21:42 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.225.139.50:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:21:45 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.186:9200 and alternative_hosts: ['10.225.139.50'] not reachable."
+unit-opensearch-0: 02:21:45 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.225.139.50:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:21:48 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.186:9200 and alternative_hosts: ['10.225.139.50'] not reachable."
+unit-opensearch-0: 02:21:49 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.225.139.50:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:21:52 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.186:9200 and alternative_hosts: ['10.225.139.50'] not reachable."
+unit-opensearch-0: 02:21:53 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.50:9200 and alternative_hosts: ['10.225.139.186'] not reachable."
+unit-opensearch-0: 02:21:57 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.50:9200 and alternative_hosts: ['10.225.139.186'] not reachable."
+unit-opensearch-0: 02:22:01 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.225.139.50:9200 and alternative_hosts: ['10.225.139.186'] not reachable."
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

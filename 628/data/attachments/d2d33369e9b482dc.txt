@@ -1,0 +1,17 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGKILL opensearch:['opensearch/0', 'opensearch/1', 'opensearch/2']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch:['opensearch/0', 'opensearch/1', 'opensearch/2'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.216.109.210:5601 with password gXEN3sSUAE4Ne9fCeY9uvPSACpCOM9IY and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.216.109.210:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.216.109.210:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.216.109.244:5601 with password gXEN3sSUAE4Ne9fCeY9uvPSACpCOM9IY and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.216.109.244:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.216.109.244:5601/auth/login

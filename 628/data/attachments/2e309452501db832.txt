@@ -1,0 +1,2 @@
+Device eth0 added to juju-affba3-4
+Device eth0 removed from juju-affba3-4

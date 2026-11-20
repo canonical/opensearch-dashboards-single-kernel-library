@@ -1,0 +1,34 @@
+Destroying chaos mesh in testing
+deleting api-resources
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+podnetworkchaos.chaos-mesh.org "opensearch-dashboards-k8s-0" deleted
+podnetworkchaos.chaos-mesh.org "opensearch-dashboards-k8s-1" deleted
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+No resources found
+deleting chaos-mesh-validation-auth
+validatingwebhookconfiguration.admissionregistration.k8s.io "chaos-mesh-validation-auth" deleted
+deleting chaos-mesh-validation
+validatingwebhookconfiguration.admissionregistration.k8s.io "chaos-mesh-validation" deleted
+deleting clusterrolebindings
+deleting clusterroles
+deleting crds
+uninstalling chaos-mesh k8s helm repo
+release "chaos-mesh" uninstalled
