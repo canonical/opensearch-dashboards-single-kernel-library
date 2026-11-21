@@ -1,0 +1,217 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-k8s-56
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-710
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: installing agent
+  opensearch/1 [allocating] waiting: installing agent
+  opensearch/2 [allocating] waiting: installing agent
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+  self-signed-certificates/0 [idle] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: installing charm software
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] waiting: Requesting lock on operation: start
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [idle] maintenance: Waiting for TLS to be fully configured...
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] maintenance: Initializing the security index...
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] waiting: Requesting lock on operation: start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/2 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [executing] blocked: Traefik load balancer is unable to obtain an IP or hostname from the cluster.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [idle] active: Serving at http://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+  traefik-k8s/0 [executing] active: Serving at http://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] maintenance: Restarting OpenSearch Dashboards server
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:126 Old Workload Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:127 Old Dashboards Version: {'opensearch-dashboards-k8s/0': '2.19.5', 'opensearch-dashboards-k8s/1': '2.19.5', 'opensearch-dashboards-k8s/2': '2.19.5'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:130 Old Charm URL: ch:amd64/opensearch-dashboards-k8s-12
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/1 [executing] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/2 [executing] waiting: Waiting for upgrade to be idle
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/1 [idle] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/2 [idle] waiting: Waiting for upgrade to be idle
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] maintenance: 
+  opensearch-dashboards-k8s/1 [idle] maintenance: Waiting for TLS to be fully configured
+  opensearch-dashboards-k8s/2 [idle] waiting: Waiting for upgrade to be idle
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/1 [executing] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards-k8s/2 [executing] waiting: Waiting for upgrade to be idle
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password DMwX3tY37q9M8LuonQb1QZwKwCRzIqEt and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password DMwX3tY37q9M8LuonQb1QZwKwCRzIqEt and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password DMwX3tY37q9M8LuonQb1QZwKwCRzIqEt and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:149 New Workload Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:150 New Dashboards Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:153 New Charm URL: local:noble/opensearch-dashboards-k8s-0
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  03:09:04Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Address         Exposed  Message
+opensearch                          active      3  opensearch-k8s             2/edge          56  10.152.183.139  no       
+opensearch-dashboards-k8s  2.19.6   active      3  opensearch-dashboards-k8s                   0  10.152.183.251  no       
+self-signed-certificates            active      1  self-signed-certificates   1/stable       710  10.152.183.130  no       
+traefik-k8s                2.11.57  active      1  traefik-k8s                latest/stable  506  10.152.183.50   no       Serving at https://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+opensearch-dashboards-k8s/0   active    idle   10.1.0.236         
+opensearch-dashboards-k8s/1*  active    idle   10.1.0.230         
+opensearch-dashboards-k8s/2   active    idle   10.1.0.192         
+opensearch/0*                 active    idle   10.1.0.56          
+opensearch/1                  active    idle   10.1.0.9           
+opensearch/2                  active    idle   10.1.0.150         
+self-signed-certificates/0*   active    idle   10.1.0.4           
+traefik-k8s/0*                active    idle   10.1.0.213         Serving at https://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-dashboards-k8s-1: 02:54:02 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:54:02 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-2: 02:54:02 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:54:02 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:54:05 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-2: 02:54:06 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:55:14 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:55:15 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:55:17 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-traefik-k8s-0: 03:01:04 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:04 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:06 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:06 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:07 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:07 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:09 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:09 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:02:02 ERROR unit.traefik-k8s/0.juju-log certificates:13: failed processing the ingress relation <ops.model.Relation ingress:11>: 'provider is not ready: ingress for <ops.model.Relation ingress:11> wiped.'
+unit-traefik-k8s-0: 03:02:02 ERROR unit.traefik-k8s/0.juju-log certificates:13: failed processing the ingress relation <ops.model.Relation ingress:11>: 'provider is not ready: ingress for <ops.model.Relation ingress:11> wiped.'
+unit-traefik-k8s-0: 03:02:02 ERROR unit.traefik-k8s/0.juju-log certificates:13: The setup of some ingress relation failed, see previous logs
+unit-opensearch-dashboards-k8s-2: 03:04:40 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-2: 03:05:31 ERROR unit.opensearch-dashboards-k8s/2.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+808BE783C0700000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+808BE783C0700000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-1: 03:05:39 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 03:05:54 ERROR unit.opensearch-dashboards-k8s/1.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+80FBF710B3790000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+80FBF710B3790000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-0: 03:06:05 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 03:06:18 ERROR unit.opensearch-dashboards-k8s/0.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+804BF3C98F730000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+804BF3C98F730000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

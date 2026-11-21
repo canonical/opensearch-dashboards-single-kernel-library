@@ -1,0 +1,42 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:19:27Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active       3  opensearch                2/edge    413  no       
+opensearch-dashboards     2.19.6   blocked      2  opensearch-dashboards                 0  no       OpenSearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports  Message
+opensearch-dashboards/0      blocked      idle       4        10.234.210.93          OpenSearch connection is missing
+opensearch-dashboards/1*     maintenance  executing  5        10.234.210.208         (install) Installing OpenSearch Dashboards
+opensearch/0*                maintenance  executing  0        10.234.210.159         (install) Installing OpenSearch...
+opensearch/1                 maintenance  executing  1        10.234.210.136         (install) Installing OpenSearch...
+opensearch/2                 maintenance  executing  2        10.234.210.125         (install) Installing OpenSearch...
+self-signed-certificates/0*  active       idle       3        10.234.210.59          
+
+Machine  State    Address         Inst id        Base          AZ                              Message
+0        started  10.234.210.159  juju-3e12d2-0  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+1        started  10.234.210.136  juju-3e12d2-1  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+2        started  10.234.210.125  juju-3e12d2-2  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+3        started  10.234.210.59   juju-3e12d2-3  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+4        started  10.234.210.93   juju-3e12d2-4  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+5        started  10.234.210.208  juju-3e12d2-5  ubuntu@24.04  amd64-noble-large-pfkrbkgiwonl  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 02:03:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:03:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:03:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:03:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:03:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:03:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:03:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:03:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:03:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:03:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

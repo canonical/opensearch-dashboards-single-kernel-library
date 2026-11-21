@@ -1,0 +1,139 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGSTOP opensearch-dashboards-k8s:['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch-dashboards-k8s:['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password hA8hGCy42Vx0RD8OixSx39YmaaADETAh and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password hA8hGCy42Vx0RD8OixSx39YmaaADETAh and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  03:10:20Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Address         Exposed  Message
+opensearch                          active      3  opensearch-k8s             2/edge          56  10.152.183.237  no       
+opensearch-dashboards-k8s  2.19.6   active      2  opensearch-dashboards-k8s                   0  10.152.183.163  no       
+self-signed-certificates            active      1  self-signed-certificates   1/stable       710  10.152.183.184  no       
+traefik-k8s                2.11.57  active      1  traefik-k8s                latest/stable  506  10.152.183.145  no       Serving at http://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+opensearch-dashboards-k8s/0   active    idle   10.1.0.43          
+opensearch-dashboards-k8s/1*  active    idle   10.1.0.146         
+opensearch/0*                 active    idle   10.1.0.95          
+opensearch/1                  active    idle   10.1.0.182         
+opensearch/2                  active    idle   10.1.0.44          
+self-signed-certificates/0*   active    idle   10.1.0.117         
+traefik-k8s/0*                active    idle   10.1.0.58          Serving at http://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-0: 02:34:08 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:34:08 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-2: 02:34:10 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 02:34:17 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:34:17 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:34:51 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:34:52 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:34:54 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:34:54 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:34:55 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:34:56 ERROR unit.opensearch/1.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:34:57 ERROR unit.opensearch/2.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:34:58 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:34:58 ERROR unit.opensearch/1.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:34:59 ERROR unit.opensearch/2.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:01 ERROR unit.opensearch/1.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:35:01 ERROR unit.opensearch/0.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:02 ERROR unit.opensearch/2.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:03 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:35:04 ERROR unit.opensearch/0.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:05 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:06 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:35:07 ERROR unit.opensearch/0.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:07 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:08 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:09 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:35:10 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:11 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:12 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:35:13 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:35:13 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:35:14 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-traefik-k8s-0: 02:40:14 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:14 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:15 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:15 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:17 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:17 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:18 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:40:18 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-1: 02:53:46 ERROR unit.opensearch-dashboards-k8s/1.juju-log Hanging, no response from http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-0: 03:07:40 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-1: 03:07:40 ERROR unit.opensearch-dashboards-k8s/1.juju-log Hanging, no response from http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-k8s-0: 03:07:57 ERROR unit.opensearch-dashboards-k8s/0.juju-log Hanging, no response from http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/testing-opensearch-dashboards-k8s/api/status: HTTPConnectionPool(host='opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints', port=5601): Read timed out. (read timeout=5).
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,177 @@
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:116 Test access with JWT to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/api/status
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:121 Access with JWT successful
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:123 Remove relation of jwt-integrator with opensearch-dashboards-k8s
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:126 Remove relation of jwt-integrator with opensearch
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at http://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at http://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at http://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [idle] active: Serving at http://10.43.45.0
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:130 Test access with JWT after disabling
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:135 Access with JWT failed as expected
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  03:13:07Z
+
+App                        Version  Status   Scale  Charm                      Channel        Rev  Address         Exposed  Message
+jwt-integrator                      blocked      1  jwt-integrator             1/edge          19  10.152.183.160  no       no relation for jwt interface
+opensearch                          active       3  opensearch-k8s             2/edge          56  10.152.183.223  no       
+opensearch-dashboards-k8s  2.19.6   active       1  opensearch-dashboards-k8s                   0  10.152.183.93   no       
+self-signed-certificates            active       1  self-signed-certificates   1/stable       710  10.152.183.209  no       
+traefik-k8s                2.11.57  active       1  traefik-k8s                latest/stable  506  10.152.183.137  no       Serving at http://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+jwt-integrator/0*             blocked   idle   10.1.0.156         no relation for jwt interface
+opensearch-dashboards-k8s/0*  active    idle   10.1.0.47          
+opensearch/0                  active    idle   10.1.0.134         
+opensearch/1                  active    idle   10.1.0.119         
+opensearch/2*                 active    idle   10.1.0.130         
+self-signed-certificates/0*   active    idle   10.1.0.147         
+traefik-k8s/0*                active    idle   10.1.0.112         Serving at http://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-jwt-integrator-0: 02:57:59 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:00 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:00 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:00 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:01 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:01 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:01 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:01 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:02 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:58:02 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-opensearch-dashboards-k8s-0: 02:58:03 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-2: 02:58:14 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:58:15 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:58:17 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:58:56 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:58:58 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:58:58 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:58:58 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:00 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:00 ERROR unit.opensearch/0.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:00 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:02 ERROR unit.opensearch/1.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:02 ERROR unit.opensearch/0.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:03 ERROR unit.opensearch/2.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:04 ERROR unit.opensearch/1.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:04 ERROR unit.opensearch/0.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:05 ERROR unit.opensearch/2.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:06 ERROR unit.opensearch/1.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:06 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:08 ERROR unit.opensearch/2.juju-log certificates:5: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:08 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:08 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:10 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:10 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:10 ERROR unit.opensearch/2.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:12 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:12 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:13 ERROR unit.opensearch/2.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:15 ERROR unit.opensearch/0.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:15 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:16 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:17 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:17 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:19 ERROR unit.opensearch/2.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:19 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:19 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:59:21 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:59:21 ERROR unit.opensearch/1.juju-log status-peers:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:59:21 ERROR unit.opensearch/2.juju-log opensearch-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-jwt-integrator-0: 03:03:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:03:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:03:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:03:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:03:16 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:03:17 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-traefik-k8s-0: 03:07:51 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:07:51 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:07:56 ERROR unit.traefik-k8s/0.juju-log peers:13: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:07:56 ERROR unit.traefik-k8s/0.juju-log peers:13: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:08:00 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:08:00 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:08:04 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:08:04 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

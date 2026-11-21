@@ -1,0 +1,78 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:425 Cutting all units from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:435 Network throttle on opensearch-dashboards-k8s/0 (Pod: opensearch-dashboards-k8s-0)...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:435 Network throttle on opensearch-dashboards-k8s/1 (Pod: opensearch-dashboards-k8s-1)...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:458 Waiting until units ['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1'] are not reachable
+[1m[31mERROR   [0m tests.integration.ha.helpers:helpers.py:56 timed out
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:465 Waiting until unit ['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1'] are 'lost'
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:475 Checking lack of Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:545 Trying to reach host:10.43.45.0 port:80 path:/testing-opensearch-dashboards-k8s https: False
+[32mINFO    [0m tests.integration.helpers:helpers.py:545 Trying to reach host:10.43.45.0 port:80 path:/testing-opensearch-dashboards-k8s https: False
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:478 Restoring network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:481 Removing NetworkChaos to restore network to the leader (Pod: opensearch-dashboards-k8s-0)
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:481 Removing NetworkChaos to restore network to the leader (Pod: opensearch-dashboards-k8s-1)
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:492 Waiting until units ['opensearch-dashboards-k8s/0', 'opensearch-dashboards-k8s/1'] are reachable again
+[1m[31mERROR   [0m tests.integration.ha.helpers:helpers.py:56 [Errno 111] Connection refused
+[1m[31mERROR   [0m tests.integration.ha.helpers:helpers.py:56 [Errno 111] Connection refused
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:513 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password cWt2ubhJbPGoy0YFTj9gh42Yw8EEzQax and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password cWt2ubhJbPGoy0YFTj9gh42Yw8EEzQax and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  03:17:46Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Address         Exposed  Message
+opensearch                          active      2  opensearch-k8s             2/edge          56  10.152.183.170  no       
+opensearch-dashboards-k8s  2.19.6   active      2  opensearch-dashboards-k8s                   0  10.152.183.201  no       
+self-signed-certificates            active      1  self-signed-certificates   1/stable       710  10.152.183.196  no       
+traefik-k8s                2.11.57  active      1  traefik-k8s                latest/stable  506  10.152.183.78   no       Serving at http://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+opensearch-dashboards-k8s/0*  active    idle   10.1.0.47          
+opensearch-dashboards-k8s/1   active    idle   10.1.0.147         
+opensearch/0*                 active    idle   10.1.0.192         
+opensearch/1                  active    idle   10.1.0.142         
+self-signed-certificates/0*   active    idle   10.1.0.79          
+traefik-k8s/0*                active    idle   10.1.0.207         Serving at http://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-1: 02:54:54 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:54:54 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 02:55:13 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:55:13 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:56:26 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:56:29 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:56:32 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-traefik-k8s-0: 03:01:45 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:45 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:47 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:47 ERROR unit.traefik-k8s/0.juju-log peers:10: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:48 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:48 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:50 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 03:01:50 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-1: 03:04:12 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 03:08:45 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 03:10:22 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 03:10:23 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 03:15:00 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [aaeae0] "unit-opensearch-dashboards-k8s-1" cannot open api: unable to connect to API: dial tcp 10.102.17.79:17070: connect: no route to host
+unit-opensearch-dashboards-k8s-0: 03:15:04 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [aaeae0] "unit-opensearch-dashboards-k8s-0" cannot open api: api connection dial timed out
+unit-opensearch-dashboards-k8s-1: 03:15:06 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [aaeae0] "unit-opensearch-dashboards-k8s-1" cannot open api: unable to connect to API: dial tcp 10.102.17.79:17070: connect: no route to host
+unit-opensearch-dashboards-k8s-0: 03:15:10 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [aaeae0] "unit-opensearch-dashboards-k8s-0" cannot open api: unable to connect to API: dial tcp 10.102.17.79:17070: connect: no route to host
+unit-opensearch-dashboards-k8s-1: 03:15:13 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [aaeae0] "unit-opensearch-dashboards-k8s-1" cannot open api: api connection dial timed out
+unit-opensearch-dashboards-k8s-0: 03:15:16 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 03:15:18 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

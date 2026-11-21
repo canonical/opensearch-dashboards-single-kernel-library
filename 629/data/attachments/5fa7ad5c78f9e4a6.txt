@@ -1,0 +1,67 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  05:24:47Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+jwt-integrator                     blocked      1  jwt-integrator            1/edge     20  no       Missing 'signing-key' or 'roles-key' con... Run `status-detail`: 0 action required; 1 additional statuses.
+opensearch                         active       3  opensearch                2/edge    410  no       
+opensearch-dashboards     2.19.6   blocked      1  opensearch-dashboards                 0  no       OpenSearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+jwt-integrator/0*            blocked      idle       0        10.153.101.168            Missing 'signing-key' or 'roles-key' con... Run `status-detail`: 0 action required; 1 additional statuses.
+opensearch-dashboards/0*     blocked      idle       5        10.153.101.82   5601/tcp  OpenSearch connection is missing
+opensearch/0                 maintenance  executing  1        10.153.101.178            (install) Installing OpenSearch...
+opensearch/1                 active       idle       2        10.153.101.200  9200/tcp  
+opensearch/2*                active       idle       3        10.153.101.64   9200/tcp  
+self-signed-certificates/0*  active       idle       4        10.153.101.24             
+
+Machine  State    Address         Inst id        Base          AZ                                  Message
+0        started  10.153.101.168  juju-7b81f9-0  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+1        started  10.153.101.178  juju-7b81f9-1  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+2        started  10.153.101.200  juju-7b81f9-2  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+3        started  10.153.101.64   juju-7b81f9-3  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+4        started  10.153.101.24   juju-7b81f9-4  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+5        started  10.153.101.82   juju-7b81f9-5  ubuntu@24.04  arm64-noble-large-ps6-jyy3dnih4vbb  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 05:09:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 05:09:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 05:09:11 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:11 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:12 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:12 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:13 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:13 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-3: 05:09:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 05:09:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 05:09:14 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:14 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:09:15 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-4: 05:09:19 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 05:09:19 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 05:09:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 05:09:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 05:09:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 05:09:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 05:09:32 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 05:09:32 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 05:15:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:15:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:15:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:15:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:15:06 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:15:06 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:19:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:19:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:19:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:19:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:24:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:24:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:24:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 05:24:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

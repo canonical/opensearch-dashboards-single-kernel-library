@@ -1,0 +1,79 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:10:42Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+jwt-integrator                     blocked      1  jwt-integrator            1/edge     19  no       Missing 'signing-key' or 'roles-key' con... Run `status-detail`: 0 action required; 1 additional statuses.
+opensearch                         active       3  opensearch                2/edge    413  no       
+opensearch-dashboards     2.19.6   blocked      1  opensearch-dashboards                 0  no       OpenSearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+jwt-integrator/0*            blocked      idle       0        10.57.19.111              Missing 'signing-key' or 'roles-key' con... Run `status-detail`: 0 action required; 1 additional statuses.
+opensearch-dashboards/0*     blocked      idle       5        10.57.19.141    5601/tcp  OpenSearch connection is missing
+opensearch/0                 active       idle       1        10.57.19.83     9200/tcp  
+opensearch/1*                active       idle       2        10.57.19.190    9200/tcp  
+opensearch/2                 maintenance  executing  3        10.57.19.92               (install) Installing OpenSearch...
+self-signed-certificates/0*  active       idle       4        10.57.19.22               
+
+Machine  State    Address       Inst id        Base          AZ                              Message
+0        started  10.57.19.111  juju-f98e51-0  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+1        started  10.57.19.83   juju-f98e51-1  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+2        started  10.57.19.190  juju-f98e51-2  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+3        started  10.57.19.92   juju-f98e51-3  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+4        started  10.57.19.22   juju-f98e51-4  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+5        started  10.57.19.141  juju-f98e51-5  ubuntu@24.04  amd64-noble-large-nvzy45daqopc  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-4: 02:54:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:54:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:54:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:54:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-jwt-integrator-0: 02:55:02 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:02 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:03 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:03 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:04 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:05 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:05 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:06 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 02:55:06 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+machine-2: 02:55:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:55:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:55:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:55:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:55:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:55:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:55:20 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:55:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:57:19 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:21 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:23 ERROR unit.opensearch/0.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:25 ERROR unit.opensearch/0.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:57:27 ERROR unit.opensearch/0.juju-log certificates:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:21 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:22 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:24 ERROR unit.opensearch/0.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:26 ERROR unit.opensearch/0.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:28 ERROR unit.opensearch/0.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:30 ERROR unit.opensearch/0.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:58:31 ERROR unit.opensearch/0.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-jwt-integrator-0: 03:00:46 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:00:46 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:00:46 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:00:46 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:00:46 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:00:47 ERROR unit.jwt-integrator/0.juju-log status-peers:0: Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:04:53 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:04:53 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:04:53 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:04:53 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:09:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:09:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:09:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+unit-jwt-integrator-0: 03:09:38 ERROR unit.jwt-integrator/0.juju-log Mandatory parameter signing-key is missing
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,15 @@
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password GMy01iaHsYUEXYDc2bXFpitWGAVochkb and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password GMy01iaHsYUEXYDc2bXFpitWGAVochkb and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:80 with password GMy01iaHsYUEXYDc2bXFpitWGAVochkb and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.43.45.0:80/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.33 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.13 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.73 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>

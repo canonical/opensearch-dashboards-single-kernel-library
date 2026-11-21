@@ -1,0 +1,89 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:arm64/noble/jwt-integrator-20
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:arm64/noble/opensearch-k8s-58
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:arm64/noble/self-signed-certificates-585
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:opensearch-dashboards-k8s-0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: installing agent
+  opensearch/1 [allocating] waiting: installing agent
+  opensearch/2 [allocating] waiting: installing agent
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Configuring admin user...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] maintenance: Initializing the security index...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [executing] waiting: Requesting lock on operation: start
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:57 Create JWT configuration
+[32mINFO    [0m root:helpers_jwt.py:36 JWT successfully generated
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:75 Integrating opensearch with jwt-integrator
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+  jwt-integrator/0 [executing] blocked: Missing 'signing-key' or 'roles-key' con... Run `status-detail`: 0 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m integration.test_jwt_auth:test_jwt_auth.py:79 Integrating opensearch-dashboards-k8s with jwt-integrator
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  jwt-integrator/0 [idle] active:
