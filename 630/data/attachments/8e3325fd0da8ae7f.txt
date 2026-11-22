@@ -1,0 +1,244 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-415
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-710
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-dashboards-65
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] active: 
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] waiting: Waiting for OpenSearch to start...
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] maintenance: Initializing the security index...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [idle] waiting: Requesting lock on operation: start
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [idle] blocked: Opensearch connection is missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] waiting: Awaiting restart operation
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[31m[1mERROR   [0m integration.helpers:helpers.py:625 Failed to read workload_version: cat: /var/lib/juju/agents/unit-opensearch-dashboards-0/charm/workload_version: No such file or directory
+[31m[1mERROR   [0m integration.helpers:helpers.py:625 Failed to read workload_version: cat: /var/lib/juju/agents/unit-opensearch-dashboards-1/charm/workload_version: No such file or directory
+[31m[1mERROR   [0m integration.helpers:helpers.py:625 Failed to read workload_version: cat: /var/lib/juju/agents/unit-opensearch-dashboards-2/charm/workload_version: No such file or directory
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:126 Old Workload Version: {'opensearch-dashboards/0': '', 'opensearch-dashboards/1': '', 'opensearch-dashboards/2': ''}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:127 Old Dashboards Version: {'opensearch-dashboards/0': '2.19.4', 'opensearch-dashboards/1': '2.19.4', 'opensearch-dashboards/2': '2.19.4'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:130 Old Charm URL: ch:amd64/opensearch-dashboards-65
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: upgrading...
+  opensearch-dashboards/1 [idle] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards/2 [idle] waiting: Waiting for upgrade to be idle
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards/1 [idle] waiting: Waiting for upgrade to be idle
+  opensearch-dashboards/2 [executing] maintenance: upgrading...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [executing] maintenance: Restarting OpenSearch Dashboards server
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.102.60.51:5601 with password GV5U9DJitoZXzHCdLrYvbHzKI8CBF1Gz and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.102.60.51:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.102.60.51:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.102.60.89:5601 with password GV5U9DJitoZXzHCdLrYvbHzKI8CBF1Gz and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.102.60.89:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.102.60.89:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.102.60.186:5601 with password GV5U9DJitoZXzHCdLrYvbHzKI8CBF1Gz and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.102.60.186:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.102.60.186:5601/auth/login
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:149 New Workload Version: {'opensearch-dashboards/0': '2.19.6', 'opensearch-dashboards/1': '2.19.6', 'opensearch-dashboards/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:150 New Dashboards Version: {'opensearch-dashboards/0': '2.19.6', 'opensearch-dashboards/1': '2.19.6', 'opensearch-dashboards/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:153 New Charm URL: local:noble/opensearch-dashboards-0
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:162 Old release has no workload_version file; skipping workload comparison
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:20:01Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      3  opensearch                2/edge    415  no       
+opensearch-dashboards     2.19.6   active      3  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0      active    idle   4        10.102.60.51    5601/tcp  
+opensearch-dashboards/1*     active    idle   5        10.102.60.89    5601/tcp  
+opensearch-dashboards/2      active    idle   6        10.102.60.186   5601/tcp  
+opensearch/0                 active    idle   0        10.102.60.27    9200/tcp  
+opensearch/1                 active    idle   1        10.102.60.249   9200/tcp  
+opensearch/2*                active    idle   2        10.102.60.66    9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.102.60.194             
+
+Machine  State    Address        Inst id        Base          AZ                              Message
+0        started  10.102.60.27   juju-033ad0-0  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+1        started  10.102.60.249  juju-033ad0-1  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+2        started  10.102.60.66   juju-033ad0-2  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+3        started  10.102.60.194  juju-033ad0-3  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+4        started  10.102.60.51   juju-033ad0-4  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+5        started  10.102.60.89   juju-033ad0-5  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+6        started  10.102.60.186  juju-033ad0-6  ubuntu@24.04  amd64-noble-large-ci5axxljrnsa  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-3: 03:09:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:09:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:09:54 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:09:54 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:09:59 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:09:59 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:10:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:10:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:10:03 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:10:03 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:10:04 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:10:04 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 03:10:13 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 03:10:13 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 03:12:16 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:18 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:19 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:21 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:23 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:40 ERROR unit.opensearch/0.juju-log status-peers:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:42 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:44 ERROR unit.opensearch/0.juju-log opensearch-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:45 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:47 ERROR unit.opensearch/0.juju-log opensearch-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:49 ERROR unit.opensearch/0.juju-log upgrade-version-a:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:12:51 ERROR unit.opensearch/0.juju-log node-lock-fallback:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 03:13:57 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-1: 03:13:59 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-1: 03:14:02 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-1: 03:14:04 ERROR unit.opensearch/1.juju-log opensearch-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-1: 03:14:07 ERROR unit.opensearch/1.juju-log node-lock-fallback:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-1: 03:14:09 ERROR unit.opensearch/1.juju-log status-peers:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.102.60.249:9200 and alternative_hosts: ['10.102.60.27'] not reachable."
+unit-opensearch-dashboards-2: 03:15:31 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:31 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:33 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:33 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:35 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:35 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-1: 03:15:39 ERROR unit.opensearch-dashboards/1.juju-log opensearch-client:8: Request GET to http://10.102.60.89:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.102.60.89:5601/api/status
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: Request GET to http://10.102.60.186:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.102.60.186:5601/api/status
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: Request GET to http://10.102.60.51:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.102.60.51:5601/api/status
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:39 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:39 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:40 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:15:40 ERROR unit.opensearch-dashboards/2.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:40 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:40 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:40 ERROR unit.opensearch-dashboards/0.juju-log opensearch-client:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-1: 03:15:41 ERROR unit.opensearch-dashboards/1.juju-log opensearch-client:8: Request GET to http://10.102.60.89:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.102.60.89', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x770848fa82c0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 03:15:46 ERROR unit.opensearch-dashboards/1.juju-log opensearch-client:8: Request GET to http://10.102.60.89:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.102.60.89', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x770848fa9490>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 03:15:56 ERROR unit.opensearch-dashboards/0.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:15:56 ERROR unit.opensearch-dashboards/0.juju-log restart:7: Request GET to http://10.102.60.51:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.102.60.51', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7e4a9e0db740>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 03:16:01 ERROR unit.opensearch-dashboards/0.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 03:16:01 ERROR unit.opensearch-dashboards/0.juju-log restart:7: Request GET to http://10.102.60.51:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.102.60.51', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7e4a9b96c110>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 03:16:06 ERROR unit.opensearch-dashboards/0.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:16:08 ERROR unit.opensearch-dashboards/2.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:16:08 ERROR unit.opensearch-dashboards/2.juju-log restart:7: Request GET to http://10.102.60.186:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.102.60.186', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7977b945fc50>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-2: 03:16:13 ERROR unit.opensearch-dashboards/2.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-2: 03:16:14 ERROR unit.opensearch-dashboards/2.juju-log restart:7: Request GET to http://10.102.60.186:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.102.60.186:5601/api/status
+unit-opensearch-dashboards-2: 03:16:19 ERROR unit.opensearch-dashboards/2.juju-log restart:7: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

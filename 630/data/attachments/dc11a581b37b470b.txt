@@ -1,0 +1,38 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:27:03Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active       2  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   blocked      2  opensearch-dashboards                 0  no       OpenSearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+opensearch-dashboards/0*     blocked      idle       3        10.41.143.247   5601/tcp  OpenSearch connection is missing
+opensearch-dashboards/1      blocked      idle       4        10.41.143.222   5601/tcp  OpenSearch connection is missing
+opensearch/0                 maintenance  executing  0        10.41.143.129             (install) Installing OpenSearch...
+opensearch/1*                active       idle       1        10.41.143.26    9200/tcp  
+self-signed-certificates/0*  active       idle       2        10.41.143.99              
+
+Machine  State    Address        Inst id        Base          AZ                                  Message
+0        started  10.41.143.129  juju-bf0c4d-0  ubuntu@24.04  arm64-noble-large-ps7-ixaz6b6gbjus  Running
+1        started  10.41.143.26   juju-bf0c4d-1  ubuntu@24.04  arm64-noble-large-ps7-ixaz6b6gbjus  Running
+2        started  10.41.143.99   juju-bf0c4d-2  ubuntu@24.04  arm64-noble-large-ps7-ixaz6b6gbjus  Running
+3        started  10.41.143.247  juju-bf0c4d-3  ubuntu@24.04  arm64-noble-large-ps7-ixaz6b6gbjus  Running
+4        started  10.41.143.222  juju-bf0c4d-4  ubuntu@24.04  arm64-noble-large-ps7-ixaz6b6gbjus  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-1: 02:11:26 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:11:26 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:11:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:11:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:11:30 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:11:30 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:11:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:11:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:11:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:11:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

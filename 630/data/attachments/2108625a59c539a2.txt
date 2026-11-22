@@ -1,0 +1,31 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:245 Network throttle on opensearch-dashboards-k8s/0 (Pod: opensearch-dashboards-k8s-0)...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:249 Waiting 65s for Juju leadership lease to expire...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:257 Waiting until unit opensearch-dashboards-k8s/0 is not reachable
+[31m[1mERROR   [0m tests.integration.ha.helpers:helpers.py:56 timed out
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:264 Waiting until unit opensearch-dashboards-k8s/0 is 'lost'
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:274 Checking leader re-election...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:281 Checking Dashboard access for the rest of the nodes...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password SQyGB7nF9IlPhZLqVrnLgFttrYYfbcR2 and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[33mWARNING [0m tests.integration.helpers:helpers.py:419 Request failed or timed out: HTTPSConnectionPool(host='10.43.45.0', port=443): Read timed out. (read timeout=10)
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password SQyGB7nF9IlPhZLqVrnLgFttrYYfbcR2 and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:284 Restoring network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:287 Removing NetworkChaos to restore network to the leader (Pod: opensearch-dashboards-k8s-0)
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:297 Waiting until unit opensearch-dashboards-k8s/0 is reachable again
+[31m[1mERROR   [0m tests.integration.ha.helpers:helpers.py:56 [Errno 111] Connection refused
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:315 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password SQyGB7nF9IlPhZLqVrnLgFttrYYfbcR2 and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password SQyGB7nF9IlPhZLqVrnLgFttrYYfbcR2 and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login

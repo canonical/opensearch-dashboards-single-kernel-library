@@ -1,0 +1,62 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  01:59:44Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+application                        active       1  application                           0  no       
+grafana-agent                      blocked      3  grafana-agent             1/stable  606  no       Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch                         active       3  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   active       3  opensearch-dashboards                 0  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+application/0*               active       idle       7        10.174.243.195            
+opensearch-dashboards/0      active       idle       4        10.174.243.55   5601/tcp  
+  grafana-agent/2            blocked      idle                10.174.243.55             Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch-dashboards/1*     active       idle       5        10.174.243.201  5601/tcp  
+  grafana-agent/3            maintenance  executing           10.174.243.201            (install) Installing grafana-agent snap
+opensearch-dashboards/2      active       idle       6        10.174.243.33   5601/tcp  
+  grafana-agent/0*           blocked      idle                10.174.243.33             Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch/0*                active       idle       0        10.174.243.9    9200/tcp  
+opensearch/1                 active       idle       1        10.174.243.66   9200/tcp  
+opensearch/2                 active       idle       2        10.174.243.77   9200/tcp  
+self-signed-certificates/0*  active       idle       3        10.174.243.246            
+
+Machine  State    Address         Inst id        Base          AZ                                  Message
+0        started  10.174.243.9    juju-582d4b-0  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+1        started  10.174.243.66   juju-582d4b-1  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+2        started  10.174.243.77   juju-582d4b-2  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+3        started  10.174.243.246  juju-582d4b-3  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+4        started  10.174.243.55   juju-582d4b-4  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+5        started  10.174.243.201  juju-582d4b-5  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+6        started  10.174.243.33   juju-582d4b-6  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+7        started  10.174.243.195  juju-582d4b-7  ubuntu@24.04  arm64-noble-large-ps7-cmcrt2ixyk3d  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:34:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:34:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:34:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:34:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:34:11 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 01:34:11 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:34:15 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:34:15 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:34:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 01:34:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:34:34 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 01:34:34 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:34:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 01:34:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 01:36:56 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:36:58 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:37:00 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:37:03 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:37:05 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:37:07 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 01:37:09 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+machine-7: 01:41:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 01:41:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

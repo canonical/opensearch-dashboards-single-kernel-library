@@ -1,0 +1,44 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:35:19Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      2  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   active      3  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+opensearch-dashboards/0*     active       idle       3        10.190.60.119   5601/tcp  
+opensearch-dashboards/1      active       idle       4        10.190.60.221   5601/tcp  
+opensearch-dashboards/2      maintenance  executing  5        10.190.60.68              (install) Installing OpenSearch Dashboards
+opensearch/0                 active       idle       0        10.190.60.185   9200/tcp  
+opensearch/1*                active       idle       1        10.190.60.23    9200/tcp  
+self-signed-certificates/0*  active       idle       2        10.190.60.22              
+
+Machine  State    Address        Inst id        Base          AZ                                  Message
+0        started  10.190.60.185  juju-8d6945-0  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+1        started  10.190.60.23   juju-8d6945-1  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+2        started  10.190.60.22   juju-8d6945-2  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+3        started  10.190.60.119  juju-8d6945-3  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+4        started  10.190.60.221  juju-8d6945-4  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+5        started  10.190.60.68   juju-8d6945-5  ubuntu@24.04  arm64-noble-large-ps7-vilzwsvpgxps  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 02:11:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:11:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:11:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:11:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:11:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:11:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:11:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:11:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:14:52 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:14:54 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+machine-4: 02:20:02 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:20:02 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:20:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:20:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
