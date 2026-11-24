@@ -1,0 +1,43 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  04:07:55Z
+
+App                       Version  Status       Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active           2  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   maintenance      2  opensearch-dashboards                 0  no       Installing OpenSearch Dashboards
+self-signed-certificates           active           1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports  Message
+opensearch-dashboards/0      maintenance  executing  3        10.228.146.61          (install) Installing OpenSearch Dashboards
+opensearch-dashboards/1*     maintenance  executing  4        10.228.146.39          (install) Installing OpenSearch Dashboards
+opensearch/0                 active       idle       0        10.228.146.19          
+opensearch/1*                maintenance  executing  1        10.228.146.59          (install) Installing OpenSearch...
+self-signed-certificates/0*  active       idle       2        10.228.146.213         
+
+Machine  State    Address         Inst id        Base          AZ                                  Message
+0        started  10.228.146.19   juju-c98704-0  ubuntu@24.04  arm64-noble-large-ps7-bkfqqofrae0l  Running
+1        started  10.228.146.59   juju-c98704-1  ubuntu@24.04  arm64-noble-large-ps7-bkfqqofrae0l  Running
+2        started  10.228.146.213  juju-c98704-2  ubuntu@24.04  arm64-noble-large-ps7-bkfqqofrae0l  Running
+3        started  10.228.146.61   juju-c98704-3  ubuntu@24.04  arm64-noble-large-ps7-bkfqqofrae0l  Running
+4        started  10.228.146.39   juju-c98704-4  ubuntu@24.04  arm64-noble-large-ps7-bkfqqofrae0l  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-2: 03:53:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:53:20 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:53:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:53:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:53:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:53:21 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:53:21 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:53:22 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:53:22 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 03:56:43 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:56:45 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:56:47 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:56:49 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 03:58:41 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 04:02:51 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

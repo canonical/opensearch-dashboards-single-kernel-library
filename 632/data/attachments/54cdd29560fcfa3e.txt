@@ -1,0 +1,133 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:59:52Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active       3  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   blocked      2  opensearch-dashboards                 0  no       OpenSearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+opensearch-dashboards/0*     blocked      idle       4        10.58.50.65     5601/tcp  OpenSearch connection is missing
+opensearch-dashboards/1      blocked      idle       5        10.58.50.197    5601/tcp  OpenSearch connection is missing
+opensearch/0                 active       idle       0        10.58.50.123    9200/tcp  
+opensearch/1                 maintenance  executing  1        10.58.50.226              (install) Installing OpenSearch...
+opensearch/2*                active       idle       2        10.58.50.14     9200/tcp  
+self-signed-certificates/0*  active       idle       3        10.58.50.20               
+
+Machine  State    Address       Inst id        Base          AZ                                  Message
+0        started  10.58.50.123  juju-4d13de-0  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+1        started  10.58.50.226  juju-4d13de-1  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+2        started  10.58.50.14   juju-4d13de-2  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+3        started  10.58.50.20   juju-4d13de-3  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+4        started  10.58.50.65   juju-4d13de-4  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+5        started  10.58.50.197  juju-4d13de-5  ubuntu@24.04  arm64-noble-large-ps7-fduw6slz52np  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-3: 03:44:23 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:44:23 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:44:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:44:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:44:36 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:44:36 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:44:45 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:44:45 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:44:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:44:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:44:46 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 03:44:46 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-dashboards-1: 03:45:32 ERROR unit.opensearch-dashboards/1.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/src/charm.py", line 33, in <module>
+    main(OpenSearchDashboardsVMCharm)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/main.py", line 39, in main
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 527, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 511, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 444, in _emit
+    self._emit_charm_event(self.dispatcher.event_name)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/_main.py", line 488, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 338, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 904, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/ops/framework.py", line 1032, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/events/opensearch_dashboards.py", line 99, in _on_install
+    self.cluster_manager.install_osd_server()
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/managers/cluster.py", line 50, in install_osd_server
+    self.workload.install()
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/tenacity/__init__.py", line 404, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/tenacity/__init__.py", line 550, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/tenacity/__init__.py", line 440, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/tenacity/__init__.py", line 462, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/tenacity/__init__.py", line 553, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/workload/vm.py", line 208, in install
+    dashboards = cache[self.SNAP_NAME]
+                 ~~~~~^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 1034, in __getitem__
+    snap = self._snap_map[snap_name] = self._load_info(snap_name)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 1083, in _load_info
+    info = self._snap_client.get_snap_information(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 983, in get_snap_information
+    return self._request("GET", "find", {"name": name})[0]  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 909, in _request
+    response = self._request_raw(method, path, query, headers, data)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 957, in _request_raw
+    response = self.opener.open(request, timeout=self.timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 515, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 532, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/var/lib/juju/agents/unit-opensearch-dashboards-1/charm/venv/lib/python3.12/site-packages/single_kernel_opensearch_dashboards/lib/charms/operator_libs_linux/v2/snap.py", line 839, in http_open
+    return self.do_open(
+           ^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/urllib/request.py", line 1348, in do_open
+    r = h.getresponse()
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 1457, in getresponse
+    response.begin()
+  File "/usr/lib/python3.12/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+unit-opensearch-dashboards-1: 03:45:33 ERROR juju.worker.uniter.operation hook "install" (via hook dispatching script: dispatch) failed: exit status 1
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

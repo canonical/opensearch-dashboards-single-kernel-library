@@ -1,0 +1,445 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-415
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-710
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-dashboards-65
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: waiting for machine
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: waiting for machine
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: waiting for machine
+  self-signed-certificates/0 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Installing OpenSearch...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Installing OpenSearch...
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] maintenance: Waiting for TLS to be fully configured...
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] waiting: Requesting lock on operation: start
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] waiting: Requesting lock on operation: start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: Executing restart operation
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: Executing restart operation
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: Executing restart operation
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] maintenance: starting...
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] maintenance: starting...
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/1 [idle] blocked: Opensearch connection is missing
+  opensearch-dashboards/2 [executing] maintenance: installing Opensearch Dashboards...
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:46:11Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active       3  opensearch                2/edge    415  no       
+opensearch-dashboards              blocked      3  opensearch-dashboards     2/stable   65  no       Opensearch connection is missing
+self-signed-certificates           active       1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload     Agent      Machine  Public address  Ports     Message
+opensearch-dashboards/0      blocked      idle       4        10.150.210.49   5601/tcp  Opensearch connection is missing
+opensearch-dashboards/1*     blocked      idle       5        10.150.210.251  5601/tcp  Opensearch connection is missing
+opensearch-dashboards/2      maintenance  executing  6        10.150.210.122            (install) installing Opensearch Dashboards...
+opensearch/0                 active       idle       0        10.150.210.180  9200/tcp  
+opensearch/1*                active       idle       1        10.150.210.172  9200/tcp  
+opensearch/2                 active       idle       2        10.150.210.232  9200/tcp  
+self-signed-certificates/0*  active       idle       3        10.150.210.51             
+
+Machine  State    Address         Inst id        Base          AZ                              Message
+0        started  10.150.210.180  juju-29e6b1-0  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+1        started  10.150.210.172  juju-29e6b1-1  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+2        started  10.150.210.232  juju-29e6b1-2  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+3        started  10.150.210.51   juju-29e6b1-3  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+4        started  10.150.210.49   juju-29e6b1-4  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+5        started  10.150.210.251  juju-29e6b1-5  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+6        started  10.150.210.122  juju-29e6b1-6  ubuntu@24.04  amd64-noble-large-w3zdafa4btdf  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-3: 02:21:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:21:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:21:28 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:21:28 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:21:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:21:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:21:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:21:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:21:40 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:21:40 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:21:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:21:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:21:49 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:21:49 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:27:05 ERROR unit.opensearch/0.juju-log certificates:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:05 ERROR unit.opensearch/2.juju-log certificates:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:08 ERROR unit.opensearch/0.juju-log certificates:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:08 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:11 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:11 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:14 ERROR unit.opensearch/0.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:14 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:17 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:17 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:20 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:20 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:23 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:23 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:26 ERROR unit.opensearch/2.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:26 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:30 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:27:30 ERROR unit.opensearch/0.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.180:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:33 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:36 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:39 ERROR unit.opensearch/2.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.150.210.232:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:27:43 ERROR unit.opensearch/2.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.150.210.232:9200 and alternative_hosts: ['10.150.210.180'] not reachable."
+unit-opensearch-dashboards-0: 02:29:54 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.150.210.49:5601/api/status
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:29:55 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:00 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:00 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbd76ae0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:05 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:05 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34ccfc2870>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:10 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:10 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbc637a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:15 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:16 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca09e0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:21 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:21 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca11f0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:26 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:26 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca1a00>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:31 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:31 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca2330>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:36 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:36 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbc63d10>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:41 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:41 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca1e50>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:46 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:46 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca1220>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:51 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:52 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca11f0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:30:57 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:30:57 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca06e0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:02 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:02 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca2990>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:07 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:07 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cce01520>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:12 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:12 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca07a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:17 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:17 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca0ec0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:22 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:22 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca1f40>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:27 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:28 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca2b40>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:31:33 ERROR unit.opensearch-dashboards/0.juju-log restart:6: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:31:33 ERROR unit.opensearch-dashboards/0.juju-log restart:6: Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b34cbca34d0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:10 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+503 Server Error: Service Unavailable for url: http://10.150.210.251:5601/api/status
+unit-opensearch-dashboards-1: 02:32:12 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320a10>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:17 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320350>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:22 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2321250>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:27 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2321400>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:32 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2321a00>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:37 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2321190>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:42 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320b30>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:47 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda23228a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:53 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda23222d0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:32:58 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda43e7dd0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:03 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2322de0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:08 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320620>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:13 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320d70>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:18 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda23207d0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:23 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2321ca0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:29 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2b3d700>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:34 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda23215b0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:39 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda23213a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-1: 02:33:44 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7eeda2320920>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7565da3ea810>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:35:24 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-1: 02:37:18 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7b7fc3c63bc0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:40:08 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:40:08 ERROR unit.opensearch-dashboards/0.juju-log Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7f9aa6def5c0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:40:09 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:40:09 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:40:09 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:40:09 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-1: 02:42:20 ERROR unit.opensearch-dashboards/1.juju-log Request GET to http://10.150.210.251:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.251', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x76e805a5b7a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:44:36 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:44:37 ERROR unit.opensearch-dashboards/0.juju-log Request GET to http://10.150.210.49:5601/api/status with payload: None failed. 
+HTTPConnectionPool(host='10.150.210.49', port=5601): Max retries exceeded with url: /api/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x72cc9cfc3b30>: Failed to establish a new connection: [Errno 111] Connection refused'))
+unit-opensearch-dashboards-0: 02:44:37 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:44:37 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:44:37 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-dashboards-0: 02:44:37 ERROR unit.opensearch-dashboards/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
