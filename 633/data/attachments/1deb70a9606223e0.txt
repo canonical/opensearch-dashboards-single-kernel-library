@@ -1,0 +1,114 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:181 Choose external provider
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:186 Completing the login flow on the external provider
+[32mINFO    [0m oauth_tools.external_idp:external_idp.py:214 Signing in to dex
+[32mINFO    [0m httpx2:_client.py:1085 HTTP Request: GET https://127.0.0.1:6443/api/v1/namespaces/dex/services/dex "HTTP/1.1 200 OK"
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model        Controller     Cloud/Region  Version  SLA          Timestamp
+testing-k8s  concierge-lxd  uk8s/default  3.6.29   unsupported  02:00:50Z
+
+App                                  Version  Status  Scale  Charm                                Channel        Rev  Address         Exposed  Message
+hydra                                v2.3.0   active      1  hydra                                latest/edge    339  10.152.183.212  no       
+identity-platform-login-ui-operator  0.21.2   active      1  identity-platform-login-ui-operator  latest/edge    146  10.152.183.60   no       
+kratos                               v1.3.1   active      1  kratos                               latest/edge    500  10.152.183.243  no       
+kratos-external-idp-integrator                active      1  kratos-external-idp-integrator       latest/edge    245  10.152.183.107  no       Provider is ready
+postgresql-k8s                       14.19    active      1  postgresql-k8s                       14/stable      960  10.152.183.49   no       
+self-signed-certificates                      active      1  self-signed-certificates             1/stable       588  10.152.183.201  no       
+traefik-admin                        v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.1      no       
+traefik-public                       v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.2      no       
+
+Unit                                    Workload  Agent  Address     Ports  Message
+hydra/0*                                active    idle   10.1.0.3           
+identity-platform-login-ui-operator/0*  active    idle   10.1.0.115         
+kratos-external-idp-integrator/0*       active    idle   10.1.0.101         Provider is ready
+kratos/0*                               active    idle   10.1.0.228         
+postgresql-k8s/0*                       active    idle   10.1.0.249         Primary
+self-signed-certificates/0*             active    idle   10.1.0.44          
+traefik-admin/0*                        active    idle   10.1.0.80          
+traefik-public/0*                       active    idle   10.1.0.55          
+
+Offer         Application               Charm                     Rev  Connected  Endpoint      Interface         Role
+certificates  self-signed-certificates  self-signed-certificates  588  2/2        certificates  tls-certificates  provider
+oauth         hydra                     hydra                     339  2/2        oauth         oauth             provider
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-kratos-0: 01:50:16 ERROR unit.kratos/0.juju-log Uncaught exception while in charm code:
+Traceback (most recent call last):
+  File "/var/lib/juju/agents/unit-kratos-0/charm/./src/charm.py", line 1340, in <module>
+    main(KratosCharm)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/__init__.py", line 343, in __call__
+    return _main.main(charm_class=charm_class, use_juju_for_storage=use_juju_for_storage)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/_main.py", line 543, in main
+    manager.run()
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/_main.py", line 529, in run
+    self._emit()
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/_main.py", line 518, in _emit
+    _emit_charm_event(self.charm, self.dispatcher.event_name, self._juju_context)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/_main.py", line 134, in _emit_charm_event
+    event_to_emit.emit(*args, **kwargs)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/framework.py", line 347, in emit
+    framework._emit(event)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/framework.py", line 857, in _emit
+    self._reemit(event_path)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/framework.py", line 947, in _reemit
+    custom_handler(event)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/./src/charm.py", line 899, in _on_pebble_ready
+    self._set_version()
+  File "/var/lib/juju/agents/unit-kratos-0/charm/./src/charm.py", line 694, in _set_version
+    version = self.kratos.get_version()
+  File "/var/lib/juju/agents/unit-kratos-0/charm/src/kratos.py", line 209, in get_version
+    stdout = self._run_cmd(cmd)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/src/kratos.py", line 228, in _run_cmd
+    process = self.container.exec(cmd, environment=environment, timeout=timeout)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/model.py", line 2996, in exec
+    return self._pebble.exec(
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/pebble.py", line 2900, in exec
+    resp = self._request('POST', '/v1/exec', body=body)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/pebble.py", line 2010, in _request
+    response = self._request_raw(method, path, query, headers, data)
+  File "/var/lib/juju/agents/unit-kratos-0/charm/venv/ops/pebble.py", line 2063, in _request_raw
+    raise ConnectionError(
+ops.pebble.ConnectionError: Could not connect to Pebble: socket not found at '/charm/containers/kratos/pebble.socket' (container restarted?)
+unit-kratos-0: 01:50:16 ERROR juju.worker.uniter pebble poll failed for container "kratos": failed to send pebble-ready event: terminated
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model testing-k8s...
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:00:50Z
+
+SAAS          Status  Store  URL
+certificates  active  local  admin/testing-k8s.certificates
+oauth         active  local  admin/testing-k8s.oauth
+
+App                    Version  Status  Scale  Charm                  Channel  Rev  Exposed  Message
+opensearch                      active      2  opensearch             2/edge   415  no       
+opensearch-dashboards  2.19.6   active      1  opensearch-dashboards             0  no       
+
+Unit                      Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*  active    idle   2        10.213.11.144   5601/tcp  
+opensearch/0*             active    idle   0        10.213.11.252   9200/tcp  
+opensearch/1              active    idle   1        10.213.11.95    9200/tcp  
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.213.11.252  juju-77249c-0  ubuntu@24.04  github-runner  Running
+1        started  10.213.11.95   juju-77249c-1  ubuntu@24.04  github-runner  Running
+2        started  10.213.11.144  juju-77249c-2  ubuntu@24.04  github-runner  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 01:51:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 01:51:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:51:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 01:51:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:51:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 01:51:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-dashboards-0: 01:59:11 ERROR unit.opensearch-dashboards/0.juju-log oauth:12: Can't delete secret for relation 6
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

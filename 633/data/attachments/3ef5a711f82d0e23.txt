@@ -1,0 +1,4 @@
+Device eth0 added to juju-4fe01e-3
+Device eth0 added to juju-4fe01e-4
+Device eth0 removed from juju-4fe01e-3
+Device eth0 removed from juju-4fe01e-4

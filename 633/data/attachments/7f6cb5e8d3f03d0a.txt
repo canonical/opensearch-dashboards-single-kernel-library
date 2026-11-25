@@ -1,0 +1,2 @@
+Device eth0 overridden for juju-4fe01e-4
+Device eth0 removed from juju-4fe01e-4

@@ -1,0 +1,48 @@
+[32mINFO    [0m integration.test_charm:test_charm.py:392 Breaking opensearch connection
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [executing] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/2 [executing] maintenance: Restarting OpenSearch Dashboards server
+[32mINFO    [0m integration.test_charm:test_charm.py:399 Waiting up to 600s for status OpenSearch connection is missing
+[32mINFO    [0m integration.test_charm:test_charm.py:419 Checking if Dashboards have become unavailable
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints port:5601 path: https: False
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints port:5601 path: https: False
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints port:5601 path: https: False
+[32mINFO    [0m integration.test_charm:test_charm.py:422 Restoring Opensearch connection
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m integration.test_charm:test_charm.py:435 Checking if Dashboards is available again
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601 with password kzjTST0hzAtypOd0FTFAyUZhyak5qQa0 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601 with password kzjTST0hzAtypOd0FTFAyUZhyak5qQa0 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601 with password kzjTST0hzAtypOd0FTFAyUZhyak5qQa0 and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.test_charm:test_charm.py:442 Adding a new index with shards allocated to a non-existent node to make cluster health red
+[32mINFO    [0m integration.test_charm:test_charm.py:466 Waiting up to 600s for OpenSearch service health to become red...
+[33mWARNING [0m integration.helpers:helpers.py:863 Expected APP message 'The OpenSearch service health is red' not found. Current app messages: ['Ingress relation missing', '', '', '', '', '', '']
+[33mWARNING [0m integration.helpers:helpers.py:863 Expected APP message 'The OpenSearch service health is red' not found. Current app messages: ['Ingress relation missing', '', '', '', '', '', '']

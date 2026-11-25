@@ -1,0 +1,411 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:425 Cutting all units from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:449 Cutting unit opensearch-dashboards/0 from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:449 Cutting unit opensearch-dashboards/1 from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:458 Waiting until units ['opensearch-dashboards/0', 'opensearch-dashboards/1'] are not reachable
+[31m[1mERROR   [0m tests.integration.ha.helpers:helpers.py:56 timed out
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:465 Waiting until unit ['opensearch-dashboards/0', 'opensearch-dashboards/1'] are 'lost'
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:475 Checking lack of Dashboard access...
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.32:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.32:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.32:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.32:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.32:22]
+[32mINFO    [0m tests.integration.helpers:helpers.py:537 Couldn't retrieve host certificate for unit <Unit entity_id="opensearch-dashboards/0">
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.227:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.227:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.227:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.227:22]
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:585 SCP failed: ERROR cannot connect to any address: [10.37.175.227:22]
+[32mINFO    [0m tests.integration.helpers:helpers.py:537 Couldn't retrieve host certificate for unit <Unit entity_id="opensearch-dashboards/1">
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:478 Restoring network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:492 Waiting until units ['opensearch-dashboards/0', 'opensearch-dashboards/1'] are reachable again
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:513 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.37.175.32:5601 with password aT597Z7iLPGsQTch1hL9nL9yDAVdcsBg and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.37.175.32:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.37.175.32:5601/auth/login
+[33mWARNING [0m tests.integration.helpers:helpers.py:784 Couldn't retrieve IP address via network-get: None
+[32mINFO    [0m tests.integration.helpers:helpers.py:795 Couldn't retrieve interface info either: None
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:507 No hostname provided for opensearch-dashboards/1, can't check connection.
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.37.175.32:5601 with password aT597Z7iLPGsQTch1hL9nL9yDAVdcsBg and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.37.175.32:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.37.175.32:5601/auth/login
+[33mWARNING [0m tests.integration.helpers:helpers.py:784 Couldn't retrieve IP address via network-get: None
+[32mINFO    [0m tests.integration.helpers:helpers.py:793 Could not retrieve bind address. Interface info is:
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+21: eth0@if22: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 00:16:3e:66:3b:b3 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.37.175.227/24 metric 100 brd 10.37.175.255 scope global dynamic eth0
+       valid_lft 2480sec preferred_lft 2480sec
+    inet6 fe80::216:3eff:fe66:3bb3/64 scope link 
+       valid_lft forever preferred_lft forever
+
+[31m[1mERROR   [0m tests.integration.helpers:helpers.py:507 No hostname provided for opensearch-dashboards/1, can't check connection.
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.37.175.32:5601 with password aT597Z7iLPGsQTch1hL9nL9yDAVdcsBg and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.37.175.32:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.37.175.32:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.37.175.227:5601 with password aT597Z7iLPGsQTch1hL9nL9yDAVdcsBg and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to https://10.37.175.227:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.37.175.227:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:57:54Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      2  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   active      2  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*     active    idle   3        10.37.175.32    5601/tcp  
+opensearch-dashboards/1      active    idle   4        10.37.175.227   5601/tcp  
+opensearch/0*                active    idle   0        10.37.175.79    9200/tcp  
+opensearch/1                 active    idle   1        10.37.175.100   9200/tcp  
+self-signed-certificates/0*  active    idle   2        10.37.175.181             
+
+Machine  State    Address        Inst id        Base          AZ                                  Message
+0        started  10.37.175.79   juju-c88d0d-0  ubuntu@24.04  arm64-noble-large-ps7-ta3gb96efil9  Running
+1        started  10.37.175.100  juju-c88d0d-1  ubuntu@24.04  arm64-noble-large-ps7-ta3gb96efil9  Running
+2        started  10.37.175.181  juju-c88d0d-2  ubuntu@24.04  arm64-noble-large-ps7-ta3gb96efil9  Running
+3        started  10.37.175.32   juju-c88d0d-3  ubuntu@24.04  arm64-noble-large-ps7-ta3gb96efil9  Running
+4        started  10.37.175.227  juju-c88d0d-4  ubuntu@24.04  arm64-noble-large-ps7-ta3gb96efil9  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 03:06:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 03:06:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:06:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 03:06:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:06:18 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 03:06:18 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:06:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:06:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:06:44 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 03:06:44 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 03:15:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:15:43 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.222:55850->10.37.175.243:17070: read: connection timed out
+machine-3: 03:15:46 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:15:50 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:15:55 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:00 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:07 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:15 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:25 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:35 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:16:48 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:17:04 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:17:22 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:17:46 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:22 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.worker.dependency "migration-inactive-flag" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.108:39216->10.37.175.243:17070: read: no route to host
+machine-4: 03:25:57 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:25:57 ERROR juju.worker.dependency "valid-credential-flag" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.108:39216->10.37.175.243:17070: read: no route to host
+machine-4: 03:25:57 ERROR juju.worker.dependency "migration-minion" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.108:39216->10.37.175.243:17070: read: no route to host
+machine-4: 03:25:57 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.108:39216->10.37.175.243:17070: read: no route to host
+machine-4: 03:26:03 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:26:10 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:26:17 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:26:25 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:26:35 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:26:44 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:26:54 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:27:07 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:27:19 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:27:36 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:27:57 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.196:46110->10.37.175.243:17070: read: connection timed out
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:18 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.108:37062->10.37.175.243:17070: read: connection timed out
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:29:20 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:29:21 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:23 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:25 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:27 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:30 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:31 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:35 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:36 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:41 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:43 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:48 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:50 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:29:57 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:29:59 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:30:08 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:30:10 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:30:20 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:30:23 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:30:37 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:30:38 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:30:56 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:30:57 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:31:20 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:31:21 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:31:46 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:31:48 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:32:16 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:32:21 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:32:58 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:33:01 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:33:43 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:33:49 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:34:40 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:34:42 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:35:49 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:35:52 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:37:11 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:37:14 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-3: 03:38:42 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:38:42 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: network is unreachable
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+unit-opensearch-dashboards-1: 03:45:43 ERROR juju.worker.dependency "migration-minion" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.227:37824->10.37.175.243:17070: read: connection timed out
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: codec.ReadHeader error: receiving message: read tcp 10.37.175.227:37808->10.37.175.243:17070: read: connection timed out
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:43 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-4: 03:45:48 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-4: 03:45:55 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:56 ERROR juju.api.watcher error trying to stop watcher: connection is shutdown before send: connection is shut down
+machine-3: 03:45:59 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:45:59 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:05 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:46:06 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:11 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:46:12 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:17 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:46:20 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:24 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:46:32 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:33 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-3: 03:46:45 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:46:47 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:46:59 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:47:04 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:47:14 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:47:22 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:47:32 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:47:43 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:47:52 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:48:10 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:48:19 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:48:38 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:48:50 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:49:13 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:49:25 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: unable to connect to API: dial tcp 10.37.175.243:17070: connect: no route to host
+machine-4: 03:49:55 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:50:08 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:50:44 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:51:01 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:51:39 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:52:03 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:52:51 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:53:13 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:54:07 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+machine-3: 03:54:38 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-3" cannot open api: api connection dial timed out
+machine-4: 03:55:46 ERROR juju.worker.dependency "api-caller" manifold worker returned unexpected error: [ff410c] "machine-4" cannot open api: api connection dial timed out
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
