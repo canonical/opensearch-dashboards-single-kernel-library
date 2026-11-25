@@ -6,12 +6,11 @@
 
 import logging
 import subprocess
-from functools import cached_property
 from platform import machine
 
-from charmlibs import pathops
+from charmlibs import pathops, snap
 from charmlibs.pathops import PathProtocol
-from tenacity import Retrying, retry, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type
 from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
@@ -26,7 +25,6 @@ from single_kernel_opensearch_dashboards.common.literals import (
     SNAP_DATA,
     OpenSearchDashboardsPaths,
 )
-from single_kernel_opensearch_dashboards.lib.charms.operator_libs_linux.v2 import snap
 from single_kernel_opensearch_dashboards.workload.base import (
     Paths,
     WorkloadBase,
@@ -87,17 +85,7 @@ class VMWorkload(WorkloadBase):
     SNAP_NAME = "opensearch-dashboards"
     SNAP_APP_SERVICE = "opensearch-dashboards-daemon"
     SNAP_EXPORTER_SERVICE = "exporter-daemon"
-
-    @cached_property
-    def dashboards(self) -> snap.Snap:
-        """Loads the snap from the cache, retrying on SnapError."""
-        for attempt in Retrying(stop=stop_after_attempt(12), wait=wait_fixed(10), reraise=True):
-            with attempt:
-                dashboards_snap = snap.SnapCache()[self.SNAP_NAME]
-        logger.debug(
-            f"Snap {self.SNAP_NAME} fetched after {attempt.retry_state.attempt_number - 1} retries."
-        )
-        return dashboards_snap
+    SNAP_APP_UNIT = f"snap.{SNAP_NAME}.{SNAP_APP_SERVICE}.service"
 
     @property
     @override
@@ -113,8 +101,8 @@ class VMWorkload(WorkloadBase):
     def stop(self) -> None:
         """Stops the OpenSearch Dashboards and exporter daemon services."""
         try:
-            self.dashboards.stop(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
-        except snap.SnapError as e:
+            snap.stop(self.SNAP_NAME, [self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
+        except snap.Error as e:
             logger.exception(str(e))
             raise
 
@@ -125,7 +113,7 @@ class VMWorkload(WorkloadBase):
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_any(
             retry_if_not_result(lambda result: True if result else False),
-            retry_if_exception(snap.SnapError),
+            retry_if_exception(snap.Error),
         ),
     )
     def restart(self) -> bool:
@@ -138,8 +126,8 @@ class VMWorkload(WorkloadBase):
             bool: True if the services were successfully restarted and are alive, False otherwise.
         """
         try:
-            self.dashboards.restart(services=[self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
-        except snap.SnapError as e:
+            snap.restart(self.SNAP_NAME, [self.SNAP_APP_SERVICE, self.SNAP_EXPORTER_SERVICE])
+        except snap.Error as e:
             logger.exception(e)
             raise
         return self.healthy()
@@ -153,8 +141,8 @@ class VMWorkload(WorkloadBase):
             value (Any): The value to assign to the configuration key.
         """
         try:
-            self.dashboards.set(config={key: value})
-        except snap.SnapError as e:
+            snap.set(self.SNAP_NAME, {key: value})
+        except snap.Error as e:
             logger.exception(str(e))
             raise
 
@@ -182,10 +170,12 @@ class VMWorkload(WorkloadBase):
     @override
     def running(self) -> bool:
         """Checks if the OpenSearch Dashboards snap service is active."""
-        try:
-            return bool(self.dashboards.services[self.SNAP_APP_SERVICE]["active"])
-        except KeyError:
-            return False
+        return (
+            subprocess.run(
+                ["systemctl", "is-active", "--quiet", self.SNAP_APP_UNIT], check=False
+            ).returncode
+            == 0
+        )
 
     @override
     @retry(
@@ -204,15 +194,12 @@ class VMWorkload(WorkloadBase):
             OSDInstallError: If the snap fails to install after 3 attempts.
         """
         try:
-            cache = snap.SnapCache()
-            dashboards = cache[self.SNAP_NAME]
             revision = OPENSEARCH_DASHBOARDS_SNAP_REVISIONS[machine()]
-            dashboards.ensure(snap.SnapState.Present, revision=revision)
+            snap.ensure_installed(self.SNAP_NAME, revision=revision)
 
-            self.dashboards = dashboards
             self.paths.certificate_dir.mkdir(exist_ok=True)
-            self.dashboards.hold()
-        except snap.SnapError as e:
+            snap.hold(self.SNAP_NAME)
+        except snap.Error as e:
             logger.error(str(e))
             raise OSDInstallError(
                 "failed to install the Opensearch Dashboards snap. check logs for more details"

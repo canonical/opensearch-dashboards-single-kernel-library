@@ -398,6 +398,18 @@ files = [
 ops = ">=2.19,<4"
 
 [[package]]
+name = "charmlibs-snap"
+version = "2.2.0"
+description = "The charmlibs.snap package."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "charmlibs_snap-2.2.0-py3-none-any.whl", hash = "sha256:d88b171a4974a9a0b006f971d640d29917efea2e10d115a6e9f689be7d97efde"},
+    {file = "charmlibs_snap-2.2.0.tar.gz", hash = "sha256:b97dc8737f992bfbaf8f30df0cc0a47cb42c5b9887ecb6c29c0eb8e0789e367b"},
+]
+
+[[package]]
 name = "charset-normalizer"
 version = "3.5.2"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
@@ -3967,4 +3979,4 @@ h11 = ">=0.16.0,<1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "0610ad423c6eb461d8b4093933dfc06421a658a7a18e37c9cff7f2d1db3f9abb"
+content-hash = "811e20c519aa73ecc8ea90d9e1138ecae6e7a6738ff96fb4275ee3cfd9cd0d71"
