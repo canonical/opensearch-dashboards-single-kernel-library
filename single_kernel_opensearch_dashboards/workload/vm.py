@@ -11,7 +11,7 @@ from platform import machine
 from charmlibs import pathops, snap
 from charmlibs.pathops import PathProtocol
 from tenacity import retry, retry_if_exception_type
-from tenacity.retry import retry_any, retry_if_exception, retry_if_not_result
+from tenacity.retry import retry_any, retry_if_not_result
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 from typing_extensions import override
@@ -113,7 +113,7 @@ class VMWorkload(WorkloadBase):
         retry_error_callback=lambda state: state.outcome.result(),  # type: ignore
         retry=retry_any(
             retry_if_not_result(lambda result: True if result else False),
-            retry_if_exception(snap.Error),
+            retry_if_exception_type(snap.Error),
         ),
     )
     def restart(self) -> bool:
