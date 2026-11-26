@@ -1,0 +1,12 @@
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601 with password CgWey0O3p2saQ37pcCq8LOMjnRSvsAUO and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601 with password CgWey0O3p2saQ37pcCq8LOMjnRSvsAUO and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601 with password CgWey0O3p2saQ37pcCq8LOMjnRSvsAUO and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to http://opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.167 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.49 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.1.0.134 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>

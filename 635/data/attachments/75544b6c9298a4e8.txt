@@ -1,0 +1,466 @@
+[32mINFO    [0m integration.test_charm:test_charm.py:496 Destroying and restoring the Opensearch cluster
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:arm64/noble/opensearch-k8s-62
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: installing agent
+  opensearch/1 [allocating] waiting: installing agent
+  opensearch/2 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: installing agent
+  opensearch/1 [allocating] waiting: installing agent
+  opensearch/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] waiting: agent initialising
+  opensearch/1 [idle] waiting: agent initialising
+  opensearch/2 [idle] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [idle] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] waiting: Requesting lock on operation: start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] maintenance: Initializing the security index...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [idle] waiting: Requesting lock on operation: start
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [idle] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [executing] waiting: The shards opensearch-0.038/.plugins-ml-config,.opendistro_security need to complete building
+  opensearch/2 [executing] waiting: The shards opensearch-0.038/.opensearch-sap-log-types-config need to complete building
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] maintenance: New index .opensearch-dashboards requested on client relation 22
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m integration.test_charm:test_charm.py:528 Checking if Dashboards is available again
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password ggyf5tqriklTFDplR600gPjgHfzQR5Wi and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password ggyf5tqriklTFDplR600gPjgHfzQR5Wi and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.43.45.0:443 with password ggyf5tqriklTFDplR600gPjgHfzQR5Wi and path: /testing-opensearch-dashboards-k8s
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.43.45.0:443/testing-opensearch-dashboards-k8s/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  02:52:06Z
+
+App                        Version  Status  Scale  Charm                      Channel        Rev  Address         Exposed  Message
+application                         active      1  application                                 0  10.152.183.121  no       
+opensearch                          active      3  opensearch-k8s             2/edge          62  10.152.183.196  no       
+opensearch-dashboards-k8s  2.19.6   active      3  opensearch-dashboards-k8s                   0  10.152.183.74   no       
+self-signed-certificates            active      1  self-signed-certificates   1/stable       585  10.152.183.146  no       
+traefik-k8s                2.11.57  active      1  traefik-k8s                latest/stable  508  10.152.183.56   no       Serving at https://10.43.45.0
+
+Unit                          Workload  Agent  Address     Ports  Message
+application/0*                active    idle   10.1.0.20          
+opensearch-dashboards-k8s/0   active    idle   10.1.0.17          
+opensearch-dashboards-k8s/1   active    idle   10.1.0.136         
+opensearch-dashboards-k8s/2*  active    idle   10.1.0.148         
+opensearch/0                  active    idle   10.1.0.237         
+opensearch/1                  active    idle   10.1.0.161         
+opensearch/2*                 active    idle   10.1.0.217         
+self-signed-certificates/0*   active    idle   10.1.0.184         
+traefik-k8s/0*                active    idle   10.1.0.231         Serving at https://10.43.45.0
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-dashboards-k8s-2: 01:59:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-1: 01:59:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 01:59:30 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 01:59:34 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 01:59:34 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-2: 01:59:36 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:01:09 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:10 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:12 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:13 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:14 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:15 ERROR unit.opensearch/1.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:16 ERROR unit.opensearch/2.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:18 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:18 ERROR unit.opensearch/1.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:19 ERROR unit.opensearch/2.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:21 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:21 ERROR unit.opensearch/0.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:22 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:24 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:25 ERROR unit.opensearch/0.juju-log certificates:4: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:26 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:28 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:29 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:29 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:31 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:32 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:33 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:34 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:36 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:37 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:37 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:38 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:40 ERROR unit.opensearch/1.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:41 ERROR unit.opensearch/0.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:41 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:43 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:44 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:44 ERROR unit.opensearch/2.juju-log node-lock-fallback:3: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:46 ERROR unit.opensearch/1.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:47 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:48 ERROR unit.opensearch/0.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:49 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:50 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:52 ERROR unit.opensearch/0.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:52 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:54 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:55 ERROR unit.opensearch/1.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:01:56 ERROR unit.opensearch/0.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:01:57 ERROR unit.opensearch/2.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:01:59 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:00 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:00 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:02:02 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:03 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:04 ERROR unit.opensearch/0.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:02:05 ERROR unit.opensearch/1.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:06 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:07 ERROR unit.opensearch/0.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:02:08 ERROR unit.opensearch/1.juju-log opensearch-peers:0: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:09 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:02:11 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:12 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:12 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:02:14 ERROR unit.opensearch/1.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:02:15 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:15 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:18 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:22 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:25 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:29 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:02:32 ERROR unit.opensearch/0.juju-log upgrade-version-a:2: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:05:03 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:05:03 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:05:04 ERROR unit.opensearch/1.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:05:04 ERROR unit.opensearch/0.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:05:07 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:05:08 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:05:08 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:05:09 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:05:11 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:05:11 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:05:12 ERROR unit.opensearch/2.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:05:15 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-2: 02:05:15 ERROR unit.opensearch/2.juju-log An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-1: 02:05:18 ERROR unit.opensearch/1.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-opensearch-0: 02:05:18 ERROR unit.opensearch/0.juju-log status-peers:1: An error occurred while checking profile requirements: Command failed: sysctl
+stdout=
+stderr=Container not connected
+unit-traefik-k8s-0: 02:13:51 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:51 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:53 ERROR unit.traefik-k8s/0.juju-log peers:11: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:53 ERROR unit.traefik-k8s/0.juju-log peers:11: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:54 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:54 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:56 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:13:56 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:24:37 ERROR unit.opensearch-dashboards-k8s/0.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+204054C1FCF90000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+204054C1FCF90000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-1: 02:24:37 ERROR unit.opensearch-dashboards-k8s/1.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+2080B5EDB2F80000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+2080B5EDB2F80000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-2: 02:24:58 ERROR unit.opensearch-dashboards-k8s/2.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+2020AD0DC0EB0000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+2020AD0DC0EB0000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-0: 02:28:46 ERROR unit.opensearch-dashboards-k8s/0.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+2030073D4DFA0000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+2030073D4DFA0000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-1: 02:28:46 ERROR unit.opensearch-dashboards-k8s/1.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+20207774D2F30000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+20207774D2F30000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-2: 02:29:04 ERROR unit.opensearch-dashboards-k8s/2.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+203097164CF50000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+203097164CF50000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+controller-0: 02:38:48 ERROR juju.worker.caasapplicationprovisioner.runner exited "opensearch": building app "opensearch" config: getting OCI image resources: unable to fetch OCI image resources for opensearch: application "opensearch" dying or dead
+unit-opensearch-2: 02:38:51 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:38:51 ERROR unit.opensearch/1.juju-log status-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:38:56 ERROR unit.opensearch/0.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:39:15 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:39:16 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:20 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:39:33 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:33 ERROR unit.opensearch/0.juju-log Failed to add voting exclusion: opensearch-0.038.
+unit-opensearch-0: 02:39:36 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-2.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:39:37 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:37 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:39:37 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 02:39:38 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-2.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-2: 02:39:39 ERROR unit.opensearch/2.juju-log Failed to delete voting exclusions {'opensearch-2.038'}: HTTP error self.response_code=None
+self.response_text='HTTPSConnectionPool(host=\'opensearch-0.opensearch-endpoints.testing.svc.cluster.local\', port=9200): Max retries exceeded with url: /_cluster/voting_config_exclusions?node_names=opensearch-0.038,opensearch-1.038&timeout=1m (Caused by NewConnectionError("HTTPSConnection(host=\'opensearch-0.opensearch-endpoints.testing.svc.cluster.local\', port=9200): Failed to establish a new connection: [Errno 111] Connection refused"))'
+unit-opensearch-2: 02:39:39 ERROR unit.opensearch/2.juju-log Failed to delete voting exclusion: opensearch-2.038.
+unit-opensearch-2: 02:39:39 ERROR unit.opensearch/2.juju-log Failed to delete shard allocation exclusion: opensearch-2.038.
+unit-opensearch-2: 02:39:40 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:39:41 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-2.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:39:41 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:42 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:39:42 ERROR unit.opensearch/1.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-0: 02:39:43 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:44 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-2: 02:39:44 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:39:45 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-2.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-1.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:39:46 ERROR unit.opensearch/1.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:39:46 ERROR unit.opensearch/1.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:39:47 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-2: 02:39:48 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:48 ERROR unit.opensearch/0.juju-log opensearch-peers:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:39:49 ERROR unit.opensearch/0.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-0.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-2.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-2: 02:39:49 ERROR unit.opensearch/2.juju-log upgrade-version-a:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-2.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-1.opensearch-endpoints.testing.svc.cluster.local', 'opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-2: 02:42:12 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:42:13 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:42:13 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:43:44 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:43:44 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:43:47 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:43:47 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:43:51 ERROR unit.opensearch/1.juju-log certificates:21: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:43:51 ERROR unit.opensearch/0.juju-log certificates:21: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

@@ -1,0 +1,92 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Waiting for TLS to be fully configured
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Executing restart operation
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [idle] maintenance: updating ingress configurations
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] maintenance: Waiting for TLS to be fully configured
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [executing] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/1 [executing] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  opensearch-dashboards-k8s/1 [idle] active: 
+  opensearch-dashboards-k8s/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0

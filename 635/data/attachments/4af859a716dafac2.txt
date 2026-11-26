@@ -1,0 +1,211 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:806 Connecting to existing model concierge-lxd:testing on unspecified cloud
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SecretsRevoker received from the controller
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/opensearch-k8s-64
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:amd64/noble/self-signed-certificates-710
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: installing agent
+  opensearch/1 [allocating] waiting: installing agent
+  opensearch/2 [allocating] waiting: installing agent
+  self-signed-certificates/0 [allocating] waiting: installing agent
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+  self-signed-certificates/0 [idle] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [allocating] waiting: agent initialising
+  opensearch/1 [allocating] waiting: agent initialising
+  opensearch/2 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/1 [executing] maintenance: Waiting for TLS to be fully configured...
+  opensearch/2 [executing] maintenance: Waiting for TLS to be fully configured...
+  self-signed-certificates/0 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [idle] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [idle] maintenance: Initializing the security index...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] waiting: Waiting for OpenSearch to start...
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/1 [idle] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/2 [idle] blocked: OpenSearch connection is missing. Run `status-detail`: 2 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards-k8s/1 [executing] waiting: Awaiting restart operation
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:application-0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:126 Old Workload Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:127 Old Dashboards Version: {'opensearch-dashboards-k8s/0': '2.19.5', 'opensearch-dashboards-k8s/1': '2.19.5', 'opensearch-dashboards-k8s/2': '2.19.5'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:130 Old Charm URL: ch:amd64/opensearch-dashboards-k8s-12
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [executing] maintenance: 
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing. Run `status-detail`: 1 action required; 1 additional statuses.
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] waiting: Awaiting restart operation
+  opensearch-dashboards-k8s/1 [executing] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [executing] maintenance: Executing restart operation
+  opensearch-dashboards-k8s/1 [executing] waiting: Awaiting restart operation
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [executing] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/1 [idle] blocked: Ingress relation missing
+  opensearch-dashboards-k8s/2 [idle] blocked: Ingress relation missing
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601 with password KqxnAxEe0HfjKvppHsEq0R76SBKxvr4k and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to https://opensearch-dashboards-k8s-0.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601 with password KqxnAxEe0HfjKvppHsEq0R76SBKxvr4k and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to https://opensearch-dashboards-k8s-1.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601 with password KqxnAxEe0HfjKvppHsEq0R76SBKxvr4k and path: 
+[32mINFO    [0m integration.helpers:helpers.py:380 Routing request through application to https://opensearch-dashboards-k8s-2.opensearch-dashboards-k8s-endpoints:5601/auth/login
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:149 New Workload Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:150 New Dashboards Version: {'opensearch-dashboards-k8s/0': '2.19.6', 'opensearch-dashboards-k8s/1': '2.19.6', 'opensearch-dashboards-k8s/2': '2.19.6'}
+[32mINFO    [0m integration.test_upgrade:test_upgrade.py:153 New Charm URL: local:noble/opensearch-dashboards-k8s-0
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  02:49:18Z
+
+App                        Version  Status   Scale  Charm                      Channel   Rev  Address         Exposed  Message
+application                         active       1  application                            0  10.152.183.96   no       
+opensearch                          active       3  opensearch-k8s             2/edge     64  10.152.183.163  no       
+opensearch-dashboards-k8s  2.19.6   blocked      3  opensearch-dashboards-k8s              0  10.152.183.206  no       Ingress relation missing
+self-signed-certificates            active       1  self-signed-certificates   1/stable  710  10.152.183.164  no       
+
+Unit                          Workload  Agent  Address     Ports  Message
+application/0*                active    idle   10.1.0.73          
+opensearch-dashboards-k8s/0   blocked   idle   10.1.0.104         Ingress relation missing
+opensearch-dashboards-k8s/1   blocked   idle   10.1.0.187         Ingress relation missing
+opensearch-dashboards-k8s/2*  blocked   idle   10.1.0.147         Ingress relation missing
+opensearch/0                  active    idle   10.1.0.191         
+opensearch/1                  active    idle   10.1.0.93          
+opensearch/2*                 active    idle   10.1.0.140         
+self-signed-certificates/0*   active    idle   10.1.0.1           
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-dashboards-k8s-1: 02:34:29 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-1: 02:34:29 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-2: 02:34:29 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-2: 02:34:29 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:34:29 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:34:33 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:35:51 ERROR juju.worker.uniter container "opensearch": WaitNotices error, waiting 1s: only admins may use the "users" filter
+unit-opensearch-dashboards-k8s-2: 02:35:52 ERROR juju.worker.uniter container "opensearch-dashboards": WaitNotices error, waiting 1s: only admins may use the "users" filter
+unit-opensearch-0: 02:36:10 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:36:10 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:36:13 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:36:13 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:36:17 ERROR unit.opensearch/0.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:36:17 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:37:47 ERROR unit.opensearch/1.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:37:51 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:37:55 ERROR unit.opensearch/1.juju-log opensearch-peers:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:37:59 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:38:03 ERROR unit.opensearch/1.juju-log node-lock-fallback:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-1: 02:38:07 ERROR unit.opensearch/1.juju-log status-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host opensearch-1.opensearch-endpoints.testing.svc.cluster.local:9200 and alternative_hosts: ['opensearch-0.opensearch-endpoints.testing.svc.cluster.local'] not reachable."
+unit-opensearch-dashboards-k8s-2: 02:45:08 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-2: 02:45:55 ERROR unit.opensearch-dashboards-k8s/2.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+800B7A84B87F0000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+800B7A84B87F0000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+unit-opensearch-dashboards-k8s-1: 02:46:06 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:46:13 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:46:28 ERROR unit.opensearch-dashboards-k8s/0.juju-log Checking certificate failed: Could not open file or uri for loading certificate from /etc/opensearch-dashboards/certificates/server.pem
+803BED85E5780000:error:16000069:STORE routines:ossl_store_get0_loader_int:unregistered scheme:../crypto/store/store_register.c:237:scheme=file
+803BED85E5780000:error:80000002:system library:file_open:No such file or directory:../providers/implementations/storemgmt/file_store.c:267:calling stat(/etc/opensearch-dashboards/certificates/server.pem)
+Unable to load certificate
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

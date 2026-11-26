@@ -1,0 +1,197 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGSTOP opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.105.155.171:5601 with password tWkseVTUDFopUfySO2ZQZHSTM5EpMpsM and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.105.155.171:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.105.155.171:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.105.155.143:5601 with password tWkseVTUDFopUfySO2ZQZHSTM5EpMpsM and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.105.155.143:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.105.155.143:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:42:18Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      3  opensearch                2/edge    415  no       
+opensearch-dashboards     2.19.6   active      2  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0      active    idle   4        10.105.155.171  5601/tcp  
+opensearch-dashboards/1*     active    idle   5        10.105.155.143  5601/tcp  
+opensearch/0*                active    idle   0        10.105.155.128  9200/tcp  
+opensearch/1                 active    idle   1        10.105.155.68   9200/tcp  
+opensearch/2                 active    idle   2        10.105.155.178  9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.105.155.169            
+
+Machine  State    Address         Inst id        Base          AZ                              Message
+0        started  10.105.155.128  juju-0a642b-0  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+1        started  10.105.155.68   juju-0a642b-1  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+2        started  10.105.155.178  juju-0a642b-2  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+3        started  10.105.155.169  juju-0a642b-3  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+4        started  10.105.155.171  juju-0a642b-4  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+5        started  10.105.155.143  juju-0a642b-5  ubuntu@24.04  amd64-noble-large-d9jg0jpfcmp4  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:00:14 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:00:14 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:00:24 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:00:24 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:00:27 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:00:27 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:00:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:00:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:00:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:00:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:00:39 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:00:39 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:03:01 ERROR unit.opensearch/0.juju-log Failed to install/upgrade opensearch. 
+Snap: 'opensearch' -- command ['snap', 'install', 'opensearch', '--revision="193"'] failed!
+Stdout:
+2026-11-26T02:01:07Z INFO Waiting for automatic snapd restart...
+2026-11-26T02:01:08Z INFO Waiting for automatic snapd restart...
+2026-11-26T02:01:09Z INFO Waiting for automatic snapd restart...
+2026-11-26T02:01:10Z INFO Waiting for automatic snapd restart...
+
+Stderr:
+error: cannot perform the following tasks:
+- Download snap "opensearch" (193) from channel "stable" (Get "https://canonical-bos01.cdn.snapcraftcontent.com/download-origin/canonical-lgw01/5jhXwLx2kfI42wm6InusEO3ZryZyh6Eq_193.snap?interactive=1&token=1795672800_a8a82027e7bc7dd948609d262bf45239e7d0b0a1": net/http: timeout awaiting response headers)
+
+Latest logs:
+Nov 26 02:01:10 juju-0a642b-0 systemd[1]: Starting snapd.service - Snap Daemon...
+Nov 26 02:01:12 juju-0a642b-0 snapd[9867]: seclog.go:107: security logger enabled
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: overlord.go:316: Acquiring state lock file
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: overlord.go:321: Acquired state lock file
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: patch.go:64: Patching system state level 6 to sublevel 1...
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: patch.go:64: Patching system state level 6 to sublevel 2...
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: patch.go:64: Patching system state level 6 to sublevel 3...
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: daemon.go:421: started snapd/2.78 (series 16; classic) ubuntu/24.04 (amd64) linux/6.8.0-151-generic.
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: daemon.go:515: adjusting startup timeout by 35s (pessimistic estimate of 30s plus 5s per snap)
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: backends.go:70: AppArmor status: apparmor is enabled and all features are available (using snapd provided apparmor_parser)
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: backend.go:143: delegating reload of snap-confine profiles to system snap security profiles setup
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: backend.go:287: reloading profiles of snap-confine provided by the system snap
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: standby.go:95: will consider standby after: 5s
+Nov 26 02:01:13 juju-0a642b-0 systemd[1]: Started snapd.service - Snap Daemon.
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: snapmgr.go:1675: performing periodic snap downloads cache cleanup
+Nov 26 02:01:13 juju-0a642b-0 snapd[9867]: cache.go:320: removed 0 entries/    0 from downloads cache
+Nov 26 02:01:14 juju-0a642b-0 snapd[9867]: devicemgr.go:1363: skipping boot ok check since it already ran for boot-id "f93ca189-a618-4a70-8c5d-0ed625c6c59a"
+Nov 26 02:01:14 juju-0a642b-0 snapd[9867]: backend.go:287: reloading profiles of snap-confine provided by the system snap
+Nov 26 02:01:22 juju-0a642b-0 snapd[9867]: cache.go:320: removed 0 entries/    0 from downloads cache
+Nov 26 02:03:01 juju-0a642b-0 snapd[9867]: taskrunner.go:304: Change 4 task (Download snap "opensearch" (193) from channel "stable") failed: Get "https://canonical-bos01.cdn.snapcraftcontent.com/download-origin/canonical-lgw01/5jhXwLx2kfI42wm6InusEO3ZryZyh6Eq_193.snap?interactive=1&token=1795672800_a8a82027e7bc7dd948609d262bf45239e7d0b0a1": net/http: timeout awaiting response headers
+
+unit-opensearch-1: 02:04:30 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:31 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:32 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:33 ERROR unit.opensearch/2.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:35 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:36 ERROR unit.opensearch/2.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:37 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:38 ERROR unit.opensearch/2.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:40 ERROR unit.opensearch/1.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:40 ERROR unit.opensearch/2.juju-log certificates:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:43 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:43 ERROR unit.opensearch/2.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:45 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:45 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:48 ERROR unit.opensearch/1.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:48 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:50 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:50 ERROR unit.opensearch/2.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:53 ERROR unit.opensearch/1.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:53 ERROR unit.opensearch/2.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:55 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:55 ERROR unit.opensearch/2.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:04:57 ERROR unit.opensearch/1.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:04:57 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:00 ERROR unit.opensearch/1.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:00 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:21 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:24 ERROR unit.opensearch/2.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:51 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:51 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:53 ERROR unit.opensearch/1.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:53 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:56 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:56 ERROR unit.opensearch/2.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:05:58 ERROR unit.opensearch/1.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:05:58 ERROR unit.opensearch/2.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:06:00 ERROR unit.opensearch/1.juju-log opensearch-peers:1: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:06:00 ERROR unit.opensearch/2.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:06:03 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:06:03 ERROR unit.opensearch/2.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-2: 02:06:05 ERROR unit.opensearch/2.juju-log upgrade-version-a:3: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:06:05 ERROR unit.opensearch/1.juju-log status-peers:2: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-dashboards-1: 02:12:24 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-1: 02:12:26 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:12:36 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-2: 02:15:38 ERROR unit.opensearch/2.juju-log unable to get nodes
+unit-opensearch-dashboards-1: 02:15:45 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.105.155.128:9200/_cluster/health: HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:15:45 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:16:02 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from https://10.105.155.128:9200/_cluster/health: HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-0: 02:16:02 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-1: 02:16:09 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.105.155.128:9200/_cluster/health: HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:16:09 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-1: 02:16:40 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from https://10.105.155.128:9200/_cluster/health: HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-1: 02:16:40 ERROR unit.opensearch-dashboards/1.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-1: 02:24:13 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from http://10.105.155.143:5601/api/status: HTTPConnectionPool(host='10.105.155.143', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-0: 02:26:40 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5)"
+unit-opensearch-0: 02:26:58 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5)"
+unit-opensearch-2: 02:26:59 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5)"
+unit-opensearch-dashboards-0: 02:26:59 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from https://10.105.155.128:9200/_cluster/health: HTTPSConnectionPool(host='10.105.155.128', port=9200): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-0: 02:26:59 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:27:01 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.178:9200/_cluster/health
+unit-opensearch-1: 02:28:59 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.68:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.128'] not reachable."
+unit-opensearch-1: 02:28:59 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.68:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.128'] not reachable."
+unit-opensearch-2: 02:29:01 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.178:9200 and alternative_hosts: ['10.105.155.68', '10.105.155.128'] not reachable."
+unit-opensearch-2: 02:29:02 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.178:9200 and alternative_hosts: ['10.105.155.68', '10.105.155.128'] not reachable."
+unit-opensearch-0: 02:29:33 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:29:34 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:29:38 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:29:40 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-dashboards-0: 02:29:41 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.128:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:29:43 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.178:9200/_cluster/health
+unit-opensearch-dashboards-0: 02:29:45 ERROR unit.opensearch-dashboards/0.juju-log Failed to connect to https://10.105.155.68:9200/_cluster/health
+unit-opensearch-1: 02:31:16 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.68:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.128'] not reachable."
+unit-opensearch-1: 02:31:20 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.68:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.128'] not reachable."
+unit-opensearch-dashboards-1: 02:31:22 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from http://10.105.155.143:5601/api/status: HTTPConnectionPool(host='10.105.155.143', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-0: 02:31:25 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:31:28 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:31:33 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-0: 02:31:37 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.128:9200 and alternative_hosts: ['10.105.155.178', '10.105.155.68'] not reachable."
+unit-opensearch-dashboards-0: 02:31:46 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from http://10.105.155.171:5601/api/status: HTTPConnectionPool(host='10.105.155.171', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-2: 02:31:51 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.178:9200 and alternative_hosts: ['10.105.155.68', '10.105.155.128'] not reachable."
+unit-opensearch-2: 02:31:55 ERROR unit.opensearch/2.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.105.155.178:9200 and alternative_hosts: ['10.105.155.68', '10.105.155.128'] not reachable."
+unit-opensearch-dashboards-1: 02:39:24 ERROR unit.opensearch-dashboards/1.juju-log Hanging, no response from http://10.105.155.143:5601/api/status: HTTPConnectionPool(host='10.105.155.143', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-0: 02:39:48 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from http://10.105.155.171:5601/api/status: HTTPConnectionPool(host='10.105.155.171', port=5601): Read timed out. (read timeout=5).
+unit-opensearch-dashboards-0: 02:40:06 ERROR unit.opensearch-dashboards/0.juju-log Hanging, no response from http://10.105.155.171:5601/api/status: HTTPConnectionPool(host='10.105.155.171', port=5601): Read timed out. (read timeout=5).
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

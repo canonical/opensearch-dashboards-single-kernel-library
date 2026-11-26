@@ -1,0 +1,2 @@
+Device eth0 overridden for juju-f4372d-4
+Device eth0 removed from juju-f4372d-4

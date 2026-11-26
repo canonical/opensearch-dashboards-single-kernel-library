@@ -1,0 +1,26 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:253 Network throttle on {old_leader_name}...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:257 Waiting until unit opensearch-dashboards/0 is not reachable
+[31m[1mERROR   [0m tests.integration.ha.helpers:helpers.py:56 timed out
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:264 Waiting until unit opensearch-dashboards/0 is 'lost'
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:274 Checking leader re-election...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:281 Checking Dashboard access for the rest of the nodes...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.123.5.11:5601 with password 0KP0ylQlEEQMvJ2dAOHoNHrKLYP9jxm6 and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.123.5.11:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.123.5.11:5601/auth/login
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:284 Restoring network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:292 Releasing network throttle on LXC container juju-b2ff09-3
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:297 Waiting until unit opensearch-dashboards/0 is reachable again
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:315 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.123.5.41:5601 with password 0KP0ylQlEEQMvJ2dAOHoNHrKLYP9jxm6 and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.123.5.41:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.123.5.41:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.123.5.11:5601 with password 0KP0ylQlEEQMvJ2dAOHoNHrKLYP9jxm6 and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.123.5.11:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.123.5.11:5601/auth/login

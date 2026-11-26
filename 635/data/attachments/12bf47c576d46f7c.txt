@@ -1,0 +1,129 @@
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.104:5601 with password bAaTPE37BOWaH1tGu4caHnrqCpdD8YdE and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.104:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.104:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.177:5601 with password bAaTPE37BOWaH1tGu4caHnrqCpdD8YdE and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.177:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.177:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.122:5601 with password bAaTPE37BOWaH1tGu4caHnrqCpdD8YdE and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.122:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.122:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.220 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.247 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.31 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  02:20:41Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      3  opensearch                2/edge    415  no       
+opensearch-dashboards     2.19.6   active      3  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  710  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*     active    idle   0        10.0.0.220      5601/tcp  
+opensearch-dashboards/1      active    idle   1        10.0.0.247      5601/tcp  
+opensearch-dashboards/2      active    idle   2        10.0.0.31       5601/tcp  
+opensearch/0                 active    idle   4        10.0.0.160      9200/tcp  
+opensearch/1                 active    idle   5        10.0.0.176      9200/tcp  
+opensearch/2*                active    idle   6        10.0.0.30       9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.0.0.169                
+
+Machine  State    Address     Inst id        Base          AZ             Message
+0        started  10.0.0.220  juju-1f620a-0  ubuntu@24.04  github-runner  Running
+1        started  10.0.0.247  juju-1f620a-1  ubuntu@24.04  github-runner  Running
+2        started  10.0.0.31   juju-1f620a-2  ubuntu@24.04  github-runner  Running
+3        started  10.0.0.169  juju-1f620a-3  ubuntu@24.04  github-runner  Running
+4        started  10.0.0.160  juju-1f620a-4  ubuntu@24.04  github-runner  Running
+5        started  10.0.0.176  juju-1f620a-5  ubuntu@24.04  github-runner  Running
+6        started  10.0.0.30   juju-1f620a-6  ubuntu@24.04  github-runner  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:02:12 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:02:12 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:02:26 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:02:26 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:43 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:02:43 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:08:57 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:08:57 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:09:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:09:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:10:00 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:10:00 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:10:16 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:10:16 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 02:14:12 ERROR unit.opensearch/1.juju-log certificates:8: This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:14:12 ERROR unit.opensearch/1.juju-log certificates:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:14:13 ERROR unit.opensearch/1.juju-log certificates:8: This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:14:13 ERROR unit.opensearch/1.juju-log certificates:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:14:32 ERROR unit.opensearch/0.juju-log certificates:8: This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:14:32 ERROR unit.opensearch/0.juju-log certificates:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:14:32 ERROR unit.opensearch/0.juju-log certificates:8: This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:14:32 ERROR unit.opensearch/0.juju-log certificates:8: This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:14:57 ERROR unit.opensearch/1.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:14:57 ERROR unit.opensearch/0.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:14:59 ERROR unit.opensearch/1.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:00 ERROR unit.opensearch/0.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:02 ERROR unit.opensearch/1.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:02 ERROR unit.opensearch/0.juju-log status-peers:5: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:05 ERROR unit.opensearch/1.juju-log status-peers:5: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:06 ERROR unit.opensearch/0.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:08 ERROR unit.opensearch/1.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:09 ERROR unit.opensearch/0.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:11 ERROR unit.opensearch/1.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:12 ERROR unit.opensearch/0.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:14 ERROR unit.opensearch/1.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.38:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:15 ERROR unit.opensearch/0.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:17 ERROR unit.opensearch/1.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.38:9200 and alternative_hosts: ['10.10.10.218'] not reachable."
+unit-opensearch-0: 02:15:18 ERROR unit.opensearch/0.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:20 ERROR unit.opensearch/1.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.38:9200 and alternative_hosts: ['10.10.10.218'] not reachable."
+unit-opensearch-0: 02:15:21 ERROR unit.opensearch/0.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:23 ERROR unit.opensearch/1.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.38:9200 and alternative_hosts: ['10.10.10.218'] not reachable."
+unit-opensearch-0: 02:15:23 ERROR unit.opensearch/0.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:15:26 ERROR unit.opensearch/1.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.38:9200 and alternative_hosts: ['10.10.10.218'] not reachable."
+unit-opensearch-0: 02:15:26 ERROR unit.opensearch/0.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:28 ERROR unit.opensearch/0.juju-log upgrade-version-a:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.10.10.218:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-0: 02:15:31 ERROR unit.opensearch/0.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:34 ERROR unit.opensearch/0.juju-log status-peers:5: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:36 ERROR unit.opensearch/0.juju-log opensearch-client:9: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:39 ERROR unit.opensearch/0.juju-log opensearch-peers:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:42 ERROR unit.opensearch/0.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:45 ERROR unit.opensearch/0.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+unit-opensearch-0: 02:15:48 ERROR unit.opensearch/0.juju-log node-lock-fallback:7: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.218:9200 and alternative_hosts: ['10.10.10.38'] not reachable."
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

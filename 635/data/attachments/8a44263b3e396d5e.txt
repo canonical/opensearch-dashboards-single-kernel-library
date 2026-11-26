@@ -1,0 +1,103 @@
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.249:5601 with password jCnIOQrGIdFAeofXtv3etrskOwVxStZu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.249:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.249:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.226:5601 with password jCnIOQrGIdFAeofXtv3etrskOwVxStZu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.226:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.226:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.10.10.183:5601 with password jCnIOQrGIdFAeofXtv3etrskOwVxStZu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.10.10.183:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.10.10.183:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.125 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.90 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m integration.helpers:helpers.py:313 Accessing prometheus exporter with 10.0.0.93 ip
+[32mINFO    [0m integration.helpers:helpers.py:302 Response of exporter: <Response [200]>
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:02:06Z
+
+App                       Version  Status  Scale  Charm                     Channel   Rev  Exposed  Message
+opensearch                         active      3  opensearch                2/edge    414  no       
+opensearch-dashboards     2.19.6   active      3  opensearch-dashboards                 0  no       
+self-signed-certificates           active      1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+opensearch-dashboards/0*     active    idle   0        10.0.0.125      5601/tcp  
+opensearch-dashboards/1      active    idle   1        10.0.0.90       5601/tcp  
+opensearch-dashboards/2      active    idle   2        10.0.0.93       5601/tcp  
+opensearch/0                 active    idle   4        10.0.0.16       9200/tcp  
+opensearch/1                 active    idle   5        10.0.0.213      9200/tcp  
+opensearch/2*                active    idle   6        10.0.0.242      9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.0.0.241                
+
+Machine  State    Address     Inst id        Base          AZ                                  Message
+0        started  10.0.0.125  juju-ea766a-0  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+1        started  10.0.0.90   juju-ea766a-1  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+2        started  10.0.0.93   juju-ea766a-2  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+3        started  10.0.0.241  juju-ea766a-3  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+4        started  10.0.0.16   juju-ea766a-4  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+5        started  10.0.0.213  juju-ea766a-5  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+6        started  10.0.0.242  juju-ea766a-6  ubuntu@24.04  arm64-noble-large-ps7-isfj2attrxpz  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:47:49 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:47:49 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:47:50 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:47:50 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:47:52 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:47:52 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:52:20 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:52:20 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:52:25 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:52:25 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:52:33 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:52:33 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:52:35 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:52:35 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:55:06 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:09 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:12 ERROR unit.opensearch/0.juju-log certificates:8: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:15 ERROR unit.opensearch/0.juju-log certificates:8: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:17 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:20 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:22 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:24 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:27 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:29 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:31 ERROR unit.opensearch/0.juju-log opensearch-client:9: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:34 ERROR unit.opensearch/0.juju-log opensearch-peers:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:36 ERROR unit.opensearch/0.juju-log opensearch-peers:5: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:39 ERROR unit.opensearch/0.juju-log node-lock-fallback:4: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-1: 02:55:39 ERROR unit.opensearch/1.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:55:41 ERROR unit.opensearch/0.juju-log status-peers:6: Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-0: 02:56:01 ERROR unit.opensearch/0.juju-log certificates:8: Failed to update relation TLS info: missing key 'chain'
+unit-opensearch-0: 02:56:02 ERROR unit.opensearch/0.juju-log certificates:8: Failed to update relation TLS info: missing key 'chain'
+unit-opensearch-1: 02:56:02 ERROR unit.opensearch/1.juju-log certificates:8: Failed to update relation TLS info: missing key 'chain'
+unit-opensearch-1: 02:56:02 ERROR unit.opensearch/1.juju-log certificates:8: Failed to update relation TLS info: missing key 'chain'
+unit-opensearch-0: 02:56:05 ERROR unit.opensearch/0.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:56:05 ERROR unit.opensearch/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:56:05 ERROR unit.opensearch/1.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:56:05 ERROR unit.opensearch/1.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:56:06 ERROR unit.opensearch/0.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-0: 02:56:06 ERROR unit.opensearch/0.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:56:06 ERROR unit.opensearch/1.juju-log This operation (update_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:56:06 ERROR unit.opensearch/1.juju-log This operation (fetch_my_relation_data()) can only be performed by the leader unit
+unit-opensearch-1: 02:57:04 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:07 ERROR unit.opensearch/1.juju-log opensearch-peers:5: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:10 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:14 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:17 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:20 ERROR unit.opensearch/1.juju-log status-peers:6: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+unit-opensearch-1: 02:57:23 ERROR unit.opensearch/1.juju-log node-lock-fallback:4: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.10.10.205:9200 and alternative_hosts: ['10.10.10.130'] not reachable."
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

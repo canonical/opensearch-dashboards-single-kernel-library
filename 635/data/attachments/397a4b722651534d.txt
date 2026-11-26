@@ -1,0 +1,48 @@
+[32mINFO    [0m integration.helpers:helpers.py:734 Getting content of file with command:JUJU_MODEL=testing juju ssh opensearch-dashboards/0 sudo cat /var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/server.pem
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.144:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.14.244.144:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.14.244.144:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.39:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.14.244.39:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.14.244.39:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.155:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.14.244.155:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.14.244.155:5601/auth/login
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] active: 
+  opensearch-dashboards/1 [executing] maintenance: Restarting OpenSearch Dashboards server
+  opensearch-dashboards/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.helpers:helpers.py:734 Getting content of file with command:JUJU_MODEL=testing juju ssh opensearch-dashboards/0 sudo cat /var/snap/opensearch-dashboards/current/etc/opensearch-dashboards/certificates/server.pem
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.144:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.14.244.144:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.14.244.144:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.39:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.14.244.39:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.14.244.39:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.14.244.155:5601 with password uxq108gToZGYWztMy5CMFgPdADLETott and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.14.244.155:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.14.244.155:5601/auth/login

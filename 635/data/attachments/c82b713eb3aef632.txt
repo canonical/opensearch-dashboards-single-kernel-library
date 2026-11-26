@@ -1,0 +1,29 @@
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:327 Cutting all units from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:353 Cutting unit opensearch-dashboards/0 from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:353 Cutting unit opensearch-dashboards/1 from network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:362 Waiting until units ['opensearch-dashboards/0', 'opensearch-dashboards/1'] are not reachable
+[31m[1mERROR   [0m tests.integration.ha.helpers:helpers.py:56 timed out
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:369 Waiting until unit ['opensearch-dashboards/0', 'opensearch-dashboards/1'] are 'lost'
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:380 Checking lack of Dashboard access...
+[33mWARNING [0m tests.integration.helpers:helpers.py:784 Couldn't retrieve IP address via network-get: None
+[32mINFO    [0m tests.integration.helpers:helpers.py:795 Couldn't retrieve interface info either: None
+[33mWARNING [0m tests.integration.helpers:helpers.py:784 Couldn't retrieve IP address via network-get: None
+[32mINFO    [0m tests.integration.helpers:helpers.py:795 Couldn't retrieve interface info either: None
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:383 Restoring network...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:390 Waiting for Juju to detect new IPs...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:405 Old IP 10.123.5.41 has changed to 10.123.5.189...
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:405 Old IP 10.123.5.11 has changed to 10.123.5.60...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  self-signed-certificates/0 [idle] active: 
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+[32mINFO    [0m integration.ha.test_network_cut:test_network_cut.py:414 Checking Dashboard access...
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.123.5.189:5601 with password 0KP0ylQlEEQMvJ2dAOHoNHrKLYP9jxm6 and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.123.5.189:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.123.5.189:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:510 Attempting to login to 10.123.5.60:5601 with password 0KP0ylQlEEQMvJ2dAOHoNHrKLYP9jxm6 and path: 
+[32mINFO    [0m tests.integration.helpers:helpers.py:413 Sending external request to http://10.123.5.60:5601/auth/login
+[32mINFO    [0m tests.integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.123.5.60:5601/auth/login

@@ -1,0 +1,19 @@
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:166 Sending SIGTERM opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1']...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:183 Waiting for opensearch-dashboards:['opensearch-dashboards/0', 'opensearch-dashboards/1'] to be down...
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:205 Waiting a bit, so the process could safely restart...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+[32mINFO    [0m integration.ha.test_process_interrupt:test_process_interrupt.py:215 Checking OSD access...
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.84.106.102:5601 with password cksyQlcCHAG1Zdpn6EK6lUh5S9EUUm6Y and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.84.106.102:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.84.106.102:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.84.106.21:5601 with password cksyQlcCHAG1Zdpn6EK6lUh5S9EUUm6Y and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.84.106.21:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.84.106.21:5601/auth/login
