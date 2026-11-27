@@ -18,6 +18,14 @@ on:
   workflow_call:
     secrets:
       CHARMHUB_TOKEN:
+      OPENROUTER_API_KEY:
+        required: false
+      FLAKE0_INGEST_URL:
+        required: false
+      FLAKE0_INGEST_USER:
+        required: false
+      FLAKE0_INGEST_PASSWORD:
+        required: false
   workflow_dispatch:
 
 permissions:
@@ -117,5 +125,12 @@ jobs:
     with:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       run-on-all-bases: ${{ github.event_name == 'schedule' }}
+    secrets:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      FLAKE0_INGEST_URL: ${{ secrets.FLAKE0_INGEST_URL }}
+      FLAKE0_INGEST_USER: ${{ secrets.FLAKE0_INGEST_USER }}
+      FLAKE0_INGEST_PASSWORD: ${{ secrets.FLAKE0_INGEST_PASSWORD }}
     permissions:
       contents: write # Needed for Allure Report
+      pull-requests: write # flake0 error classification adds a PR comment if tests fail
+      actions: read # flake0 error classification needs to read the run history
