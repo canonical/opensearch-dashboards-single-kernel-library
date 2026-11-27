@@ -92,6 +92,9 @@ backends:
       CI: '$(HOST: echo $CI)'
       CHARM_UBUNTU_BASE: '$(HOST: echo $CHARM_UBUNTU_BASE)'
       DOCKERHUB_MIRROR: '$(HOST: echo $DOCKERHUB_MIRROR)'
+      FLAKE0_MARKERS: '$(HOST: echo $FLAKE0_MARKERS)'
+      PYTEST_PLUGINS: '$(HOST: echo $PYTEST_PLUGINS)'
+      PYTHONPATH: '$(HOST: echo $PYTHONPATH)'
       # To install pipx on self-hosted runners
       CONCIERGE_EXTRA_DEBS: pipx
     systems:
