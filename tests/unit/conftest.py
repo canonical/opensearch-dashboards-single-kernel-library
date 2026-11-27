@@ -46,10 +46,12 @@ def patched_pebble_restart(mocker):
 
 @pytest.fixture(autouse=True)
 def patched_snap(mocker):
+    # unit tests should not depend on a running snapd daemon or systemd.
+    for func in ("ensure_installed", "hold", "stop", "restart", "set"):
+        mocker.patch(f"single_kernel_opensearch_dashboards.workload.vm.snap.{func}")
     mocker.patch(
-        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.dashboards",
-        new_callable=PropertyMock,
-        return_value=MagicMock(),
+        "single_kernel_opensearch_dashboards.workload.vm.VMWorkload.running",
+        return_value=True,
     )
 
 
