@@ -1,0 +1,264 @@
+[32mINFO    [0m integration.test_charm:test_charm.py:496 Destroying and restoring the Opensearch cluster
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying ch:arm64/noble/opensearch-426
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: waiting for machine
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: agent initialising
+  opensearch/4 [allocating] waiting: waiting for machine
+  opensearch/5 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: agent initialising
+  opensearch/4 [allocating] waiting: agent initialising
+  opensearch/5 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: agent initialising
+  opensearch/4 [allocating] waiting: agent initialising
+  opensearch/5 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [allocating] waiting: agent initialising
+  opensearch/4 [allocating] waiting: agent initialising
+  opensearch/5 [allocating] waiting: agent initialising
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Installing OpenSearch...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] waiting: Waiting for TLS to be fully configured...
+  opensearch/4 [executing] maintenance: Installing OpenSearch...
+  opensearch/5 [executing] maintenance: Installing OpenSearch...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] waiting: Requesting lock on operation: start
+  opensearch/4 [executing] waiting: Waiting for TLS to be fully configured...
+  opensearch/5 [executing] waiting: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Waiting for TLS to be fully configured...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: Initializing the security index...
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Requesting lock on operation: start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Requesting lock on operation: start
+  opensearch/5 [executing] waiting: Waiting for OpenSearch to start...
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] waiting: Waiting for OpenSearch to start...
+  opensearch/5 [executing] waiting: The shards opensearch-4.8af/.opensearch-observability,.opendistro_security need to complete building
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [idle] active: 
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [idle] active: 
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [idle] active: 
+  opensearch/4 [idle] active: 
+  opensearch/5 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] maintenance: New index .opensearch-dashboards requested on client relation 19
+  opensearch/4 [executing] active: 
+  opensearch/5 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/3 [executing] active: 
+  opensearch/4 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+  opensearch-dashboards/2 [executing] blocked: OpenSearch Dashboards API is unavailable
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [idle] active: 
+[32mINFO    [0m integration.test_charm:test_charm.py:528 Checking if Dashboards is available again
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.104.164.180:5601 with password vShw85iA58uUR3ppnAnia3Oexewqk6gu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.104.164.180:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.104.164.180:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.104.164.113:5601 with password vShw85iA58uUR3ppnAnia3Oexewqk6gu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.104.164.113:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.104.164.113:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.104.164.153:5601 with password vShw85iA58uUR3ppnAnia3Oexewqk6gu and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to http://10.104.164.153:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:http://10.104.164.153:5601/auth/login
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region         Version  SLA          Timestamp
+testing  concierge-lxd  localhost/localhost  3.6.29   unsupported  03:05:49Z
+
+App                       Version  Status   Scale  Charm                     Channel   Rev  Exposed  Message
+application                        active       1  application                           0  no       
+grafana-agent                      blocked      3  grafana-agent             1/stable  606  no       Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch                         active       3  opensearch                2/edge    426  no       
+opensearch-dashboards     2.19.6   active       3  opensearch-dashboards                 0  no       
+self-signed-certificates           active       1  self-signed-certificates  1/stable  585  no       
+
+Unit                         Workload  Agent  Machine  Public address  Ports     Message
+application/0*               active    idle   7        10.104.164.128            
+opensearch-dashboards/0*     active    idle   4        10.104.164.180  5601/tcp  
+  grafana-agent/1            blocked   idle            10.104.164.180            Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch-dashboards/1      active    idle   5        10.104.164.113  5601/tcp  
+  grafana-agent/2*           blocked   idle            10.104.164.113            Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch-dashboards/2      active    idle   6        10.104.164.153  5601/tcp  
+  grafana-agent/0            blocked   idle            10.104.164.153            Missing ['grafana-cloud-config']|['grafana-dashboards-provider']|['logging-consumer']|['send-remote-write'] for cos-a...
+opensearch/3*                active    idle   8        10.104.164.146  9200/tcp  
+opensearch/4                 active    idle   9        10.104.164.101  9200/tcp  
+opensearch/5                 active    idle   10       10.104.164.12   9200/tcp  
+self-signed-certificates/0*  active    idle   3        10.104.164.156            
+
+Machine  State    Address         Inst id         Base          AZ                                  Message
+3        started  10.104.164.156  juju-a5e805-3   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+4        started  10.104.164.180  juju-a5e805-4   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+5        started  10.104.164.113  juju-a5e805-5   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+6        started  10.104.164.153  juju-a5e805-6   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+7        started  10.104.164.128  juju-a5e805-7   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+8        started  10.104.164.146  juju-a5e805-8   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+9        started  10.104.164.101  juju-a5e805-9   ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+10       started  10.104.164.12   juju-a5e805-10  ubuntu@24.04  arm64-noble-large-ps7-ytj5mmn7dwue  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 02:20:42 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 02:20:42 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:20:56 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-3: 02:20:56 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:21:06 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 02:21:06 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:21:08 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-2: 02:21:08 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:21:29 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-4: 02:21:29 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:21:34 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-6: 02:21:34 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:21:47 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-5: 02:21:47 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-1: 02:27:02 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:03 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:07 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:08 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:11 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:12 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:16 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:17 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:22 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:23 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:26 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:27 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:30 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:31 ERROR unit.opensearch/1.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:35 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-1: 02:27:36 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+machine-7: 02:31:55 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-7: 02:31:55 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-opensearch-0: 02:49:41 ERROR unit.opensearch/0.juju-log Failed to add voting exclusion: opensearch-0.8af.
+unit-opensearch-1: 02:49:43 ERROR unit.opensearch/1.juju-log Failed to delete shard allocation exclusion: opensearch-1.8af.
+unit-opensearch-1: 02:49:44 ERROR unit.opensearch/1.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.90:9200 and alternative_hosts: ['10.104.164.62', '10.104.164.6'] not reachable."
+unit-opensearch-0: 02:49:44 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6', '10.104.164.90'] not reachable."
+unit-opensearch-2: 02:49:45 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='HTTPSConnectionPool(host=\'10.104.164.62\', port=9200): Max retries exceeded with url: /_cluster/health (Caused by NewConnectionError("HTTPSConnection(host=\'10.104.164.62\', port=9200): Failed to establish a new connection: [Errno 111] Connection refused"))'
+unit-opensearch-0: 02:49:45 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6', '10.104.164.90'] not reachable."
+unit-opensearch-0: 02:49:46 ERROR unit.opensearch/0.juju-log HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6', '10.104.164.90'] not reachable."
+unit-opensearch-1: 02:49:47 ERROR unit.opensearch/1.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:49:48 ERROR unit.opensearch/2.juju-log node-lock-fallback:0: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.6:9200 and alternative_hosts: ['10.104.164.90', '10.104.164.62'] not reachable."
+unit-opensearch-0: 02:49:49 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6'] not reachable."
+unit-opensearch-0: 02:49:50 ERROR unit.opensearch/0.juju-log opensearch-peers:1: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6'] not reachable."
+unit-opensearch-1: 02:49:50 ERROR unit.opensearch/1.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+unit-opensearch-2: 02:49:51 ERROR unit.opensearch/2.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.6:9200 and alternative_hosts: ['10.104.164.90', '10.104.164.62'] not reachable."
+unit-opensearch-0: 02:49:54 ERROR unit.opensearch/0.juju-log status-peers:2: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text="Host 10.104.164.62:9200 and alternative_hosts: ['10.104.164.6'] not reachable."
+unit-opensearch-1: 02:49:54 ERROR unit.opensearch/1.juju-log upgrade-version-a:3: HTTP error when checking cluster health: HTTP error self.response_code=None
+self.response_text='Host 10.104.164.90:9200 and alternative_hosts: [] not reachable.'
+machine-8: 02:53:05 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-8: 02:53:05 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-9: 02:53:07 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-9: 02:53:07 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-10: 02:53:10 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-10: 02:53:10 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

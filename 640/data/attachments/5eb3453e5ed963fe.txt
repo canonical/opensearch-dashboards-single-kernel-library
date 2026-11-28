@@ -1,0 +1,43 @@
+[32mINFO    [0m integration.test_charm:test_charm.py:392 Breaking opensearch connection
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [executing] blocked: OpenSearch connection is missing
+  opensearch-dashboards/1 [executing] blocked: OpenSearch connection is missing
+  opensearch-dashboards/2 [executing] blocked: OpenSearch connection is missing
+[32mINFO    [0m integration.test_charm:test_charm.py:399 Waiting up to 600s for status OpenSearch connection is missing
+[32mINFO    [0m integration.test_charm:test_charm.py:419 Checking if Dashboards have become unavailable
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:10.115.49.173 port:5601 path: https: True
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:10.115.49.116 port:5601 path: https: True
+[32mINFO    [0m integration.helpers:helpers.py:545 Trying to reach host:10.115.49.212 port:5601 path: https: True
+[32mINFO    [0m integration.test_charm:test_charm.py:422 Restoring Opensearch connection
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+  opensearch/2 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [executing] active: 
+  opensearch/1 [executing] active: 
+  opensearch/2 [executing] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards/0 [idle] active: 
+  opensearch-dashboards/1 [idle] active: 
+  opensearch-dashboards/2 [executing] maintenance: Checking OpenSearch Dashboards health after restart/start
+[32mINFO    [0m integration.test_charm:test_charm.py:435 Checking if Dashboards is available again
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.115.49.173:5601 with password aUzzqL5u6IH4k8t46I31Ya0DMtyZmKti and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.115.49.173:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.115.49.173:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.115.49.116:5601 with password aUzzqL5u6IH4k8t46I31Ya0DMtyZmKti and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.115.49.116:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.115.49.116:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:510 Attempting to login to 10.115.49.212:5601 with password aUzzqL5u6IH4k8t46I31Ya0DMtyZmKti and path: 
+[32mINFO    [0m integration.helpers:helpers.py:413 Sending external request to https://10.115.49.212:5601/auth/login
+[32mINFO    [0m integration.helpers:helpers.py:416 Got response:<Response [200]> from url:https://10.115.49.212:5601/auth/login
+[32mINFO    [0m integration.test_charm:test_charm.py:442 Adding a new index with shards allocated to a non-existent node to make cluster health red
+[32mINFO    [0m integration.test_charm:test_charm.py:466 Waiting up to 600s for OpenSearch service health to become red...

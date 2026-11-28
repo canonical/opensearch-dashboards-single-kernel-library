@@ -1,0 +1,70 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch/0 [idle] active: 
+  opensearch/1 [idle] active: 
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  opensearch-dashboards-k8s/0 [idle] active: 
+  traefik-k8s/0 [idle] active: Serving at https://10.43.45.0
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:181 Choose external provider
+[32mINFO    [0m oauth_tools.oauth_helpers:oauth_helpers.py:186 Completing the login flow on the external provider
+[32mINFO    [0m oauth_tools.external_idp:external_idp.py:214 Signing in to dex
+[32mINFO    [0m httpx2:_client.py:1085 HTTP Request: GET https://127.0.0.1:6443/api/v1/namespaces/dex/services/dex "HTTP/1.1 200 OK"
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model    Controller     Cloud/Region  Version  SLA          Timestamp
+testing  concierge-lxd  uk8s/default  3.6.29   unsupported  02:30:56Z
+
+App                                  Version  Status  Scale  Charm                                Channel        Rev  Address         Exposed  Message
+hydra                                v2.3.0   active      1  hydra                                latest/edge    339  10.152.183.79   no       
+identity-platform-login-ui-operator  0.21.2   active      1  identity-platform-login-ui-operator  latest/edge    146  10.152.183.188  no       
+kratos                               v1.3.1   active      1  kratos                               latest/edge    500  10.152.183.221  no       
+kratos-external-idp-integrator                active      1  kratos-external-idp-integrator       latest/edge    245  10.152.183.205  no       Provider is ready
+opensearch                                    active      2  opensearch-k8s                       2/edge          76  10.152.183.196  no       
+opensearch-dashboards-k8s            2.19.6   active      1  opensearch-dashboards-k8s                             0  10.152.183.249  no       
+postgresql-k8s                       14.19    active      1  postgresql-k8s                       14/stable      960  10.152.183.212  no       
+self-signed-certificates                      active      1  self-signed-certificates             1/stable       588  10.152.183.229  no       
+traefik-admin                        v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.2      no       
+traefik-k8s                          2.11.57  active      1  traefik-k8s                          latest/stable  506  10.152.183.201  no       Serving at https://10.43.45.0
+traefik-public                       v2.11.0  active      1  traefik-k8s                          latest/stable  176  10.43.45.3      no       
+
+Unit                                    Workload  Agent  Address     Ports  Message
+hydra/0*                                active    idle   10.1.0.30          
+identity-platform-login-ui-operator/0*  active    idle   10.1.0.233         
+kratos-external-idp-integrator/0*       active    idle   10.1.0.47          Provider is ready
+kratos/0*                               active    idle   10.1.0.66          
+opensearch-dashboards-k8s/0*            active    idle   10.1.0.103         
+opensearch/0                            active    idle   10.1.0.172         
+opensearch/1*                           active    idle   10.1.0.29          
+postgresql-k8s/0*                       active    idle   10.1.0.67          Primary
+self-signed-certificates/0*             active    idle   10.1.0.152         
+traefik-admin/0*                        active    idle   10.1.0.198         
+traefik-k8s/0*                          active    idle   10.1.0.159         Serving at https://10.43.45.0
+traefik-public/0*                       active    idle   10.1.0.153         
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+unit-opensearch-1: 02:18:21 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-0: 02:18:21 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:18:52 ERROR juju.worker.proxyupdater error writing apt proxy config file: open /etc/apt/apt.conf.d/95-juju-proxy-settings: permission denied
+unit-opensearch-dashboards-k8s-0: 02:19:15 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-traefik-k8s-0: 02:19:17 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:19:17 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:19:18 ERROR unit.opensearch-dashboards-k8s/0.juju-log dashboard_peers:6: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-traefik-k8s-0: 02:19:19 ERROR unit.traefik-k8s/0.juju-log peers:8: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:19:19 ERROR unit.traefik-k8s/0.juju-log peers:8: Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:19:20 ERROR unit.opensearch-dashboards-k8s/0.juju-log restart:7: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-traefik-k8s-0: 02:19:21 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:19:21 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:19:23 ERROR unit.opensearch-dashboards-k8s/0.juju-log status-peers:5: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-traefik-k8s-0: 02:19:23 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-traefik-k8s-0: 02:19:23 ERROR unit.traefik-k8s/0.juju-log Failed to fetch LoadBalancer traefik-k8s-lb: services "traefik-k8s-lb" not found
+unit-opensearch-dashboards-k8s-0: 02:19:25 ERROR unit.opensearch-dashboards-k8s/0.juju-log upgrade:4: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 02:19:28 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-0: 02:19:30 ERROR unit.opensearch/0.juju-log Missing cluster topology requirements: At least 1 cluster manager nodes and 1 data nodes are required.
+unit-opensearch-dashboards-k8s-0: 02:19:31 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 02:19:33 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 02:19:49 ERROR unit.opensearch-dashboards-k8s/0.juju-log OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 02:19:57 ERROR unit.opensearch-dashboards-k8s/0.juju-log restart:7: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-opensearch-dashboards-k8s-0: 02:19:59 ERROR unit.opensearch-dashboards-k8s/0.juju-log status-peers:5: OpenSearch Dashboards charm is not trusted, upgrade functionality is not possible, 
+unit-kratos-0: 02:21:43 ERROR juju.worker.uniter pebble poll failed for container "kratos": failed to send pebble-ready event: terminated
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...

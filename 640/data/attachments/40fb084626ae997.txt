@@ -1,0 +1,4 @@
+Device eth0 overridden for juju-fc16d3-3
+Device eth0 overridden for juju-fc16d3-4
+Device eth0 removed from juju-fc16d3-3
+Device eth0 removed from juju-fc16d3-4
